@@ -5,7 +5,7 @@
 [![Code Climate](https://codeclimate.com/github/sensortower/sidekiq-throttled.svg?branch=master)](https://codeclimate.com/github/sensortower/sidekiq-throttled)
 [![Coverage Status](https://coveralls.io/repos/sensortower/sidekiq-throttled/badge.svg?branch=master&service=github)](https://coveralls.io/github/sensortower/sidekiq-throttled?branch=master)
 
-Concurrency and threshold throttling for Sidekiq.
+Concurrency and threshold throttling for [Sidekiq](https://github.com/mperham/sidekiq/).
 
 
 ## Installation
