@@ -1,6 +1,8 @@
 # Sidekiq::Throttled
 
-[![Build Status](https://travis-ci.org/sensortower/sidekiq-throttled.svg)](https://travis-ci.org/sensortower/sidekiq-throttled)
+[![Gem Version](https://badge.fury.io/rb/sidekiq-throttled.svg)](http://rubygems.org/gems/sidekiq-throttled)
+[![Build Status](https://travis-ci.org/sensortower/sidekiq-throttled.svg?branch=master)](https://travis-ci.org/sensortower/sidekiq-throttled)
+[![Code Climate](https://codeclimate.com/github/sensortower/sidekiq-throttled.svg?branch=master)](https://codeclimate.com/github/sensortower/sidekiq-throttled)
 
 Concurrency and threshold throttling for Sidekiq.
 
