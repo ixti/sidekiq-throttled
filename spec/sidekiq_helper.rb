@@ -2,7 +2,11 @@ require "securerandom"
 
 require "sidekiq/testing"
 
-require "jid_generator"
+module JidGenerator
+  def jid
+    SecureRandom.hex 12
+  end
+end
 
 configure_redis = proc do |config|
   config.redis = {
