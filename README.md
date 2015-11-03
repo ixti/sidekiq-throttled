@@ -1,5 +1,7 @@
 # Sidekiq::Throttled
 
+[![Build Status](https://travis-ci.org/sensortower/sidekiq-throttled.svg)](https://travis-ci.org/sensortower/sidekiq-throttled)
+
 Concurrency and threshold throttling for Sidekiq.
 
 
