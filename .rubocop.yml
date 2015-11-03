@@ -1,0 +1,72 @@
+## Styles ######################################################################
+
+Style/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+
+Style/BracesAroundHashParameters:
+  Enabled: false
+
+# Broken (2014-12-15). Use `yardstick` gem instead.
+# See: https://github.com/bbatsov/rubocop/issues/947
+# TODO: Enable back once cop is fixed.
+Style/Documentation:
+  Enabled: false
+
+Style/EmptyLineBetweenDefs:
+  AllowAdjacentOneLineDefs: true
+
+Style/Encoding:
+  EnforcedStyle: when_needed
+
+Style/HashSyntax:
+  EnforcedStyle: hash_rockets
+
+Style/IndentHash:
+  EnforcedStyle: consistent
+
+# New lambda syntax is as ugly to me as new syntax of Hash.
+Style/Lambda:
+  Enabled: false
+
+Style/MultilineOperationIndentation:
+  EnforcedStyle: indented
+
+# IMHO `%r{foo/bar}` looks way more cleaner than `/foo\/bar/`.
+# Enabling this cop also makes Guardfile (which is full of pathname regexps)
+# look absolutley (style) inconsistent and terrible. Thus it should be on
+# developer's choice whenever to user `%r` or not. Just like we don't enforce
+# to use `["foo"]` over `%w(foo)` and so on.
+Style/RegexpLiteral:
+  Enabled: false
+
+# A bit useless restriction, that makes impossible aligning code like this:
+#
+#   redis do |conn|
+#     conn.hset    :k1, now
+#     conn.hincrby :k2, 123
+#   end
+Style/SingleSpaceBeforeFirstArg:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+# Not all trivial readers/writers can be defined with attr_* methods
+#
+#   class Example < SimpleDelegator
+#     def __getobj__
+#       @obj
+#     end
+#
+#     def __setobj__(obj)
+#       @obj = obj
+#     end
+#   end
+Style/TrivialAccessors:
+  Enabled: false
+
+## Metrics #####################################################################
+
+Metrics/MethodLength:
+  CountComments: false
+  Max: 15
