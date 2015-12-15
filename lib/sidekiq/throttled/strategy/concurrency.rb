@@ -24,7 +24,8 @@ module Sidekiq
         # @param [Hash] opts
         # @option opts [#to_i] :limit Amount of allwoed concurrent jobs
         #   processors running for given key
-        # @option opts [#to_i] :ttl (15.minutes) Concurrency lock TTL
+        # @option opts [#to_i] :ttl (15 minutes) Concurrency lock TTL
+        #   in seconds
         def initialize(base_key, opts)
           @key   = "#{base_key}:concurrency".freeze
           @keys  = [@key]
