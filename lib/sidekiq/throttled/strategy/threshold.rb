@@ -37,31 +37,43 @@ module Sidekiq
         #   @return [Float] Period in seconds
         attr_reader :period
 
-        # @param [#to_s] base_key
+        # @param [#to_s] strategy_key
         # @param [Hash] opts
         # @option opts [#to_i] :limit Amount of jobs allowed per period
         # @option opts [#to_f] :period Period in seconds
-        def initialize(base_key, opts)
-          @key    = "#{base_key}:threshold".freeze
-          @keys   = [@key]
+        def initialize(strategy_key, opts)
+          @base_key = "#{strategy_key}:threshold".freeze
           @limit  = opts.fetch(:limit).to_i
           @period = opts.fetch(:period).to_f
+          @key_suffix = opts[:key_suffix]
+        end
+
+        def dynamic_keys?
+          @key_suffix
         end
 
         # @return [Boolean] whenever job is throttled or not
-        def throttled?
-          1 == SCRIPT.eval(@keys, [@limit, @period, Time.now.to_f])
+        def throttled?(*job_args)
+          1 == SCRIPT.eval([key(job_args)], [@limit, @period, Time.now.to_f])
         end
 
         # @return [Integer] Current count of jobs
-        def count
-          Sidekiq.redis { |conn| conn.llen(@key) }.to_i
+        def count(*job_args)
+          Sidekiq.redis { |conn| conn.llen(key(job_args)) }.to_i
         end
 
         # Resets count of jobs
         # @return [void]
-        def reset!
-          Sidekiq.redis { |conn| conn.del(@key) }
+        def reset!(*job_args)
+          Sidekiq.redis { |conn| conn.del(key(job_args)) }
+        end
+
+        private
+
+        def key(job_args)
+          key = @base_key.dup
+          key << ":#{@key_suffix.call(*job_args)}" if @key_suffix
+          key
         end
       end
     end

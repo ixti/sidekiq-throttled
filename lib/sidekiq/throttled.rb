@@ -61,7 +61,7 @@ module Sidekiq
         jid = message.fetch("jid".freeze) { return false }
 
         Registry.get job do |strategy|
-          return strategy.throttled? jid
+          return strategy.throttled?(jid, *message["args"])
         end
 
         false

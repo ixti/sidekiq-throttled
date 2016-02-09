@@ -16,7 +16,7 @@
     </tr>
   </thead>
   <tbody>
-    <% Sidekiq::Throttled::Registry.each do |name, strategy| %>
+    <% Sidekiq::Throttled::Registry.each_with_static_keys do |name, strategy| %>
       <tr>
         <td style="vertical-align:middle;"><%= name %></td>
         <td style="vertical-align:middle;text-align:center;">

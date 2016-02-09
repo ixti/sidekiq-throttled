@@ -12,7 +12,7 @@ module Sidekiq
         yield
       ensure
         Registry.get msg["class".freeze] do |strategy|
-          strategy.finalize! msg["jid".freeze]
+          strategy.finalize!(msg["jid".freeze], *msg["args"])
         end
       end
     end

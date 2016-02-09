@@ -122,4 +122,18 @@ RSpec.describe Sidekiq::Throttled::Strategy do
       end
     end
   end
+
+  describe "#dynamic_keys?" do
+    subject { strategy.dynamic_keys? }
+
+    context "when a key_suffix is being used" do
+      let(:options) { threshold.merge(:key_suffix => -> (i) { i }) }
+      it { is_expected.to be_truthy }
+    end
+
+    context "when a key_suffix is not being used" do
+      let(:options) { threshold }
+      it { is_expected.to be_falsy }
+    end
+  end
 end

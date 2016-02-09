@@ -34,4 +34,82 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
       expect(strategy.count).to eq 0
     end
   end
+
+  describe "with a dynamic key suffix" do
+    subject(:strategy) do
+      described_class.new(
+        :test, :limit => 5, :period => 10, :key_suffix => -> (i) { i }
+      )
+    end
+    let(:initial_key_input) { 123 }
+
+    describe "#throttled?" do
+      subject { strategy.throttled?(key_input) }
+      before { 5.times { strategy.throttled?(initial_key_input) } }
+
+      describe "when limit exceeded for the same input" do
+        let(:key_input) { initial_key_input }
+        it { is_expected.to be true }
+      end
+
+      describe "when limit exceeded for a different input" do
+        let(:key_input) { 456 }
+        it { is_expected.to be false }
+      end
+    end
+
+    describe "#count" do
+      subject { strategy.count(key_input) }
+      before { 3.times { strategy.throttled?(initial_key_input) } }
+
+      describe "for the same input" do
+        let(:key_input) { initial_key_input }
+        it { is_expected.to eq 3 }
+      end
+
+      describe "for a different input" do
+        let(:key_input) { 456 }
+        it { is_expected.to eq 0 }
+      end
+    end
+
+    describe "#reset!" do
+      before { 3.times { strategy.throttled?(initial_key_input) } }
+
+      describe "for the same input" do
+        let(:key_input) { initial_key_input }
+
+        it "resets count back to zero" do
+          strategy.reset!(key_input)
+          expect(strategy.count(key_input)).to eq 0
+        end
+      end
+
+      describe "for a different input" do
+        let(:key_input) { 456 }
+
+        it "does not reset count back to zero for the initial input" do
+          strategy.reset!(key_input)
+          expect(strategy.count(initial_key_input)).to eq 3
+        end
+      end
+    end
+  end
+
+  describe "#dynamic_keys?" do
+    let(:strategy) { described_class.new(:test, **kwargs) }
+    subject { strategy.dynamic_keys? }
+
+    describe "with a dynamic key suffix" do
+      let(:kwargs) do
+        { :limit => 5, :period => 10, :key_suffix => -> (i) { i } }
+      end
+      it { is_expected.to be_truthy }
+    end
+
+    describe "without a dynamic key suffix" do
+      let(:kwargs) { { :limit => 5, :period => 10 } }
+      it { is_expected.to be_falsy }
+    end
+  end
 end

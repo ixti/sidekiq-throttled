@@ -43,7 +43,19 @@ RSpec.describe Sidekiq::Throttled::Web::Stats do
       end
     end
 
-    context "with Concurrency strategy" do
+    context "with Concurrency strategy with a dynamic key suffix" do
+      let :strategy do
+        Sidekiq::Throttled::Strategy::Concurrency.new(
+          :foo, :limit => 10, :key_suffix => -> (i) { i }
+        )
+      end
+
+      it "raises an error when instantiated" do
+        expect { described_class.new strategy }.to raise_error(ArgumentError)
+      end
+    end
+
+    context "with Threshold strategy" do
       let :strategy do
         Sidekiq::Throttled::Strategy::Threshold.new(:foo, {
           :limit  => 10,
@@ -70,6 +82,17 @@ RSpec.describe Sidekiq::Throttled::Web::Stats do
         before { 9.times { strategy.throttled? } }
         it { is_expected.to start_with "10 jobs per 1 minute 15 seconds<br />" }
         it { is_expected.to end_with label("danger", 9) }
+      end
+    end
+
+    context "with Threshold strategy with a key suffix" do
+      let :strategy do
+        Sidekiq::Throttled::Strategy::Threshold.new(
+          :foo, :limit => 10, :period => 75, :key_suffix => -> (i) { i }
+        )
+      end
+      it "raises an error when instantiated" do
+        expect { described_class.new strategy }.to raise_error(ArgumentError)
       end
     end
   end

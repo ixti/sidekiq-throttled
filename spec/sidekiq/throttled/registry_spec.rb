@@ -101,4 +101,18 @@ RSpec.describe Sidekiq::Throttled::Registry do
       expect { |b| described_class.each(&b) }.to yield_control.exactly(3).times
     end
   end
+
+  describe ".each_with_static_keys" do
+    before do
+      described_class.add("foo", threshold)
+      described_class.add("bar", threshold.merge(:key_suffix => -> (i) { i }))
+    end
+
+    it "yields once for each strategy without dynamic key suffixes" do
+      args = [["foo", Sidekiq::Throttled::Strategy]]
+      expect do |b|
+        described_class.each_with_static_keys(&b)
+      end.to yield_successive_args(*args)
+    end
+  end
 end

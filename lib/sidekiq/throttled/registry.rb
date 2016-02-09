@@ -68,6 +68,21 @@ module Sidekiq
           @strategies.each { |*args| yield(*args) }
           self
         end
+
+        # @overload each_with_static_keys()
+        #   @return [Enumerator]
+        #
+        # @overload each_with_static_keys(&block)
+        #   @yieldparam [String] name
+        #   @yieldparam [Strategy] strategy
+        #   @yield [strategy] Gives strategy to the block
+        #   @return [Registry]
+        def each_with_static_keys
+          return to_enum(__method__) unless block_given?
+          @strategies.each do |name, strategy|
+            yield(name, strategy) unless strategy.dynamic_keys?
+          end
+        end
       end
     end
   end
