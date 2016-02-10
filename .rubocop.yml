@@ -45,7 +45,7 @@ Style/RegexpLiteral:
 #     conn.hset    :k1, now
 #     conn.hincrby :k2, 123
 #   end
-Style/SingleSpaceBeforeFirstArg:
+Style/SpaceBeforeFirstArg:
   Enabled: false
 
 Style/StringLiterals:

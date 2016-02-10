@@ -52,12 +52,12 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
       it "avoids concurrency limit starvation" do
         Timecop.travel ten_seconds_ago do
-          4.times.map { jid }.each do |jid|
+          Array.new(4) { jid }.each do |jid|
             strategy.finalize! jid unless strategy.throttled? jid
           end
         end
 
-        4.times.map { jid }.each do |jid|
+        Array.new(4) { jid }.each do |jid|
           strategy.finalize! jid unless strategy.throttled? jid
         end
 

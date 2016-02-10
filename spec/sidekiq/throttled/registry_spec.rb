@@ -28,7 +28,7 @@ RSpec.describe Sidekiq::Throttled::Registry do
 
     it "registers strategy with with it's #to_s name" do
       described_class.add(working_class, threshold)
-      expect(described_class.get "foo").to be_a Sidekiq::Throttled::Strategy
+      expect(described_class.get("foo")).to be_a Sidekiq::Throttled::Strategy
     end
 
     it "warns upon duplicate name given" do
@@ -42,7 +42,7 @@ RSpec.describe Sidekiq::Throttled::Registry do
     it "adds aliased name of rquested strategy" do
       existing_strategy = described_class.add(:foo, concurrency)
       described_class.add_alias(:bar, :foo)
-      expect(described_class.get :bar).to be existing_strategy
+      expect(described_class.get(:bar)).to be existing_strategy
     end
 
     it "warns upon duplicate name" do

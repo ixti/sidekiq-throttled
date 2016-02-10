@@ -14,7 +14,7 @@ RSpec.describe Sidekiq::Throttled::BasicFetch, :sidekiq => :disabled do
 
     Sidekiq::Client.push_bulk({
       "class" => WorkingClass,
-      "args"  => 10.times.map { [] }
+      "args"  => Array.new(10) { [] }
     })
   end
 

@@ -34,7 +34,7 @@ module Sidekiq
           old_name = old_name.to_s
 
           warn "Duplicate strategy name: #{new_name}" if @strategies[new_name]
-          fail "Strategy not found: #{old_name}" unless @strategies[old_name]
+          raise "Strategy not found: #{old_name}" unless @strategies[old_name]
 
           @aliases[new_name] = @strategies[old_name]
         end

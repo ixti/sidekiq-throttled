@@ -31,14 +31,14 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
 
     it "reduces active concurrency level" do
       strategy.finalize! known_jid
-      expect(strategy.throttled? known_jid).to be false
+      expect(strategy.throttled?(known_jid)).to be false
     end
 
     it "allows to run exactly one more job afterwards" do
       strategy.finalize! known_jid
       strategy.throttled? known_jid
 
-      expect(strategy.throttled? jid).to be true
+      expect(strategy.throttled?(jid)).to be true
     end
   end
 

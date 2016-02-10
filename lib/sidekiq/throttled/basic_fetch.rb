@@ -39,11 +39,11 @@ module Sidekiq
       # Tries to pop pair of `queue` and job `message` out of sidekiq queue.
       # @return [Array<String, String>, nil]
       def brpop
-        if @strictly_ordered_queues
-          queues = @unique_queues.dup
-        else
-          queues = @queues.shuffle.uniq
-        end
+        queues = if @strictly_ordered_queues
+                   @unique_queues.dup
+                 else
+                   @queues.shuffle.uniq
+                 end
 
         @mutex.synchronize do
           next if @suspended.empty?
