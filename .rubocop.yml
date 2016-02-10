@@ -18,6 +18,9 @@ Style/EmptyLineBetweenDefs:
 Style/Encoding:
   EnforcedStyle: when_needed
 
+Style/FrozenStringLiteralComment:
+  EnforcedStyle: always
+
 Style/HashSyntax:
   EnforcedStyle: hash_rockets
 
@@ -34,8 +37,7 @@ Style/MultilineOperationIndentation:
 # IMHO `%r{foo/bar}` looks way more cleaner than `/foo\/bar/`.
 # Enabling this cop also makes Guardfile (which is full of pathname regexps)
 # look absolutley (style) inconsistent and terrible. Thus it should be on
-# developer's choice whenever to user `%r` or not. Just like we don't enforce
-# to use `["foo"]` over `%w(foo)` and so on.
+# developer's choice whenever to user `%r` or not.
 Style/RegexpLiteral:
   Enabled: false
 

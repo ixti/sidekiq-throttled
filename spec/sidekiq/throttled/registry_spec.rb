@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 RSpec.describe Sidekiq::Throttled::Registry do
   let(:threshold)   { { :threshold => { :limit => 1, :period => 1 } } }
   let(:concurrency) { { :concurrency => { :limit => 1 } } }

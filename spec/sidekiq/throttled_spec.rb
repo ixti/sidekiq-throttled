@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
   describe ".setup!" do
     before do

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 RSpec.describe Sidekiq::Throttled::Strategy do
   subject(:strategy) { described_class.new(:foo, **options) }
 

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require "sidekiq/throttled/basic_fetch"
 
 RSpec.describe Sidekiq::Throttled::BasicFetch, :sidekiq => :disabled do

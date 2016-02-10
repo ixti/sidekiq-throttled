@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require "sidekiq/throttled/web/stats"
 
 RSpec.describe Sidekiq::Throttled::Web::Stats do

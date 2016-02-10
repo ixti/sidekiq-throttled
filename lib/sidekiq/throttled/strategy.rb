@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # internal
 require "sidekiq/throttled/errors"
 require "sidekiq/throttled/strategy/concurrency"

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # 3rd party
 require "sidekiq"
 

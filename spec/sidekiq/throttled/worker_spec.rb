@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 RSpec.describe Sidekiq::Throttled::Worker do
   let(:working_class) { Class.new { include Sidekiq::Throttled::Worker } }
 
