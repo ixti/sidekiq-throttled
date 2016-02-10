@@ -1,7 +1,23 @@
 language: ruby
 rvm:
-  - 2.1.6
+  - 2.0
+  - 2.1
+  - 2.2
+  - 2.3.0
+  - ruby-head
+  - jruby-9.0.0.0
+  - jruby-9.0.1.0
+  - jruby-head
+  - ruby-head
+  - rbx-2
+matrix:
+  allow_failures:
+    - rvm: jruby-head
+    - rvm: ruby-head
+    - rvm: rbx-2
+  fast_finish: true
 before_install:
   - gem install bundler -v 1.10.6
 services:
   - redis-server
+sudo: false
