@@ -28,7 +28,7 @@ module Sidekiq
 
         return if @concurrency || @threshold
 
-        fail ArgumentError, "Neither :concurrency nor :threshold given"
+        raise ArgumentError, "Neither :concurrency nor :threshold given"
       end
 
       # @return [Boolean] whenever job is throttled or not.
