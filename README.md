@@ -63,6 +63,19 @@ end
 ```
 
 
+## Supported Ruby Versions
+
+This library aims to support and is [tested against][travis] the following Ruby
+versions:
+
+* Ruby 2.0.0
+* Ruby 2.1.x
+* Ruby 2.2.x
+* Ruby 2.3.0
+
+[travis]: http://travis-ci.org/sensortower/sidekiq-throttled
+
+
 ## Contributing
 
 * Fork sidekiq-throttled on GitHub
