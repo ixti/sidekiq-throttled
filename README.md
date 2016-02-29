@@ -63,6 +63,29 @@ end
 ```
 
 
+### Dynamic throttling
+
+You can throttle jobs dynamically with `:key_suffix` option:
+
+``` ruby
+class MyWorker
+  include Sidekiq::Worker
+  include Sidekiq::Throttled::Worker
+
+  sidekiq_options :queue => :my_queue
+
+  sidekiq_throttle({
+    # Allow maximum 10 concurrent jobs per user at a time.
+    :concurrency => { :limit => 10, :key_suffix => -> (user_id) { user_id } }
+  })
+
+  def perform(user_id)
+    # ...
+  end
+end
+```
+
+
 ## Supported Ruby Versions
 
 This library aims to support and is [tested against][travis] the following Ruby
