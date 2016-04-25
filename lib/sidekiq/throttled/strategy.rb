@@ -25,16 +25,17 @@ module Sidekiq
       def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil)
         key = "throttled:#{name}"
 
-        if concurrency
-          @concurrency = Concurrency.new(
-            key, concurrency.merge(:key_suffix => key_suffix)
-          )
-        end
-        if threshold
-          @threshold = Threshold.new(
-            key, threshold.merge(:key_suffix => key_suffix)
-          )
-        end
+        @concurrency =
+          if concurrency
+            concurrency[:key_suffix] = key_suffix
+            Concurrency.new(key, concurrency)
+          end
+
+        @threshold =
+          if threshold
+            threshold[:key_suffix] = key_suffix
+            Threshold.new(key, threshold)
+          end
 
         return if @concurrency || @threshold
 
