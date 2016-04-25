@@ -3,14 +3,8 @@
 require "thread"
 
 # 3rd party
+require "celluloid" if Sidekiq::VERSION < "4.0.0"
 require "sidekiq"
-
-if Sidekiq::VERSION < "4.0.0"
-  # sidekiq 3.x uses celluloid but does not requires it
-  # needs to be required BEFORE sidekiq fetch
-  require "celluloid"
-end
-
 require "sidekiq/fetch"
 
 module Sidekiq
@@ -18,6 +12,10 @@ module Sidekiq
     # Throttled version of `Sidekiq::BasicFetch` fetcher strategy.
     class BasicFetch < ::Sidekiq::BasicFetch
       TIMEOUT = 2
+
+      class UnitOfWork < ::Sidekiq::BasicFetch::UnitOfWork
+        alias job message if Sidekiq::VERSION < "4.0.0"
+      end
 
       # Class constructor
       def initialize(*args)
@@ -32,13 +30,13 @@ module Sidekiq
         work = brpop
         return unless work
 
-        work = ::Sidekiq::BasicFetch::UnitOfWork.new(*work)
-        return work unless Throttled.throttled? work.message
+        work = UnitOfWork.new(*work)
+        return work unless Throttled.throttled? work.job
 
         queue = "queue:#{work.queue_name}"
 
         @mutex.synchronize { @suspended << queue }
-        Sidekiq.redis { |conn| conn.lpush(queue, work.message) }
+        Sidekiq.redis { |conn| conn.lpush(queue, work.job) }
 
         nil
       end
