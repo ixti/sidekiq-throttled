@@ -2,7 +2,6 @@
 RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
   describe ".setup!" do
     before do
-      require "celluloid"
       require "sidekiq/processor"
       allow(Sidekiq).to receive(:server?).and_return true
       described_class.setup!
