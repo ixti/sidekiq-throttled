@@ -10,10 +10,7 @@ module JidGenerator
 end
 
 configure_redis = proc do |config|
-  config.redis = {
-    :url        =>  "redis://localhost/15",
-    :namespace  =>  "sidekiq-throttled-test"
-  }
+  config.redis = { :url => "redis://localhost/15" }
 end
 
 Sidekiq.configure_server(&configure_redis)
