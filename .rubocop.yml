@@ -1,3 +1,6 @@
+AllCops:
+  DisplayCopNames: true
+
 ## Styles ######################################################################
 
 Style/AlignParameters:
@@ -23,6 +26,9 @@ Style/FrozenStringLiteralComment:
 
 Style/HashSyntax:
   EnforcedStyle: hash_rockets
+
+Style/IndentArray:
+  EnforcedStyle: consistent
 
 Style/IndentHash:
   EnforcedStyle: consistent
