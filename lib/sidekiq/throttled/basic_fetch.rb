@@ -17,6 +17,8 @@ module Sidekiq
   module Throttled
     # Throttled version of `Sidekiq::BasicFetch` fetcher strategy.
     class BasicFetch < ::Sidekiq::BasicFetch
+      TIMEOUT = 2
+
       # Class constructor
       def initialize(*args)
         @mutex      = Mutex.new
@@ -59,11 +61,11 @@ module Sidekiq
         end
 
         if queues.empty?
-          sleep Sidekiq::Fetcher::TIMEOUT
+          sleep TIMEOUT
           return
         end
 
-        Sidekiq.redis { |conn| conn.brpop(*queues, Sidekiq::Fetcher::TIMEOUT) }
+        Sidekiq.redis { |conn| conn.brpop(*queues, TIMEOUT) }
       end
     end
   end
