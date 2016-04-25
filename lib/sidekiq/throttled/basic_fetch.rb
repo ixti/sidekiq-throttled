@@ -3,8 +3,14 @@
 require "thread"
 
 # 3rd party
-require "celluloid"
 require "sidekiq"
+
+if Sidekiq::VERSION < "4.0.0"
+  # sidekiq 3.x uses celluloid but does not requires it
+  # needs to be required BEFORE sidekiq fetch
+  require "celluloid"
+end
+
 require "sidekiq/fetch"
 
 module Sidekiq
