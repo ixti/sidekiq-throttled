@@ -14,7 +14,7 @@ module Sidekiq
 
         # @param [Strategy::Concurrency, Strategy::Threshold] strategy
         def initialize(strategy)
-          if strategy && strategy.dynamic_keys?
+          if strategy && (strategy.dynamic_keys? || strategy.dynamic_limit?)
             raise ArgumentError, "Can't handle strategies with dynamic keys"
           end
           @strategy = strategy

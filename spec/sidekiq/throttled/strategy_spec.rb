@@ -136,4 +136,23 @@ RSpec.describe Sidekiq::Throttled::Strategy do
       it { is_expected.to be_falsy }
     end
   end
+
+  describe "#dynamic_limit?" do
+    subject { strategy.dynamic_limit? }
+
+    let(:options) { threshold }
+
+    context "when a dynamic limit is being used" do
+      let(:threshold) do
+        { :threshold => { :limit => -> (i) { i }, :period => 10 } }
+      end
+
+      it { is_expected.to be_truthy }
+    end
+
+    context "when a dynamic limit is not being used" do
+      let(:options) { threshold }
+      it { is_expected.to be_falsy }
+    end
+  end
 end
