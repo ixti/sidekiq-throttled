@@ -47,6 +47,11 @@ module Sidekiq
           (@threshold && @threshold.dynamic_keys?)
       end
 
+      def dynamic_limit?
+        (@concurrency && @concurrency.dynamic_limit?) ||
+          (@threshold && @threshold.dynamic_limit?)
+      end
+
       # @return [Boolean] whenever job is throttled or not.
       def throttled?(jid, *job_args)
         return true if @concurrency && @concurrency.throttled?(jid, *job_args)

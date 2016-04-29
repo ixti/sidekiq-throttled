@@ -85,6 +85,31 @@ class MyWorker
 end
 ```
 
+You can also supply dynamic values for limits and periods by supplying a proc for these values. The proc will be evaluated at the time the job is fetched and will receive the same arguments that are passed to the job.
+
+``` ruby
+class MyWorker
+  include Sidekiq::Worker
+  include Sidekiq::Throttled::Worker
+
+  sidekiq_options :queue => :my_queue
+
+  sidekiq_throttle({
+    # Allow maximum 1000 concurrent jobs of this class at a time for VIPs and 10 for all other users.
+    :concurrency => {
+      :limit  => ->(user_id) { User.vip?(user_id) ? 1_000 : 10 }
+    },
+    # Allow 1000 jobs/hour to be processed for VIPs and 10/day for all others
+    :threshold   => {
+      :limit  => ->(user_id) { User.vip?(user_id) ? 1_000 : 10 },
+      :period => ->(user_id) { User.vip?(user_id) ? 1.hour : 1.day }
+  })
+
+  def perform(user_id)
+    # ...
+  end
+end
+```
 
 ## Supported Ruby Versions
 
