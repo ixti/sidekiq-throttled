@@ -3,7 +3,7 @@ source "https://rubygems.org"
 
 gem "appraisal"
 gem "rspec"
-gem "rubocop", "~> 0.39.0"
+gem "rubocop"
 
 group :test do
   gem "coveralls"
