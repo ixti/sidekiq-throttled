@@ -2,6 +2,6 @@
 module Sidekiq
   module Throttled
     # Gem version
-    VERSION = "0.3.0.pre".freeze
+    VERSION = "0.3.0".freeze
   end
 end

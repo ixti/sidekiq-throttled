@@ -1,4 +1,4 @@
-## 0.3.0.pre (2016-04-25)
+## 0.3.0 (2016-05-02)
 
 * [#1](https://github.com/sensortower/sidekiq-throttled/issues/1):
   Add Sidekiq 4.0 support.
