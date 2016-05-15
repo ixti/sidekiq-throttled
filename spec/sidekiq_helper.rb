@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require "securerandom"
 
 require "sidekiq/testing"
@@ -33,7 +34,8 @@ RSpec.configure do |config|
 
   config.before :example do
     Sidekiq.redis do |conn|
-      conn.del(conn.keys("*") << "*")
+      conn.flushdb
+      conn.script("flush")
     end
   end
 end
