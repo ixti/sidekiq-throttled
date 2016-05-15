@@ -15,6 +15,9 @@ Style/BracesAroundHashParameters:
 Style/Documentation:
   Enabled: false
 
+Style/EmptyCaseCondition:
+  Enabled: false
+
 Style/EmptyLineBetweenDefs:
   AllowAdjacentOneLineDefs: true
 
