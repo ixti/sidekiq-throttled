@@ -1,3 +1,10 @@
+## master (unreleased)
+
+* Precalculate LUA script digests to reduce bandwidth upon nodes reload
+  _(which might (and might not) happen if you run thousands of nodes)_.
+  ([@ixti])
+
+
 ## 0.3.0 (2016-05-02)
 
 * [#1](https://github.com/sensortower/sidekiq-throttled/issues/1):
