@@ -1,4 +1,7 @@
 # frozen_string_literal: true
+
+require "digest/sha1"
+
 module Sidekiq
   module Throttled
     class Strategy
@@ -20,7 +23,7 @@ module Sidekiq
         # @param [#to_s] source Lua script
         def initialize(source)
           @source = source.to_s.strip.freeze
-          @sha    = nil
+          @sha    = Digest::SHA1.hexdigest(@source).freeze
         end
 
         # Executes script and returns result of execution
