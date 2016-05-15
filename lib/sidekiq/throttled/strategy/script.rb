@@ -2,6 +2,8 @@
 
 require "digest/sha1"
 
+require "sidekiq"
+
 module Sidekiq
   module Throttled
     class Strategy
@@ -20,15 +22,25 @@ module Sidekiq
         NOSCRIPT = "NOSCRIPT".freeze
         private_constant :NOSCRIPT
 
+        # LUA script source.
+        # @return [String]
+        attr_reader :source
+
+        # LUA script SHA1 digest.
+        # @return [String]
+        attr_reader :digest
+
         # @param [#to_s] source Lua script
-        def initialize(source)
+        # @paral [Logger] logger
+        def initialize(source, logger: Sidekiq.logger)
           @source = source.to_s.strip.freeze
-          @sha    = Digest::SHA1.hexdigest(@source).freeze
+          @digest = Digest::SHA1.hexdigest(@source).freeze
+          @logger = logger
         end
 
         # Executes script and returns result of execution
         def eval(*args)
-          Sidekiq.redis { |conn| conn.evalsha(@sha, *args) }
+          Sidekiq.redis { |conn| conn.evalsha(@digest, *args) }
         rescue => e
           raise unless e.message.include? NOSCRIPT
           load_and_eval(*args)
@@ -39,8 +51,21 @@ module Sidekiq
         # Loads script into redis cache and executes it.
         def load_and_eval(*args)
           Sidekiq.redis do |conn|
-            @sha = conn.script(LOAD, @source)
-            conn.evalsha(@sha, *args)
+            digest = conn.script(LOAD, @source)
+
+            # XXX: this may happen **ONLY** if script digesting will be
+            #   changed in redis, which is not likely gonna happen.
+            unless @digest == digest
+              if @logger
+                @logger.warn \
+                  "Unexpected script SHA1 digest: " \
+                  "#{digest.inspect} (expected: #{@digest.inspect})"
+              end
+
+              @digest = digest.freeze
+            end
+
+            conn.evalsha(@digest, *args)
           end
         end
       end
