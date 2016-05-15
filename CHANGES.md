@@ -1,4 +1,4 @@
-## master (unreleased)
+## 0.3.1 (2016-05-15)
 
 * Precalculate LUA script digests to reduce bandwidth upon nodes reload
   _(which might (and might not) happen if you run thousands of nodes)_.
