@@ -17,12 +17,6 @@ module Sidekiq
         SCRIPT = Script.new File.read "#{__dir__}/concurrency.lua"
         private_constant :SCRIPT
 
-        # @return [Integer] Amount of allowed concurrent job processors
-        def limit(job_args = nil)
-          return @limit.to_i unless @limit.respond_to? :call
-          @limit.call(*job_args).to_i
-        end
-
         # @param [#to_s] strategy_key
         # @param [Hash] opts
         # @option opts [#to_i] :limit Amount of allowed concurrent jobs
@@ -37,12 +31,15 @@ module Sidekiq
           @key_suffix = opts[:key_suffix]
         end
 
-        def dynamic_limit?
-          @limit.respond_to? :call
+        # @return [Integer] Amount of allowed concurrent job processors
+        def limit(job_args = nil)
+          return @limit.to_i unless @limit.respond_to? :call
+          @limit.call(*job_args).to_i
         end
 
-        def dynamic_keys?
-          @key_suffix
+        # @return [Boolean] Whenever strategy has dynamic config
+        def dynamic?
+          @key_suffix || @limit.respond_to?(:call)
         end
 
         # @return [Boolean] whenever job is throttled or not

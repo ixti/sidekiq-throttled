@@ -29,6 +29,17 @@ module Sidekiq
         SCRIPT = Script.new File.read "#{__dir__}/threshold.lua"
         private_constant :SCRIPT
 
+        # @param [#to_s] strategy_key
+        # @param [Hash] opts
+        # @option opts [#to_i] :limit Amount of jobs allowed per period
+        # @option opts [#to_f] :period Period in seconds
+        def initialize(strategy_key, opts)
+          @base_key   = "#{strategy_key}:threshold".freeze
+          @limit      = opts.fetch(:limit)
+          @period     = opts.fetch(:period)
+          @key_suffix = opts[:key_suffix]
+        end
+
         # @return [Integer] Amount of jobs allowed per period
         def limit(job_args = nil)
           return @limit.to_i unless @limit.respond_to? :call
@@ -41,23 +52,9 @@ module Sidekiq
           @period.call(*job_args).to_f
         end
 
-        # @param [#to_s] strategy_key
-        # @param [Hash] opts
-        # @option opts [#to_i] :limit Amount of jobs allowed per period
-        # @option opts [#to_f] :period Period in seconds
-        def initialize(strategy_key, opts)
-          @base_key   = "#{strategy_key}:threshold".freeze
-          @limit      = opts.fetch(:limit)
-          @period     = opts.fetch(:period)
-          @key_suffix = opts[:key_suffix]
-        end
-
-        def dynamic_limit?
-          @limit.respond_to?(:call) || @period.respond_to?(:call)
-        end
-
-        def dynamic_keys?
-          @key_suffix
+        # @return [Boolean] Whenever strategy has dynamic config
+        def dynamic?
+          @key_suffix || @limit.respond_to?(:call) || @period.respond_to?(:call)
         end
 
         # @return [Boolean] whenever job is throttled or not

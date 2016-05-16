@@ -138,43 +138,51 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
     end
   end
 
-  describe "#dynamic_keys?" do
-    let(:strategy) { described_class.new(:test, **kwargs) }
-    subject { strategy.dynamic_keys? }
+  describe "#dynamic?" do
+    subject { described_class.new(:test, **kwargs).dynamic? }
 
     describe "with a dynamic key suffix" do
       let(:kwargs) do
-        { :limit => 5, :period => 10, :key_suffix => -> (i) { i } }
+        {
+          :limit      => 5,
+          :period     => 10,
+          :key_suffix => -> { "xxx" }
+        }
       end
+
       it { is_expected.to be_truthy }
     end
 
-    describe "without a dynamic key suffix" do
-      let(:kwargs) { { :limit => 5, :period => 10 } }
-      it { is_expected.to be_falsy }
-    end
-  end
-
-  describe "#dynamic_limit?" do
-    let(:strategy) { described_class.new(:test, **kwargs) }
-    subject { strategy.dynamic_limit? }
-
     describe "with a dynamic limit" do
       let(:kwargs) do
-        { :limit => -> { 5 }, :period => 10 }
+        {
+          :limit  => -> { 5 },
+          :period => 10
+        }
       end
+
       it { is_expected.to be_truthy }
     end
 
     describe "with a dynamic period" do
       let(:kwargs) do
-        { :limit => 5, :period => -> { 10 } }
+        {
+          :limit  => 5,
+          :period => -> { 10 }
+        }
       end
+
       it { is_expected.to be_truthy }
     end
 
-    describe "without a dynamic limit or period" do
-      let(:kwargs) { { :limit => 5, :period => 10 } }
+    describe "without a dynamic key suffix and static configration" do
+      let(:kwargs) do
+        {
+          :limit => 5,
+          :period => 10
+        }
+      end
+
       it { is_expected.to be_falsy }
     end
   end

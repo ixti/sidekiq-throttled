@@ -123,36 +123,28 @@ RSpec.describe Sidekiq::Throttled::Strategy do
     end
   end
 
-  describe "#dynamic_keys?" do
-    subject { strategy.dynamic_keys? }
+  describe "#dynamic?" do
+    let(:options) { concurrency.merge threshold }
+    subject { strategy.dynamic? }
 
-    context "when a key_suffix is being used" do
-      let(:options) { threshold.merge(:key_suffix => -> (i) { i }) }
-      it { is_expected.to be_truthy }
-    end
-
-    context "when a key_suffix is not being used" do
-      let(:options) { threshold }
+    context "when all upstream strategies are non-dynamic" do
       it { is_expected.to be_falsy }
     end
-  end
 
-  describe "#dynamic_limit?" do
-    subject { strategy.dynamic_limit? }
-
-    let(:options) { threshold }
-
-    context "when a dynamic limit is being used" do
-      let(:threshold) do
-        { :threshold => { :limit => -> (i) { i }, :period => 10 } }
+    context "when threshold upstream strategy is dynamic" do
+      before do
+        expect(strategy.threshold).to receive(:dynamic?).and_return true
       end
 
       it { is_expected.to be_truthy }
     end
 
-    context "when a dynamic limit is not being used" do
-      let(:options) { threshold }
-      it { is_expected.to be_falsy }
+    context "when concurrency upstream strategy is dynamic" do
+      before do
+        expect(strategy.concurrency).to receive(:dynamic?).and_return true
+      end
+
+      it { is_expected.to be_truthy }
     end
   end
 end

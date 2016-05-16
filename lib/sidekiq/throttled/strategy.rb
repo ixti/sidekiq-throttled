@@ -42,16 +42,10 @@ module Sidekiq
         raise ArgumentError, "Neither :concurrency nor :threshold given"
       end
 
-      def dynamic_keys?
-        return true if @concurrency && @concurrency.dynamic_keys?
-        return true if @threshold && @threshold.dynamic_keys?
-
-        false
-      end
-
-      def dynamic_limit?
-        return true if @concurrency && @concurrency.dynamic_limit?
-        return true if @threshold && @threshold.dynamic_limit?
+      # @return [Boolean] whenever strategy has dynamic config
+      def dynamic?
+        return true if @concurrency && @concurrency.dynamic?
+        return true if @threshold && @threshold.dynamic?
 
         false
       end
