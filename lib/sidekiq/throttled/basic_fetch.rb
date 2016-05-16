@@ -14,6 +14,12 @@ module Sidekiq
         alias job message if Sidekiq::VERSION < "4.0.0"
       end
 
+      def initialize(options)
+        @strictly_ordered_queues = (options[:strict] ? true : false)
+        @queues = options[:queues].map { |q| "queue:#{q}" }
+        @queues.uniq! if @strictly_ordered_queues
+      end
+
       # @return [Sidekiq::BasicFetch::UnitOfWork, nil]
       def retrieve_work
         work = brpop
@@ -34,13 +40,7 @@ module Sidekiq
       # Tries to pop pair of `queue` and job `message` out of sidekiq queue.
       # @return [Array<String, String>, nil]
       def brpop
-        queues = if @strictly_ordered_queues
-                   # seems latest sidekiq doesnt use unique_queues anymore
-                   @unique_queues.try(:dup) || @queues
-                 else
-                   @queues.shuffle.uniq
-                 end
-
+        queues = (@strictly_ordered_queues ? @queues : @queues.shuffle.uniq)
         Sidekiq.redis { |conn| conn.brpop(*queues, TIMEOUT) }
       end
     end
