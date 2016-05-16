@@ -47,7 +47,8 @@ module Sidekiq
       # @return [Array<String, String>, nil]
       def brpop
         queues = if @strictly_ordered_queues
-                   @unique_queues.dup
+                   # seems latest sidekiq doesnt use unique_queues anymore
+                   @unique_queues.try(:dup) || @queues
                  else
                    @queues.shuffle.uniq
                  end
