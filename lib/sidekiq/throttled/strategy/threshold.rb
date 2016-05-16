@@ -13,13 +13,13 @@ module Sidekiq
         # Logic behind the scene can be described in following pseudo code:
         #
         #     def exceeded?
-        #       limit <= LLEN(@key) && NOW - LINDEX(@key, -1) < period
+        #       limit <= LLEN(@key) && NOW - LINDEX(@key, -1) < @period
         #     end
         #
         #     def increase!
         #       LPUSH(@key, NOW)
-        #       LTRIM(@key, 0, limit - 1)
-        #       EXPIRE(@key, period)
+        #       LTRIM(@key, 0, @limit - 1)
+        #       EXPIRE(@key, @period)
         #     end
         #
         #     return 1 if exceeded?
@@ -29,24 +29,16 @@ module Sidekiq
         SCRIPT = Script.new File.read "#{__dir__}/threshold.lua"
         private_constant :SCRIPT
 
-        # @!attribute [r] limit
-        #   @return [Integer] Amount of jobs allowed per period
+        # @return [Integer] Amount of jobs allowed per period
         def limit(job_args = nil)
-          if @_limit.respond_to?(:call)
-            @_limit.call(job_args)
-          else
-            @_limit
-          end.to_i
+          return @limit.to_i unless @limit.respond_to? :call
+          @limit.call(*job_args).to_i
         end
 
-        # @!attribute [r] period
-        #   @return [Float] Period in seconds
+        # @return [Float] Period in seconds
         def period(job_args = nil)
-          if @_period.respond_to?(:call)
-            @_period.call(job_args)
-          else
-            @_period
-          end.to_f
+          return @period.to_f unless @period.respond_to? :call
+          @period.call(*job_args).to_f
         end
 
         # @param [#to_s] strategy_key
@@ -54,14 +46,14 @@ module Sidekiq
         # @option opts [#to_i] :limit Amount of jobs allowed per period
         # @option opts [#to_f] :period Period in seconds
         def initialize(strategy_key, opts)
-          @base_key = "#{strategy_key}:threshold".freeze
-          @_limit  = opts[:limit]
-          @_period = opts[:period]
+          @base_key   = "#{strategy_key}:threshold".freeze
+          @limit      = opts.fetch(:limit)
+          @period     = opts.fetch(:period)
           @key_suffix = opts[:key_suffix]
         end
 
         def dynamic_limit?
-          @_limit.respond_to?(:call) || @_period.respond_to?(:call)
+          @limit.respond_to?(:call) || @period.respond_to?(:call)
         end
 
         def dynamic_keys?

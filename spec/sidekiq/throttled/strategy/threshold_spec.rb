@@ -98,45 +98,42 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
 
   describe "with a dynamic limit and period" do
     subject(:strategy) do
-      described_class.new(
-        :test, :limit => -> (_) { 5 }, :period => -> (_) { 10 }
-      )
+      described_class.new(:test, {
+        :limit  => -> { 5 },
+        :period => -> { 10 }
+      })
     end
 
     describe "#throttled?" do
       subject { strategy.throttled? }
 
-      describe "#throttled?" do
-        subject { strategy.throttled? }
+      context "when limit exceeded" do
+        before { 5.times { strategy.throttled? } }
+        it { is_expected.to be true }
 
-        context "when limit exceeded" do
-          before { 5.times { strategy.throttled? } }
-          it { is_expected.to be true }
-
-          context "and chill period is over" do
-            it { Timecop.travel(Time.now + 11) { is_expected.to be false } }
-          end
-        end
-
-        context "when limit is not exceded" do
-          before { 4.times { strategy.throttled? } }
-          it { is_expected.to be false }
+        context "and chill period is over" do
+          it { Timecop.travel(Time.now + 11) { is_expected.to be false } }
         end
       end
 
-      describe "#count" do
-        subject { strategy.count }
-        before { 3.times { strategy.throttled? } }
-        it { is_expected.to eq 3 }
+      context "when limit is not exceded" do
+        before { 4.times { strategy.throttled? } }
+        it { is_expected.to be false }
       end
+    end
 
-      describe "#reset!" do
-        before { 3.times { strategy.throttled? } }
+    describe "#count" do
+      subject { strategy.count }
+      before { 3.times { strategy.throttled? } }
+      it { is_expected.to eq 3 }
+    end
 
-        it "resets count back to zero" do
-          strategy.reset!
-          expect(strategy.count).to eq 0
-        end
+    describe "#reset!" do
+      before { 3.times { strategy.throttled? } }
+
+      it "resets count back to zero" do
+        strategy.reset!
+        expect(strategy.count).to eq 0
       end
     end
   end
@@ -164,7 +161,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
 
     describe "with a dynamic limit" do
       let(:kwargs) do
-        { :limit => ->(_) { 5 }, :period => 10 }
+        { :limit => -> { 5 }, :period => 10 }
       end
       it { is_expected.to be_truthy }
     end

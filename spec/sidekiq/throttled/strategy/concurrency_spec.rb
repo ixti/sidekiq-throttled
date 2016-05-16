@@ -150,7 +150,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
 
   describe "with a dynamic limit" do
     subject(:strategy) do
-      described_class.new :test, :limit => ->(_) { 5 }
+      described_class.new :test, :limit => -> { 5 }
     end
 
     describe "#throttled?" do

@@ -25,7 +25,7 @@ RSpec.describe Sidekiq::Throttled::BasicFetch, :sidekiq => :disabled do
       before do
         Sidekiq::Client.push_bulk({
           "class" => working_class,
-          "args"  => Array.new(10) { [] }
+          "args"  => Array.new(10) { [2, 3, 5] }
         })
       end
 
@@ -89,8 +89,8 @@ RSpec.describe Sidekiq::Throttled::BasicFetch, :sidekiq => :disabled do
     context "with dynamic configuration" do
       before do
         working_class.sidekiq_throttle(:threshold => {
-          :limit  => ->(_) { 5 },
-          :period => ->(_) { 10 }
+          :limit  => ->(a, b, _) { a + b },
+          :period => ->(a, b, c) { a + b + c }
         })
       end
 

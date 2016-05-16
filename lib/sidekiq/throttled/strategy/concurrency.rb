@@ -17,10 +17,10 @@ module Sidekiq
         SCRIPT = Script.new File.read "#{__dir__}/concurrency.lua"
         private_constant :SCRIPT
 
-        # @!attribute [r] limit
-        #   @return [Integer] Amount of allwoed concurrent job processors
+        # @return [Integer] Amount of allowed concurrent job processors
         def limit(job_args = nil)
-          (@_limit.respond_to?(:call) ? @_limit.call(job_args) : @_limit).to_i
+          return @limit.to_i unless @limit.respond_to? :call
+          @limit.call(*job_args).to_i
         end
 
         # @param [#to_s] strategy_key
@@ -31,14 +31,14 @@ module Sidekiq
         #   in seconds
         # @option opts :key_suffix Proc for dynamic key suffix.
         def initialize(strategy_key, opts)
-          @base_key = "#{strategy_key}:concurrency".freeze
-          @_limit = opts[:limit]
-          @ttl = opts.fetch(:ttl, 900).to_i
+          @base_key   = "#{strategy_key}:concurrency".freeze
+          @limit      = opts.fetch(:limit)
+          @ttl        = opts.fetch(:ttl, 900).to_i
           @key_suffix = opts[:key_suffix]
         end
 
         def dynamic_limit?
-          @_limit.respond_to?(:call)
+          @limit.respond_to? :call
         end
 
         def dynamic_keys?
