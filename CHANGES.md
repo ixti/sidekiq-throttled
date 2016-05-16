@@ -1,4 +1,4 @@
-## master (unreleased)
+## 0.3.2 (2016-05-16)
 
 * [#13](https://github.com/sensortower/sidekiq-throttled/issues/13)
   Fix throttled BasicFetch with strictly ordered queues on sidekiq 4.
