@@ -1,3 +1,10 @@
+## master (unreleased)
+
+* [#13](https://github.com/sensortower/sidekiq-throttled/issues/13)
+  Fix throttled BasicFetch with strictly ordered queues on sidekiq 4.
+  ([@palanglung], [@ixti])
+
+
 ## 0.3.1 (2016-05-15)
 
 * Precalculate LUA script digests to reduce bandwidth upon nodes reload
@@ -26,3 +33,4 @@
 
 [@ixti]: https://github.com/ixti
 [@fhwang]: https://github.com/fhwang
+[@palanglung]: https://github.com/palanglung
