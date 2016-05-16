@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 require "sidekiq/throttled/basic_fetch"
 
-RSpec.describe Sidekiq::Throttled::BasicFetch, :sidekiq => :disabled do
-  subject(:strategy) { described_class.new :queues => %w(foo) }
+RSpec.fdescribe Sidekiq::Throttled::BasicFetch, :sidekiq => :disabled do
+  let(:options)     { { :queues => %w(foo bar) } }
+  subject(:fetcher) { described_class.new options }
 
   before do
     class WorkingClass
@@ -20,24 +21,47 @@ RSpec.describe Sidekiq::Throttled::BasicFetch, :sidekiq => :disabled do
   end
 
   describe "#retrieve_work" do
-    subject(:work) { strategy.retrieve_work }
+    subject { fetcher.retrieve_work }
 
     it { is_expected.not_to be nil }
 
+    context "with strictly ordered queues" do
+      before { options[:strict] = true }
+
+      it "builds correct redis brpop command" do
+        Sidekiq.redis do |conn|
+          expect(conn).to receive(:brpop).with("queue:foo", "queue:bar", 2)
+          fetcher.retrieve_work
+        end
+      end
+    end
+
+    context "with weight-ordered queues" do
+      before { options[:strict] = false }
+
+      it "builds correct redis brpop command" do
+        Sidekiq.redis do |conn|
+          queue_regexp = /^queue:(foo|bar)$/
+          expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, 2)
+          fetcher.retrieve_work
+        end
+      end
+    end
+
     context "when limit is not yet reached" do
-      before { 3.times { strategy.retrieve_work } }
+      before { 3.times { fetcher.retrieve_work } }
       it { is_expected.not_to be nil }
     end
 
     context "when limit exceeded" do
-      before { 5.times { strategy.retrieve_work } }
+      before { 5.times { fetcher.retrieve_work } }
 
       it { is_expected.to be nil }
 
       it "pushes fetched job back to the queue" do
         Sidekiq.redis do |conn|
           expect(conn).to receive(:lpush)
-          strategy.retrieve_work
+          fetcher.retrieve_work
         end
       end
     end
