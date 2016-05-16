@@ -19,8 +19,10 @@ matrix:
     - rvm: rbx-2
   fast_finish: true
 gemfile:
-  - gemfiles/sidekiq_3.gemfile
-  - gemfiles/sidekiq_4.gemfile
+  - gemfiles/sidekiq_3.x.gemfile
+  - gemfiles/sidekiq_4.0.gemfile
+  - gemfiles/sidekiq_4.1.gemfile
+  - gemfiles/sidekiq_latest.gemfile
 before_install:
   - gem install bundler -v 1.10.6
 services:
