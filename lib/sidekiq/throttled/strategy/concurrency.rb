@@ -19,20 +19,26 @@ module Sidekiq
 
         # @!attribute [r] limit
         #   @return [Integer] Amount of allwoed concurrent job processors
-        attr_reader :limit
+        def limit(job_args = nil)
+          (@_limit.respond_to?(:call) ? @_limit.call(job_args) : @_limit).to_i
+        end
 
         # @param [#to_s] strategy_key
         # @param [Hash] opts
-        # @option opts [#to_i] :limit Amount of allwoed concurrent jobs
+        # @option opts [#to_i] :limit Amount of allowed concurrent jobs
         #   processors running for given key
         # @option opts [#to_i] :ttl (15 minutes) Concurrency lock TTL
         #   in seconds
         # @option opts :key_suffix Proc for dynamic key suffix.
         def initialize(strategy_key, opts)
           @base_key = "#{strategy_key}:concurrency".freeze
-          @limit = opts.fetch(:limit).to_i
+          @_limit = opts[:limit]
           @ttl = opts.fetch(:ttl, 900).to_i
           @key_suffix = opts[:key_suffix]
+        end
+
+        def dynamic_limit?
+          @_limit.respond_to?(:call)
         end
 
         def dynamic_keys?
@@ -41,7 +47,7 @@ module Sidekiq
 
         # @return [Boolean] whenever job is throttled or not
         def throttled?(jid, *job_args)
-          1 == SCRIPT.eval([key(job_args)], [@limit, @ttl, jid.to_s])
+          1 == SCRIPT.eval([key(job_args)], [limit(job_args), @ttl, jid.to_s])
         end
 
         # @return [Integer] Current count of jobs

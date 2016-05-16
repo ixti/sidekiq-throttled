@@ -95,5 +95,27 @@ RSpec.describe Sidekiq::Throttled::Web::Stats do
         expect { described_class.new strategy }.to raise_error(ArgumentError)
       end
     end
+
+    context "with Threshold strategy with a dynamic limit" do
+      let :strategy do
+        Sidekiq::Throttled::Strategy::Threshold.new(
+          :foo, :limit => ->(_) { 10 }, :period => 75
+        )
+      end
+      it "raises an error when instantiated" do
+        expect { described_class.new strategy }.to raise_error(ArgumentError)
+      end
+    end
+
+    context "with Threshold strategy with a dynamic limit" do
+      let :strategy do
+        Sidekiq::Throttled::Strategy::Threshold.new(
+          :foo, :limit => 10, :period => ->(_) { 75 }
+        )
+      end
+      it "raises an error when instantiated" do
+        expect { described_class.new strategy }.to raise_error(ArgumentError)
+      end
+    end
   end
 end
