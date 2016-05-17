@@ -1,4 +1,4 @@
-## master (unreleased)
+## 0.4.0 (2016-05-17)
 
 * [#14](https://github.com/sensortower/sidekiq-throttled/pull/14)
   Support dynamic configuration of limits and periods.
