@@ -12,21 +12,17 @@ Concurrency and threshold throttling for [Sidekiq](https://github.com/mperham/si
 
 Add this line to your application's Gemfile:
 
-```ruby
+``` ruby
 gem "sidekiq-throttled"
 ```
 
 And then execute:
 
-```
-$ bundle
-```
+    $ bundle
 
 Or install it yourself as:
 
-```
-$ gem install sidekiq-throttled
-```
+    $ gem install sidekiq-throttled
 
 
 ## Usage
