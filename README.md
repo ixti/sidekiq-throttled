@@ -124,7 +124,7 @@ versions:
 * Ruby 2.0.0
 * Ruby 2.1.x
 * Ruby 2.2.x
-* Ruby 2.3.0
+* Ruby 2.3.x
 
 [travis]: http://travis-ci.org/sensortower/sidekiq-throttled
 
