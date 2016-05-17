@@ -1,3 +1,10 @@
+## master (unreleased)
+
+* [#14](https://github.com/sensortower/sidekiq-throttled/pull/14)
+  Support dynamic configuration of limits and periods.
+  ([@azach], [@ixti])
+
+
 ## 0.3.2 (2016-05-16)
 
 * [#13](https://github.com/sensortower/sidekiq-throttled/issues/13)
@@ -34,3 +41,4 @@
 [@ixti]: https://github.com/ixti
 [@fhwang]: https://github.com/fhwang
 [@palanglung]: https://github.com/palanglung
+[@azach]: https://github.com/azach
