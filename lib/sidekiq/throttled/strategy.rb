@@ -42,9 +42,12 @@ module Sidekiq
         raise ArgumentError, "Neither :concurrency nor :threshold given"
       end
 
-      def dynamic_keys?
-        (@concurrency && @concurrency.dynamic_keys?) ||
-          (@threshold && @threshold.dynamic_keys?)
+      # @return [Boolean] whenever strategy has dynamic config
+      def dynamic?
+        return true if @concurrency && @concurrency.dynamic?
+        return true if @threshold && @threshold.dynamic?
+
+        false
       end
 
       # @return [Boolean] whenever job is throttled or not.

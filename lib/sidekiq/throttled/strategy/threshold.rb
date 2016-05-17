@@ -13,7 +13,7 @@ module Sidekiq
         # Logic behind the scene can be described in following pseudo code:
         #
         #     def exceeded?
-        #       @limit <= LLEN(@key) && NOW - LINDEX(@key, -1) < @period
+        #       limit <= LLEN(@key) && NOW - LINDEX(@key, -1) < @period
         #     end
         #
         #     def increase!
@@ -29,32 +29,40 @@ module Sidekiq
         SCRIPT = Script.new File.read "#{__dir__}/threshold.lua"
         private_constant :SCRIPT
 
-        # @!attribute [r] limit
-        #   @return [Integer] Amount of jobs allowed per period
-        attr_reader :limit
-
-        # @!attribute [r] period
-        #   @return [Float] Period in seconds
-        attr_reader :period
-
         # @param [#to_s] strategy_key
         # @param [Hash] opts
         # @option opts [#to_i] :limit Amount of jobs allowed per period
         # @option opts [#to_f] :period Period in seconds
         def initialize(strategy_key, opts)
-          @base_key = "#{strategy_key}:threshold".freeze
-          @limit  = opts.fetch(:limit).to_i
-          @period = opts.fetch(:period).to_f
+          @base_key   = "#{strategy_key}:threshold".freeze
+          @limit      = opts.fetch(:limit)
+          @period     = opts.fetch(:period)
           @key_suffix = opts[:key_suffix]
         end
 
-        def dynamic_keys?
-          @key_suffix
+        # @return [Integer] Amount of jobs allowed per period
+        def limit(job_args = nil)
+          return @limit.to_i unless @limit.respond_to? :call
+          @limit.call(*job_args).to_i
+        end
+
+        # @return [Float] Period in seconds
+        def period(job_args = nil)
+          return @period.to_f unless @period.respond_to? :call
+          @period.call(*job_args).to_f
+        end
+
+        # @return [Boolean] Whenever strategy has dynamic config
+        def dynamic?
+          @key_suffix || @limit.respond_to?(:call) || @period.respond_to?(:call)
         end
 
         # @return [Boolean] whenever job is throttled or not
         def throttled?(*job_args)
-          1 == SCRIPT.eval([key(job_args)], [@limit, @period, Time.now.to_f])
+          key = key(job_args)
+          limit = limit(job_args)
+          period = period(job_args)
+          1 == SCRIPT.eval([key], [limit, period, Time.now.to_f])
         end
 
         # @return [Integer] Current count of jobs
