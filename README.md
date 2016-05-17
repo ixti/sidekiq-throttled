@@ -85,7 +85,9 @@ class MyWorker
 end
 ```
 
-You can also supply dynamic values for limits and periods by supplying a proc for these values. The proc will be evaluated at the time the job is fetched and will receive the same arguments that are passed to the job.
+You can also supply dynamic values for limits and periods by supplying a proc
+for these values. The proc will be evaluated at the time the job is fetched
+and will receive the same arguments that are passed to the job.
 
 ``` ruby
 class MyWorker
@@ -97,12 +99,14 @@ class MyWorker
   sidekiq_throttle({
     # Allow maximum 1000 concurrent jobs of this class at a time for VIPs and 10 for all other users.
     :concurrency => {
-      :limit  => ->(user_id) { User.vip?(user_id) ? 1_000 : 10 }
+      :limit      => ->(user_id) { User.vip?(user_id) ? 1_000 : 10 },
+      :key_suffix => ->(user_id) { User.vip?(user_id) ? "vip" : "std" }
     },
     # Allow 1000 jobs/hour to be processed for VIPs and 10/day for all others
     :threshold   => {
-      :limit  => ->(user_id) { User.vip?(user_id) ? 1_000 : 10 },
-      :period => ->(user_id) { User.vip?(user_id) ? 1.hour : 1.day }
+      :limit      => ->(user_id) { User.vip?(user_id) ? 1_000 : 10 },
+      :period     => ->(user_id) { User.vip?(user_id) ? 1.hour : 1.day },
+      :key_suffix => ->(user_id) { User.vip?(user_id) ? "vip" : "std" }
   })
 
   def perform(user_id)
@@ -110,6 +114,11 @@ class MyWorker
   end
 end
 ```
+
+**NB** Don't forget to specify `:key_suffix` and make it return different values
+if you are using dynamic limit/period options. Otherwise you risk getting into
+some trouble.
+
 
 ## Supported Ruby Versions
 
