@@ -27,7 +27,7 @@
         </td>
         <td style="vertical-align:middle;text-align:center;">
           <form action="<%= root_path %>throttled/<%= name %>" method="POST">
-            <%= csrf_tag %>
+            <%= csrf_tag if respond_to?(:csrf_tag) %>
             <input type="hidden" name="_method" value="delete" />
             <button class="btn btn-danger" type="submit">Reset</button>
           </form>
