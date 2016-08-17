@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "celluloid" if Sidekiq::VERSION < "4.0.0"
 require "sidekiq"
 require "sidekiq/fetch"
 
@@ -11,7 +10,6 @@ module Sidekiq
       TIMEOUT = 2
 
       class UnitOfWork < ::Sidekiq::BasicFetch::UnitOfWork
-        alias job message if Sidekiq::VERSION < "4.0.0"
       end
 
       def initialize(options)
@@ -28,9 +26,9 @@ module Sidekiq
         work = UnitOfWork.new(*work)
         return work unless Throttled.throttled? work.job
 
-        queue = "queue:#{work.queue_name}"
-
-        Sidekiq.redis { |conn| conn.lpush(queue, work.job) }
+        Sidekiq.redis do |conn|
+          conn.lpush("queue:#{work.queue_name}", work.job)
+        end
 
         nil
       end

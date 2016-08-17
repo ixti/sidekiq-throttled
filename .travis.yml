@@ -20,7 +20,6 @@ matrix:
     - rvm: rbx-2
   fast_finish: true
 gemfile:
-  - gemfiles/sidekiq_3.x.gemfile
   - gemfiles/sidekiq_4.0.gemfile
   - gemfiles/sidekiq_4.1.gemfile
   - gemfiles/sidekiq_latest.gemfile

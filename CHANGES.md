@@ -1,3 +1,9 @@
+## master (unreleased)
+
+* Drop Sidekiq 3.x support.
+  ([@ixti])
+
+
 ## 0.4.0 (2016-05-17)
 
 * [#14](https://github.com/sensortower/sidekiq-throttled/pull/14)
