@@ -5,7 +5,7 @@
 [![Code Climate](https://codeclimate.com/github/sensortower/sidekiq-throttled.svg?branch=master)](https://codeclimate.com/github/sensortower/sidekiq-throttled)
 [![Coverage Status](https://coveralls.io/repos/sensortower/sidekiq-throttled/badge.svg?branch=master&service=github)](https://coveralls.io/github/sensortower/sidekiq-throttled?branch=master)
 
-Concurrency and threshold throttling for [Sidekiq](https://github.com/mperham/sidekiq/).
+Concurrency and threshold throttling for [Sidekiq][sidekiq].
 
 
 ## Installation
@@ -126,7 +126,13 @@ versions:
 * Ruby 2.2.x
 * Ruby 2.3.x
 
-[travis]: http://travis-ci.org/sensortower/sidekiq-throttled
+
+## Supported Sidekiq Versions
+
+This library aims to support work with following [Sidekiq][sidekiq] versions:
+
+* Sidekiq 4.0.x
+* Sidekiq 4.1.x
 
 
 ## Contributing
@@ -143,3 +149,7 @@ versions:
 
 Copyright (c) 2015 SensorTower Inc.
 See LICENSE.md for further details.
+
+
+[travis]: http://travis-ci.org/sensortower/sidekiq-throttled
+[sidekiq]: https://github.com/mperham/sidekiq
