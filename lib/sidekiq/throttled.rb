@@ -43,7 +43,7 @@ module Sidekiq
       def setup!
         Sidekiq.configure_server do |config|
           require "sidekiq/throttled/basic_fetch"
-          Sidekiq.options[:fetch] = Sidekiq::Throttled::BasicFetch
+          Sidekiq.options[:fetch] = Sidekiq::Throttled::Fetch
 
           require "sidekiq/throttled/middleware"
           config.server_middleware do |chain|

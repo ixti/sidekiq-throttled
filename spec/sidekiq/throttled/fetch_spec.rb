@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require "sidekiq/throttled/basic_fetch"
 
-RSpec.describe Sidekiq::Throttled::BasicFetch, :sidekiq => :disabled do
+RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
   let(:options)     { { :queues => %w(foo bar) } }
   subject(:fetcher) { described_class.new options }
 

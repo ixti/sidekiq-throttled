@@ -7,8 +7,8 @@ RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
       described_class.setup!
     end
 
-    it "presets Sidekiq fetch strategy to Sidekiq::Throttled::BasicFetch" do
-      expect(Sidekiq.options[:fetch]).to be Sidekiq::Throttled::BasicFetch
+    it "presets Sidekiq fetch strategy to Sidekiq::Throttled::Fetch" do
+      expect(Sidekiq.options[:fetch]).to be Sidekiq::Throttled::Fetch
     end
 
     it "injects Sidekiq::Throttled::Middleware server middleware" do
