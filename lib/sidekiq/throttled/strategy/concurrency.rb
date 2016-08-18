@@ -14,7 +14,7 @@ module Sidekiq
         #
         #     PUSH(@key, @jid)
         #     return 0
-        SCRIPT = Script.new File.read "#{__dir__}/concurrency.lua"
+        SCRIPT = Script.read "#{__dir__}/concurrency.lua"
         private_constant :SCRIPT
 
         # @param [#to_s] strategy_key

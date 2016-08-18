@@ -26,7 +26,7 @@ module Sidekiq
         #
         #     increase!
         #     return 0
-        SCRIPT = Script.new File.read "#{__dir__}/threshold.lua"
+        SCRIPT = Script.read "#{__dir__}/threshold.lua"
         private_constant :SCRIPT
 
         # @param [#to_s] strategy_key

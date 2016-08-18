@@ -31,25 +31,16 @@ module Sidekiq
         attr_reader :digest
 
         # @param [#to_s] source Lua script
-        # @paral [Logger] logger
+        # @param [Logger] logger
         def initialize(source, logger: Sidekiq.logger)
           @source = source.to_s.strip.freeze
           @digest = Digest::SHA1.hexdigest(@source).freeze
           @logger = logger
         end
 
-        # Executes script and returns result of execution
-        def eval(*args)
-          Sidekiq.redis { |conn| conn.evalsha(@digest, *args) }
-        rescue => e
-          raise unless e.message.include? NOSCRIPT
-          load_and_eval(*args)
-        end
-
-        private
-
-        # Loads script into redis cache and executes it.
-        def load_and_eval(*args)
+        # Loads script to redis
+        # @return [void]
+        def bootstrap!
           Sidekiq.redis do |conn|
             digest = conn.script(LOAD, @source)
 
@@ -64,9 +55,27 @@ module Sidekiq
 
               @digest = digest.freeze
             end
-
-            conn.evalsha(@digest, *args)
           end
+        end
+
+        # Executes script and returns result of execution
+        # @return Result of script execution
+        def eval(*args)
+          Sidekiq.redis do |conn|
+            begin
+              conn.evalsha(@digest, *args)
+            rescue => e
+              raise unless e.message.include? NOSCRIPT
+              bootstrap!
+              conn.evalsha(@digest, *args)
+            end
+          end
+        end
+
+        # Reads given file and returns new {Script} with its contents.
+        # @return [Script]
+        def self.read(file)
+          new File.read file
         end
       end
     end
