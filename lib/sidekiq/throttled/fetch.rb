@@ -1,23 +1,22 @@
 # frozen_string_literal: true
 
 require "sidekiq"
-require "sidekiq/fetch"
+require "sidekiq/throttled/unit_of_work"
 
 module Sidekiq
   module Throttled
-    # Throttled version of `Sidekiq::BasicFetch` fetcher strategy.
-    class Fetch < ::Sidekiq::BasicFetch
+    # Throttled fetch strategy.
+    class Fetch
       TIMEOUT = 2
-
-      class UnitOfWork < ::Sidekiq::BasicFetch::UnitOfWork; end
+      private_constant :TIMEOUT
 
       def initialize(options)
-        @strictly_ordered_queues = (options[:strict] ? true : false)
+        @strictly_ordered_queues = options[:strict]
         @queues = options[:queues].map { |q| "queue:#{q}" }
         @queues.uniq! if @strictly_ordered_queues
       end
 
-      # @return [Sidekiq::Throttled::Fetch::UnitOfWork, nil]
+      # @return [Sidekiq::Throttled::UnitOfWork, nil]
       def retrieve_work
         work = brpop
         return unless work
@@ -37,8 +36,11 @@ module Sidekiq
       # Tries to pop pair of `queue` and job `message` out of sidekiq queue.
       # @return [Array<String, String>, nil]
       def brpop
-        queues = (@strictly_ordered_queues ? @queues : @queues.shuffle.uniq)
         Sidekiq.redis { |conn| conn.brpop(*queues, TIMEOUT) }
+      end
+
+      def queues
+        (@strictly_ordered_queues ? @queues : @queues.shuffle.uniq)
       end
     end
   end
