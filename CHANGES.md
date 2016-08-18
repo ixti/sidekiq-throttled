@@ -1,4 +1,4 @@
-## master (unreleased)
+## 0.5.0 (2016-08-18)
 
 * Drop Sidekiq 3.x support.
   ([@ixti])
