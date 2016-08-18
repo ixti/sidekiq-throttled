@@ -1,3 +1,14 @@
-local r, k, l, p, t = redis, KEYS[1], tonumber(ARGV[1]), tonumber(ARGV[2]), tonumber(ARGV[3])
-if l <= r.call("LLEN", k) and t - r.call("LINDEX", k, -1) < p then return 1 end
-r.call("LPUSH", k, t); r.call("LTRIM", k, 0, l - 1); r.call("EXPIRE", k, p); return 0
+local key = KEYS[1]
+local lmt = tonumber(ARGV[1])
+local ttl = tonumber(ARGV[2])
+local now = tonumber(ARGV[3])
+
+if lmt <= redis.call("LLEN", key) and now - redis.call("LINDEX", key, -1) < ttl then
+  return 1
+end
+
+redis.call("LPUSH", key, now)
+redis.call("LTRIM", key, 0, lmt - 1)
+redis.call("EXPIRE", key, ttl)
+
+return 0

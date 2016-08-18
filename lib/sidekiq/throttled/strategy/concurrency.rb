@@ -44,7 +44,7 @@ module Sidekiq
 
         # @return [Boolean] whenever job is throttled or not
         def throttled?(jid, *job_args)
-          1 == SCRIPT.eval([key(job_args)], [limit(job_args), @ttl, jid.to_s])
+          1 == SCRIPT.eval([key(job_args), jid.to_s], [limit(job_args), @ttl])
         end
 
         # @return [Integer] Current count of jobs

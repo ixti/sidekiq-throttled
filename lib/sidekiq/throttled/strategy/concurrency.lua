@@ -1,3 +1,13 @@
-local r, k, l, t, j = redis, KEYS[1], tonumber(ARGV[1]), tonumber(ARGV[2]), ARGV[3]
-if l <= r.call("SCARD", k) and 0 == r.call("SISMEMBER", k, j) then return 1 end
-r.call("SADD", k, j); r.call("EXPIRE", k, t); return 0
+local key = KEYS[1]
+local jid = KEYS[2]
+local lmt = tonumber(ARGV[1])
+local ttl = tonumber(ARGV[2])
+
+if lmt <= redis.call("SCARD", key) and 0 == redis.call("SISMEMBER", key, jid) then
+  return 1
+end
+
+redis.call("SADD", key, jid)
+redis.call("EXPIRE", key, ttl)
+
+return 0
