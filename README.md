@@ -1,9 +1,9 @@
 # Sidekiq::Throttled
 
-[![Gem Version](https://badge.fury.io/rb/sidekiq-throttled.svg)](http://rubygems.org/gems/sidekiq-throttled)
-[![Build Status](https://travis-ci.org/sensortower/sidekiq-throttled.svg?branch=master)](https://travis-ci.org/sensortower/sidekiq-throttled)
-[![Code Climate](https://codeclimate.com/github/sensortower/sidekiq-throttled.svg?branch=master)](https://codeclimate.com/github/sensortower/sidekiq-throttled)
-[![Coverage Status](https://coveralls.io/repos/sensortower/sidekiq-throttled/badge.svg?branch=master&service=github)](https://coveralls.io/github/sensortower/sidekiq-throttled?branch=master)
+[![Gem Version](https://img.shields.io/badge/gem%20version-0.4.x-brightgreen.svg)](http://rubygems.org/gems/sidekiq-throttled)
+[![Build Status](https://travis-ci.org/sensortower/sidekiq-throttled.svg?branch=v0.4.x)](https://travis-ci.org/sensortower/sidekiq-throttled)
+[![Code Climate](https://codeclimate.com/github/sensortower/sidekiq-throttled.svg?branch=v0.4.x)](https://codeclimate.com/github/sensortower/sidekiq-throttled)
+[![Coverage Status](https://coveralls.io/repos/sensortower/sidekiq-throttled/badge.svg?branch=v0.4.x&service=github)](https://coveralls.io/github/sensortower/sidekiq-throttled?branch=master)
 
 Concurrency and threshold throttling for [Sidekiq](https://github.com/mperham/sidekiq/).
 
