@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require "sidekiq/throttled/basic_fetch"
+require "sidekiq/throttled/fetch"
 
 RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
   let(:options)     { { :queues => %w(foo bar) } }
