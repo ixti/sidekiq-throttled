@@ -5,7 +5,7 @@ source "https://rubygems.org"
 gem "appraisal"
 gem "rake"
 gem "rspec"
-gem "rubocop"
+gem "rubocop", "~> 0.42.0", :require => false
 
 group :test do
   gem "coveralls"
