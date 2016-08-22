@@ -13,6 +13,7 @@ require "sidekiq/throttled/web/stats"
 module Sidekiq
   module Throttled
     # Provides Sidekiq tab to monitor and reset throttled stats.
+    #
     # @private
     module Web
       class << self

@@ -7,6 +7,8 @@ require "sidekiq/throttled/strategy/threshold"
 module Sidekiq
   module Throttled
     # Meta-strategy that couples {Concurrency} and {Threshold} strategies.
+    #
+    # @private
     class Strategy
       # @!attribute [r] concurrency
       #   @return [Strategy::Concurrency, nil]

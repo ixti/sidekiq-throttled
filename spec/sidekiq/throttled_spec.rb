@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
   describe ".setup!" do
     before do
@@ -14,6 +15,37 @@ RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
     it "injects Sidekiq::Throttled::Middleware server middleware" do
       expect(Sidekiq.server_middleware.exists?(Sidekiq::Throttled::Middleware))
         .to be true
+    end
+  end
+
+  describe ".pause!" do
+    it "delegates call to QueuesPauser instance" do
+      queue = double
+
+      expect(Sidekiq::Throttled::QueuesPauser.instance)
+        .to receive(:pause!).with(queue)
+
+      described_class.pause!(queue)
+    end
+  end
+
+  describe ".resume!" do
+    it "delegates call to QueuesPauser instance" do
+      queue = double
+
+      expect(Sidekiq::Throttled::QueuesPauser.instance)
+        .to receive(:resume!).with(queue)
+
+      described_class.resume!(queue)
+    end
+  end
+
+  describe ".paused_queues" do
+    it "delegates call to QueuesPauser instance" do
+      expect(Sidekiq::Throttled::QueuesPauser.instance)
+        .to receive(:paused_queues)
+
+      described_class.paused_queues
     end
   end
 

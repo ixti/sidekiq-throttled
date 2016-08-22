@@ -2,7 +2,12 @@
 require "sidekiq/throttled/fetch"
 
 RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
-  let(:options)     { { :queues => %w(foo bar) } }
+  let(:options)       { { :queues => %w(foo bar) } }
+  let(:pauser)        { Sidekiq::Throttled::QueuesPauser.instance }
+  let(:paused_queues) { pauser.instance_variable_get :@paused_queues }
+
+  before { paused_queues.clear }
+
   subject(:fetcher) { described_class.new options }
 
   let! :working_class do
@@ -42,6 +47,14 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
             fetcher.retrieve_work
           end
         end
+
+        it "filters queues with QueuesPauser" do
+          Sidekiq.redis do |conn|
+            paused_queues.replace %w(queue:bar)
+            expect(conn).to receive(:brpop).with("queue:foo", 2)
+            fetcher.retrieve_work
+          end
+        end
       end
 
       context "with weight-ordered queues" do
@@ -51,6 +64,14 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
           Sidekiq.redis do |conn|
             queue_regexp = /^queue:(foo|bar)$/
             expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, 2)
+            fetcher.retrieve_work
+          end
+        end
+
+        it "filters queues with QueuesPauser" do
+          Sidekiq.redis do |conn|
+            paused_queues.replace %w(queue:bar)
+            expect(conn).to receive(:brpop).with("queue:foo", 2)
             fetcher.retrieve_work
           end
         end

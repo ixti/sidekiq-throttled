@@ -2,18 +2,24 @@
 
 require "sidekiq"
 require "sidekiq/throttled/unit_of_work"
+require "sidekiq/throttled/queues_pauser"
+require "sidekiq/throttled/queue_name"
 
 module Sidekiq
   module Throttled
     # Throttled fetch strategy.
+    #
+    # @private
     class Fetch
       TIMEOUT = 2
       private_constant :TIMEOUT
 
+      # Initializes fetcher instance.
       def initialize(options)
-        @strictly_ordered_queues = options[:strict]
-        @queues = options[:queues].map { |q| "queue:#{q}" }
-        @queues.uniq! if @strictly_ordered_queues
+        @strict = options[:strict]
+        @queues = options[:queues].map { |q| QueueName.expand q }
+
+        @queues.uniq! if @strict
       end
 
       # @return [Sidekiq::Throttled::UnitOfWork, nil]
@@ -25,7 +31,7 @@ module Sidekiq
         return work unless Throttled.throttled? work.job
 
         Sidekiq.redis do |conn|
-          conn.lpush("queue:#{work.queue_name}", work.job)
+          conn.lpush(QueueName.expand(work.queue_name), work.job)
         end
 
         nil
@@ -34,13 +40,19 @@ module Sidekiq
       private
 
       # Tries to pop pair of `queue` and job `message` out of sidekiq queue.
+      #
+      # @see http://redis.io/commands/brpop
       # @return [Array<String, String>, nil]
       def brpop
-        Sidekiq.redis { |conn| conn.brpop(*queues, TIMEOUT) }
-      end
+        queues = (@strict ? @queues : @queues.shuffle.uniq)
+        queues = QueuesPauser.instance.filter queues
 
-      def queues
-        (@strictly_ordered_queues ? @queues : @queues.shuffle.uniq)
+        if queues.empty?
+          sleep TIMEOUT
+          return
+        end
+
+        Sidekiq.redis { |conn| conn.brpop(*queues, TIMEOUT) }
       end
     end
   end
