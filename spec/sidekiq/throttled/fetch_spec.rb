@@ -49,9 +49,11 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
         end
 
         it "filters queues with QueuesPauser" do
+          options[:queues] << "xxx"
+          paused_queues.replace %w(queue:xxx)
+
           Sidekiq.redis do |conn|
-            paused_queues.replace %w(queue:bar)
-            expect(conn).to receive(:brpop).with("queue:foo", 2)
+            expect(conn).to receive(:brpop).with("queue:foo", "queue:bar", 2)
             fetcher.retrieve_work
           end
         end
@@ -69,9 +71,12 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
         end
 
         it "filters queues with QueuesPauser" do
+          options[:queues] << "xxx"
+          paused_queues.replace %w(queue:xxx)
+
           Sidekiq.redis do |conn|
-            paused_queues.replace %w(queue:bar)
-            expect(conn).to receive(:brpop).with("queue:foo", 2)
+            queue_regexp = /^queue:(foo|bar)$/
+            expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, 2)
             fetcher.retrieve_work
           end
         end
