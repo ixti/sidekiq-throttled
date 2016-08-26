@@ -8,7 +8,7 @@ gem "rspec"
 gem "rubocop", "~> 0.42.0", :require => false
 
 group :test do
-  gem "coveralls"
+  gem "coveralls", :require => false
   gem "rack-test"
   gem "simplecov", ">= 0.9"
   gem "sinatra", "~> 1.4", ">= 1.4.6"
