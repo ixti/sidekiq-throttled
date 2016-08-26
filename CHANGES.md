@@ -1,3 +1,10 @@
+## 0.6.0 (2016-08-27)
+
+* [#21](https://github.com/sensortower/sidekiq-throttled/pull/21)
+  Allow pause/unpause queues.
+  ([@ixti])
+
+
 ## 0.5.0 (2016-08-18)
 
 * Drop Sidekiq 3.x support.
