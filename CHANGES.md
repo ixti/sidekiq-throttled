@@ -4,6 +4,13 @@
   ([@ixti])
 
 
+## 0.4.1 (2016-08-18)
+
+* [#15](https://github.com/sensortower/sidekiq-throttled/pull/15)
+  Fix throttled web UI on older versions of sidekiq.
+  ([@palanglung])
+
+
 ## 0.4.0 (2016-05-17)
 
 * [#14](https://github.com/sensortower/sidekiq-throttled/pull/14)
