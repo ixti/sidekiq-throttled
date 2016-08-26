@@ -5,6 +5,7 @@ require "sidekiq/throttled/registry"
 module Sidekiq
   module Throttled
     # Server middleware that notifies strategy that job was finished.
+    #
     # @private
     class Middleware
       # Called within Sidekiq job processing

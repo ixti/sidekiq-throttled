@@ -3,7 +3,6 @@ module Sidekiq
   module Throttled
     module Web
       # Throttle strategy stats generation helper
-      # @private
       class Stats
         TIME_CONVERSION = [
           [60 * 60 * 24,  "day",    "days"],

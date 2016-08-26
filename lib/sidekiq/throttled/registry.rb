@@ -5,6 +5,8 @@ require "sidekiq/throttled/strategy"
 module Sidekiq
   module Throttled
     # Registred strategies.
+    #
+    # @private
     module Registry
       @strategies = {}
       @aliases    = {}

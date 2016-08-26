@@ -4,6 +4,8 @@ require "sidekiq"
 
 # internal
 require "sidekiq/version"
+require "sidekiq/throttled/communicator"
+require "sidekiq/throttled/queues_pauser"
 require "sidekiq/throttled/registry"
 require "sidekiq/throttled/worker"
 
@@ -39,8 +41,12 @@ module Sidekiq
   module Throttled
     class << self
       # Hooks throttler into sidekiq.
+      #
       # @return [void]
       def setup!
+        Communicator.instance.setup!
+        QueuesPauser.instance.setup!
+
         Sidekiq.configure_server do |config|
           require "sidekiq/throttled/fetch"
           Sidekiq.options[:fetch] = Sidekiq::Throttled::Fetch
@@ -52,9 +58,25 @@ module Sidekiq
         end
       end
 
-      # @param [String] message JSON payload of job
-      # @return [TrueClass] if job is not allowed to be processed now
-      # @return [FalseClass] otherwise
+      # (see QueuesPauser#pause!)
+      def pause!(queue)
+        QueuesPauser.instance.pause!(queue)
+      end
+
+      # (see QueuesPauser#resume!)
+      def resume!(queue)
+        QueuesPauser.instance.resume!(queue)
+      end
+
+      # (see QueuesPauser#paused_queues)
+      def paused_queues
+        QueuesPauser.instance.paused_queues
+      end
+
+      # Tells whenever job is throttled or not.
+      #
+      # @param [String] message Job's JSON payload
+      # @return [Boolean]
       def throttled?(message)
         message = JSON.parse message
         job = message.fetch("class".freeze) { return false }
