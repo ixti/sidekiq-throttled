@@ -24,8 +24,18 @@ module Sidekiq
           super { listen until @terminated }
         end
 
+        # Whenever underlying redis client subscribed to pub/sup channel.
+        #
+        # @return [Boolean]
         def ready?
           @subscribed
+        end
+
+        # Whenever main loop is still running.
+        #
+        # @return [Boolean]
+        def listening?
+          !@terminated
         end
 
         # Stops listener.
@@ -58,9 +68,12 @@ module Sidekiq
           @terminated = true
           @subscribed = false
         rescue StandardError => e
+          @subscribed = false
           handle_exception(e, { :context => "sidekiq:throttled".freeze })
           sleep 1
         rescue Exception => e # rubocop:disable Lint/RescueException
+          @terminated = true
+          @subscribed = false
           handle_exception(e, { :context => "sidekiq:throttled".freeze })
           raise
         end
@@ -76,8 +89,6 @@ module Sidekiq
         # @see Callbacks#run
         # @return [void]
         def subscribe
-          @subscribed = false
-
           Sidekiq.redis do |conn|
             conn.subscribe @channel do |on|
               on.subscribe do

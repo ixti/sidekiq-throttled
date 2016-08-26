@@ -73,7 +73,7 @@ RSpec.describe Sidekiq::Throttled::Communicator::Listener do
 
   it "is running once being initialized" do
     wait_for_listener_to_stop_running
-    expect(listener).to be_alive
+    expect(listener).to be_listening
   end
 
   it "stops listener upon Sidekiq::Shutdown being raised" do
@@ -81,7 +81,8 @@ RSpec.describe Sidekiq::Throttled::Communicator::Listener do
     listener.raise Sidekiq::Shutdown
     3.times { wait_for_listener_to_stop_running }
 
-    expect(listener).not_to be_alive
+    expect(listener).not_to be_ready
+    expect(listener).not_to be_listening
   end
 
   context "when listener receives StandardError" do
@@ -97,7 +98,8 @@ RSpec.describe Sidekiq::Throttled::Communicator::Listener do
     end
 
     it "restarts listen loop" do
-      expect(listener).to be_alive
+      expect(listener).not_to be_ready
+      expect(listener).to be_listening
     end
 
     it "re-emits `ready` event once re-subscribed" do
@@ -120,7 +122,8 @@ RSpec.describe Sidekiq::Throttled::Communicator::Listener do
     end
 
     it "does not recovers" do
-      expect(listener).not_to be_alive
+      expect(listener).not_to be_ready
+      expect(listener).not_to be_listening
     end
   end
 end
