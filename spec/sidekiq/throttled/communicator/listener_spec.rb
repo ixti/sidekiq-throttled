@@ -98,7 +98,7 @@ RSpec.describe Sidekiq::Throttled::Communicator::Listener do
     end
 
     it "restarts listen loop" do
-      expect(listener).not_to be_ready
+      expect(listener).to be_ready
       expect(listener).to be_listening
     end
 
