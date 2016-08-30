@@ -42,10 +42,9 @@ module Sidekiq
       # Tries to pop pair of `queue` and job `message` out of sidekiq queue.
       #
       # @see http://redis.io/commands/brpop
-      # @return [Array<String, String>, nil]
+      # @return [Array(String, String), nil]
       def brpop
-        queues = (@strict ? @queues : @queues.shuffle.uniq)
-        queues = QueuesPauser.instance.filter queues
+        queues = build_queues_list
 
         if queues.empty?
           sleep TIMEOUT
@@ -53,6 +52,14 @@ module Sidekiq
         end
 
         Sidekiq.redis { |conn| conn.brpop(*queues, TIMEOUT) }
+      end
+
+      # Returns list of queues to try to fetch jobs from.
+      #
+      # @note It may return an empty array.
+      # @return [Array<String>]
+      def build_queues_list
+        QueuesPauser.instance.filter(@strict ? @queues : @queues.shuffle.uniq)
       end
     end
   end
