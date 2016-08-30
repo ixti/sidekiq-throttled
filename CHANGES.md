@@ -1,4 +1,4 @@
-## master (unreleased)
+## 0.6.1 (2016-08-30)
 
 * Trivial internbal API change: extracted queues list builder of `Fetch` into
   dedicated internal method, allowing to enhance it with extra custom filters.
