@@ -145,7 +145,7 @@ This library aims to support work with following [Sidekiq][sidekiq] versions:
 
 ## Copyright
 
-Copyright (c) 2015 SensorTower Inc.
+Copyright (c) 2015-2016 SensorTower Inc.
 See LICENSE.md for further details.
 
 
