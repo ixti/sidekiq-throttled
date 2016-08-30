@@ -25,6 +25,8 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
     stub_const(klass.name, klass)
   end
 
+  it "sleeps instead of BRPOP when queues list is empty"
+
   describe "#retrieve_work" do
     shared_examples "expected behavior" do
       before do
