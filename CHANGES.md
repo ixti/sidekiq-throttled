@@ -1,3 +1,10 @@
+## master (unreleased)
+
+* Trivial internbal API change: extracted queues list builder of `Fetch` into
+  dedicated internal method, allowing to enhance it with extra custom filters.
+  ([@ixti])
+
+
 ## 0.6.0 (2016-08-27)
 
 * [#21](https://github.com/sensortower/sidekiq-throttled/pull/21)
