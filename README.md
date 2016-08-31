@@ -4,6 +4,7 @@
 [![Build Status](https://travis-ci.org/sensortower/sidekiq-throttled.svg?branch=master)](https://travis-ci.org/sensortower/sidekiq-throttled)
 [![Code Climate](https://codeclimate.com/github/sensortower/sidekiq-throttled.svg?branch=master)](https://codeclimate.com/github/sensortower/sidekiq-throttled)
 [![Coverage Status](https://coveralls.io/repos/sensortower/sidekiq-throttled/badge.svg?branch=master&service=github)](https://coveralls.io/github/sensortower/sidekiq-throttled?branch=master)
+[![API Documentation](https://img.shields.io/badge/api+docs-yard-brightgreen.svg)](http://www.rubydoc.info/gems/sidekiq-throttled)
 
 Concurrency and threshold throttling for [Sidekiq][sidekiq].
 
