@@ -1,6 +1,12 @@
+## 0.6.2 (2016-09-01)
+
+* Add `Fetch.bulk_requeue` used by Sidekiq upon termination.
+  ([@ixti])
+
+
 ## 0.6.1 (2016-08-30)
 
-* Trivial internbal API change: extracted queues list builder of `Fetch` into
+* Trivial internal API change: extracted queues list builder of `Fetch` into
   dedicated internal method, allowing to enhance it with extra custom filters.
   ([@ixti])
 
