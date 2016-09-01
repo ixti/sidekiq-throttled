@@ -37,6 +37,18 @@ module Sidekiq
         nil
       end
 
+      class << self
+        def bulk_requeue(units, _options)
+          return if units.empty?
+
+          Sidekiq.logger.debug { "Re-queueing terminated jobs" }
+          Sidekiq.redis { |conn| conn.pipelined { units.each(&:requeue) } }
+          Sidekiq.logger.info("Pushed #{units.size} jobs back to Redis")
+        rescue => e
+          Sidekiq.logger.warn("Failed to requeue #{units.size} jobs: #{e}")
+        end
+      end
+
       private
 
       # Tries to pop pair of `queue` and job `message` out of sidekiq queue.
