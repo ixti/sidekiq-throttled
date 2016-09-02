@@ -8,4 +8,5 @@ RSpec.describe Sidekiq::Throttled::Fetch::UnitOfWork do
   describe "#queue_name"
   describe "#requeue"
   describe "#throttled_requeue"
+  describe "#throttled?"
 end

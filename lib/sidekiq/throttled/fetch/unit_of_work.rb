@@ -26,7 +26,7 @@ module Sidekiq
         end
 
         # Callback that is called by `Sidekiq::Processor` when job was
-        # succeccfully processed. Most this is used by `ReliableFetch`
+        # succeccfully processed. Most likely this is used by `ReliableFetch`
         # of Sidekiq Pro/Enterprise to remove job from running queue.
         #
         # @return [void]
@@ -52,6 +52,14 @@ module Sidekiq
         # @return [void]
         def requeue
           Sidekiq.redis { |conn| conn.rpush(QueueName.expand(queue_name), job) }
+        end
+
+        # Tells whenever job should be pushed back to queue (throttled) or not.
+        #
+        # @see Sidekiq::Throttled.throttled?
+        # @return [Boolean]
+        def throttled?
+          Throttled.throttled? job
         end
 
         # Pushes job back to the head of the queue, so that job won't be tried

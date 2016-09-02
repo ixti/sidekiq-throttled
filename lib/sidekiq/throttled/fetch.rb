@@ -30,7 +30,7 @@ module Sidekiq
         return unless work
 
         work = UnitOfWork.new(*work)
-        return work unless Throttled.throttled? work.job
+        return work unless work.throttled?
 
         work.throttled_requeue
 
