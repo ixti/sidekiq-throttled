@@ -32,7 +32,7 @@ module Sidekiq
         work = UnitOfWork.new(*work)
         return work unless work.throttled?
 
-        work.throttled_requeue
+        work.requeue_throttled
 
         nil
       end

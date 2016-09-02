@@ -1,3 +1,9 @@
+## 0.6.4 (2016-09-02)
+
+* Rename UNitOfWork throttled requeue to `#requeue_throttled`.
+  ([@ixti])
+
+
 ## 0.6.3 (2016-09-02)
 
 * Enrich internal API to allow better extensibility.

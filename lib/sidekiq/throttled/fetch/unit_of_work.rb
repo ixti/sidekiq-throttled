@@ -54,14 +54,6 @@ module Sidekiq
           Sidekiq.redis { |conn| conn.rpush(QueueName.expand(queue_name), job) }
         end
 
-        # Tells whenever job should be pushed back to queue (throttled) or not.
-        #
-        # @see Sidekiq::Throttled.throttled?
-        # @return [Boolean]
-        def throttled?
-          Throttled.throttled? job
-        end
-
         # Pushes job back to the head of the queue, so that job won't be tried
         # immediately after it was requeued (in most cases).
         #
@@ -69,8 +61,16 @@ module Sidekiq
         #   Sidekiq performs upon `Sidekiq::Worker.perform_async` call.
         #
         # @return [void]
-        def throttled_requeue
+        def requeue_throttled
           Sidekiq.redis { |conn| conn.lpush(QueueName.expand(queue_name), job) }
+        end
+
+        # Tells whenever job should be pushed back to queue (throttled) or not.
+        #
+        # @see Sidekiq::Throttled.throttled?
+        # @return [Boolean]
+        def throttled?
+          Throttled.throttled? job
         end
       end
     end
