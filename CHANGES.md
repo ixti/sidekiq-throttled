@@ -1,3 +1,9 @@
+## 0.6.3 (2016-09-02)
+
+* Enrich internal API to allow better extensibility.
+  ([@ixti])
+
+
 ## 0.6.2 (2016-09-01)
 
 * Add `Fetch.bulk_requeue` used by Sidekiq upon termination.
