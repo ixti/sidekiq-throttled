@@ -33,6 +33,7 @@ module Sidekiq
         return work unless work.throttled?
 
         work.requeue_throttled
+        sleep TIMEOUT
 
         nil
       end
