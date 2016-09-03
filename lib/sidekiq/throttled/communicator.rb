@@ -22,6 +22,7 @@ module Sidekiq
     #   # Emit message from console
     #   Sidekiq.redis do |conn|
     #     Communicator.instance.transmit(conn, "knock", "ixti")
+    #   end
     class Communicator
       include Singleton
       include ExceptionHandler
