@@ -1,7 +1,7 @@
 local key = KEYS[1]
-local jid = KEYS[2]
-local lmt = tonumber(ARGV[1])
-local ttl = tonumber(ARGV[2])
+local jid = ARGV[1]
+local lmt = tonumber(ARGV[2])
+local ttl = tonumber(ARGV[3])
 
 if lmt <= redis.call("SCARD", key) and 0 == redis.call("SISMEMBER", key, jid) then
   return 1
