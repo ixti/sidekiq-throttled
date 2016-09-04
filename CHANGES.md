@@ -1,6 +1,12 @@
+## 0.6.5 (2016-09-04)
+
+* Fix concurrency throttling when redis-namespace is used.
+  ([@ixti])
+
+
 ## 0.6.4 (2016-09-02)
 
-* Rename UNitOfWork throttled requeue to `#requeue_throttled`.
+* Rename UnitOfWork throttled requeue to `#requeue_throttled`.
   ([@ixti])
 
 
