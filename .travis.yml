@@ -17,6 +17,9 @@ gemfile:
   - gemfiles/sidekiq_4.0.gemfile
   - gemfiles/sidekiq_4.1.gemfile
   - gemfiles/sidekiq_latest.gemfile
+env:
+  - WITH_REDIS_NAMESPACE=0
+  - WITH_REDIS_NAMESPACE=1
 before_install:
   - gem install bundler -v 1.10.6
 services:

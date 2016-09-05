@@ -6,6 +6,7 @@ gem "appraisal"
 gem "rake"
 gem "rspec"
 gem "rubocop", "~> 0.42.0", :require => false
+gem "redis-namespace"
 
 group :test do
   gem "coveralls", :require => false

@@ -11,7 +11,14 @@ module JidGenerator
 end
 
 configure_redis = proc do |config|
-  config.redis = { :url => "redis://localhost/15" }
+  redis_opts = { :url => "redis://localhost/15" }
+
+  if 1 == ENV["WITH_REDIS_NAMESPACE"].to_i
+    require "redis-namespace"
+    redis_opts[:namespace] = "XXX"
+  end
+
+  config.redis = redis_opts
 end
 
 Sidekiq.configure_server(&configure_redis)
