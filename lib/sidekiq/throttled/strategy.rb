@@ -29,13 +29,13 @@ module Sidekiq
 
         @concurrency =
           if concurrency
-            concurrency[:key_suffix] = key_suffix
+            concurrency[:key_suffix] ||= key_suffix
             Concurrency.new(key, concurrency)
           end
 
         @threshold =
           if threshold
-            threshold[:key_suffix] = key_suffix
+            threshold[:key_suffix] ||= key_suffix
             Threshold.new(key, threshold)
           end
 
