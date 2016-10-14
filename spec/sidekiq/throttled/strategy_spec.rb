@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require "sidekiq/throttled/strategy/concurrency"
 RSpec.describe Sidekiq::Throttled::Strategy do
   subject(:strategy) { described_class.new(:foo, **options) }
 
@@ -9,6 +10,23 @@ RSpec.describe Sidekiq::Throttled::Strategy do
   describe ".new" do
     it "fails if neither :threshold nor :concurrency given" do
       expect { described_class.new(:foo) }.to raise_error ArgumentError
+    end
+
+    it "opts[:concurrency][:key_suffix] not nil if :key_suffix given" do
+      opts = { :concurrency =>
+               { :limit => 7,
+                 :key_suffix => -> (user_id) { user_id } } }
+      described_class.new(:foo, **opts)
+      expect(opts[:concurrency][:key_suffix]).not_to be nil
+    end
+
+    it "opts[:threshold][:key_suffix] not nil if :key_suffix given" do
+      opts = { :threshold =>
+               { :limit => 5,
+                 :period => 10,
+                 :key_suffix => -> (user_id) { user_id } } }
+      described_class.new(:foo, **opts)
+      expect(opts[:threshold][:key_suffix]).not_to be nil
     end
   end
 
