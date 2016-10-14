@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-require "sidekiq/throttled/strategy/concurrency"
 RSpec.describe Sidekiq::Throttled::Strategy do
   subject(:strategy) { described_class.new(:foo, **options) }
 
