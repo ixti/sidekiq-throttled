@@ -18,17 +18,15 @@ module Sidekiq
         private_constant :SCRIPT
 
         # @param [#to_s] strategy_key
-        # @param [Hash] opts
-        # @option opts [#to_i] :limit Amount of allowed concurrent jobs
-        #   processors running for given key
-        # @option opts [#to_i] :ttl (15 minutes) Concurrency lock TTL
-        #   in seconds
-        # @option opts :key_suffix Proc for dynamic key suffix.
-        def initialize(strategy_key, opts)
+        # @param [#to_i, #call] limit Amount of allowed concurrent jobs
+        #   per processors running for given key.
+        # @param [#to_i] ttl Concurrency lock TTL in seconds.
+        # @param [Proc] key_suffix Dynamic key suffix generator.
+        def initialize(strategy_key, limit:, ttl: 900, key_suffix: nil)
           @base_key   = "#{strategy_key}:concurrency".freeze
-          @limit      = opts.fetch(:limit)
-          @ttl        = opts.fetch(:ttl, 900).to_i
-          @key_suffix = opts[:key_suffix]
+          @limit      = limit
+          @ttl        = ttl.to_i
+          @key_suffix = key_suffix
         end
 
         # @return [Integer] Amount of allowed concurrent job processors

@@ -30,14 +30,15 @@ module Sidekiq
         private_constant :SCRIPT
 
         # @param [#to_s] strategy_key
-        # @param [Hash] opts
-        # @option opts [#to_i] :limit Amount of jobs allowed per period
-        # @option opts [#to_f] :period Period in seconds
-        def initialize(strategy_key, opts)
+        # @param [#to_i, #call] limit Amount of allowed concurrent jobs
+        #   per period running for given key.
+        # @param [#to_f, #call] :period Period in seconds.
+        # @param [Proc] key_suffix Dynamic key suffix generator.
+        def initialize(strategy_key, limit:, period:, key_suffix: nil)
           @base_key   = "#{strategy_key}:threshold".freeze
-          @limit      = opts.fetch(:limit)
-          @period     = opts.fetch(:period)
-          @key_suffix = opts[:key_suffix]
+          @limit      = limit
+          @period     = period
+          @key_suffix = key_suffix
         end
 
         # @return [Integer] Amount of jobs allowed per period

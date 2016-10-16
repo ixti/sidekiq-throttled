@@ -20,23 +20,23 @@ module Sidekiq
 
       # @param [#to_s] name
       # @param [Hash] concurrency Concurrency options.
-      #   See {Strategy::Concurrency#initialize} for details.
+      #   See keyword args of {Strategy::Concurrency#initialize} for details.
       # @param [Hash] threshold Threshold options.
-      #   See {Strategy::Threshold#initialize} for details.
-      # @param [Hash] key_suffix Proc for dynamic keys.
+      #   See keyword args of {Strategy::Threshold#initialize} for details.
+      # @param [#call] key_suffix Dynamic key suffix generator.
       def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil)
         key = "throttled:#{name}"
 
         @concurrency =
           if concurrency
             concurrency[:key_suffix] ||= key_suffix
-            Concurrency.new(key, concurrency)
+            Concurrency.new(key, **concurrency)
           end
 
         @threshold =
           if threshold
             threshold[:key_suffix] ||= key_suffix
-            Threshold.new(key, threshold)
+            Threshold.new(key, **threshold)
           end
 
         return if @concurrency || @threshold

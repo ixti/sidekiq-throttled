@@ -11,21 +11,31 @@ RSpec.describe Sidekiq::Throttled::Strategy do
       expect { described_class.new(:foo) }.to raise_error ArgumentError
     end
 
-    it "opts[:concurrency][:key_suffix] not nil if :key_suffix given" do
-      opts = { :concurrency =>
-               { :limit => 7,
-                 :key_suffix => -> (user_id) { user_id } } }
-      described_class.new(:foo, **opts)
-      expect(opts[:concurrency][:key_suffix]).not_to be nil
+    it "passes given concurrency suffix generator" do
+      key_suffix = lambda { |_| }
+
+      expect(Sidekiq::Throttled::Strategy::Concurrency).to receive(:new)
+        .with("throttled:foo", include(:key_suffix => key_suffix))
+        .and_call_original
+
+      described_class.new(:foo, :concurrency => {
+        :limit      => 123,
+        :key_suffix => key_suffix
+      })
     end
 
-    it "opts[:threshold][:key_suffix] not nil if :key_suffix given" do
-      opts = { :threshold =>
-               { :limit => 5,
-                 :period => 10,
-                 :key_suffix => -> (user_id) { user_id } } }
-      described_class.new(:foo, **opts)
-      expect(opts[:threshold][:key_suffix]).not_to be nil
+    it "passes given threshold suffix generator" do
+      key_suffix = lambda { |_| }
+
+      expect(Sidekiq::Throttled::Strategy::Threshold).to receive(:new)
+        .with("throttled:foo", include(:key_suffix => key_suffix))
+        .and_call_original
+
+      described_class.new(:foo, :threshold => {
+        :limit      => 123,
+        :period     => 657,
+        :key_suffix => key_suffix
+      })
     end
   end
 
