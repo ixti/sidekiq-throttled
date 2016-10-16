@@ -1,3 +1,10 @@
+## 0.6.6 (2016-10-16)
+
+* [#24](https://github.com/sensortower/sidekiq-throttled/pull/24)
+  Fix dynamic `:key_suffix` issue.
+  ([@iporsut])
+
+
 ## 0.6.5 (2016-09-04)
 
 * Fix concurrency throttling when redis-namespace is used.
@@ -93,3 +100,4 @@
 [@fhwang]: https://github.com/fhwang
 [@palanglung]: https://github.com/palanglung
 [@azach]: https://github.com/azach
+[@iporsut]: https://github.com/iporsut
