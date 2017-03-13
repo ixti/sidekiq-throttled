@@ -16,6 +16,10 @@ Security/MarshalLoad:
   Exclude:
     - lib/sidekiq/throttled/communicator/listener.rb
 
-# Enable this cop once Ruby 2.2 is EOL and we drop it's support.
+# Enable this cop once we drop Ruby 2.2.x support.
 Style/SafeNavigation:
+  Enabled: false
+
+# Enable this cop once we drop Ruby 2.2.x support.
+Style/NumericPredicate:
   Enabled: false
