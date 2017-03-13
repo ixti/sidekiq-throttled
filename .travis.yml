@@ -1,27 +1,43 @@
 language: ruby
+sudo: false
+
+services:
+  - redis-server
+
+cache: bundler
+
+before_install:
+  - gem update --system
+  - gem --version
+  - gem install bundler --no-rdoc --no-ri
+  - bundle --version
+
+install: bundle install --without development doc
+
+env:
+  - JRUBY_OPTS="$JRUBY_OPTS --debug" WITH_REDIS_NAMESPACE="false"
+  - JRUBY_OPTS="$JRUBY_OPTS --debug" WITH_REDIS_NAMESPACE="true"
+
 rvm:
-  - 2.2.5
-  - 2.3.1
-  - ruby-head
-  - jruby-9.0.5.0
-  - jruby-head
+  # Include JRuby first because it takes the longest
+  - jruby-9.1.7.0
   - rbx-2
+  - 2.2
+  - 2.3.3
+  - 2.4.0
+
 matrix:
-  allow_failures:
-    - rvm: ruby-head
-    - rvm: jruby-9.0.5.0
-    - rvm: jruby-head
-    - rvm: rbx-2
   fast_finish: true
+  include:
+    # Only run RuboCop and Yardstick metrics on the latest MRI
+    - rvm: 2.4.0
+      env: SUITE="rubocop"
+      gemfile: Gemfile
+    - rvm: 2.4.0
+      env: SUITE="yardstick"
+      gemfile: Gemfile
+
 gemfile:
   - gemfiles/sidekiq_4.0.gemfile
   - gemfiles/sidekiq_4.1.gemfile
-  - gemfiles/sidekiq_latest.gemfile
-env:
-  - WITH_REDIS_NAMESPACE=0
-  - WITH_REDIS_NAMESPACE=1
-before_install:
-  - gem install bundler -v 1.10.6
-services:
-  - redis-server
-sudo: false
+  - gemfiles/sidekiq_4.2.gemfile

@@ -7,4 +7,11 @@ RSpec::Core::RakeTask.new(:spec)
 require "rubocop/rake_task"
 RuboCop::RakeTask.new
 
-task :default => [:spec, :rubocop]
+default_suite = ENV["CI"] ? :spec : %i(spec rubocop verify_measurements)
+named_suites  = {
+  "rubocop"   => :rubocop,
+  "yardstick" => :verify_measurements,
+  "rspec"     => :spec
+}
+
+task :default => named_suites.fetch(ENV["SUITE"], default_suite)

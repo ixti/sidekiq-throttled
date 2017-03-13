@@ -124,6 +124,7 @@ versions:
 
 * Ruby 2.2.x
 * Ruby 2.3.x
+* Ruby 2.4.x
 
 
 ## Supported Sidekiq Versions

@@ -13,7 +13,7 @@ end
 configure_redis = proc do |config|
   redis_opts = { :url => "redis://localhost/15" }
 
-  if 1 == ENV["WITH_REDIS_NAMESPACE"].to_i
+  if "true" == ENV["WITH_REDIS_NAMESPACE"].to_s
     require "redis-namespace"
     redis_opts[:namespace] = "XXX"
   end
