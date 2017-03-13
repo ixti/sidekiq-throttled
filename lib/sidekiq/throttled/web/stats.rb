@@ -37,10 +37,9 @@ module Sidekiq
         # @return [String]
         def colorize_count(int, max)
           percentile = 100.00 * int / max
-          lvl = case
-                when 80 <= percentile then "danger"
-                when 60 <= percentile then "warning"
-                else                       "success"
+          lvl = if    80 <= percentile then "danger"
+                elsif 60 <= percentile then "warning"
+                else                        "success"
                 end
 
           %(<span class="label label-#{lvl}">#{int}</span>)
@@ -52,7 +51,7 @@ module Sidekiq
 
           TIME_CONVERSION.each do |(dimension, unit, units)|
             count = (int / dimension).to_i
-            next unless 0 < count
+            next unless count.positive?
             int -= count * dimension
             arr << "#{count} #{1 == count ? unit : units}"
           end
@@ -65,7 +64,7 @@ module Sidekiq
           digits = int.to_s.split ""
           str    = digits.shift(digits.count % 3).join("")
 
-          str << " " << digits.shift(3).join("") while 0 < digits.count
+          str << " " << digits.shift(3).join("") while digits.count.positive?
 
           str.strip
         end

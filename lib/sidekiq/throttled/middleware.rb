@@ -12,8 +12,8 @@ module Sidekiq
       def call(_worker, msg, _queue)
         yield
       ensure
-        Registry.get msg["class".freeze] do |strategy|
-          strategy.finalize!(msg["jid".freeze], *msg["args"])
+        Registry.get msg["class"] do |strategy|
+          strategy.finalize!(msg["jid"], *msg["args"])
         end
       end
     end

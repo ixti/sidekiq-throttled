@@ -35,7 +35,7 @@ module Sidekiq
         # @param [#to_f, #call] :period Period in seconds.
         # @param [Proc] key_suffix Dynamic key suffix generator.
         def initialize(strategy_key, limit:, period:, key_suffix: nil)
-          @base_key   = "#{strategy_key}:threshold".freeze
+          @base_key   = "#{strategy_key}:threshold"
           @limit      = limit
           @period     = period
           @key_suffix = key_suffix

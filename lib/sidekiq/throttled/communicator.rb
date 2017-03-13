@@ -30,7 +30,7 @@ module Sidekiq
       # Redis PUB/SUB channel name
       #
       # @see http://redis.io/topics/pubsub
-      CHANNEL_NAME = "sidekiq:throttled".freeze
+      CHANNEL_NAME = "sidekiq:throttled"
       private_constant :CHANNEL_NAME
 
       # Initializes singleton instance.
@@ -54,7 +54,7 @@ module Sidekiq
       # @return [void]
       def stop_listener
         @mutex.synchronize do
-          @listener.stop if @listener
+          @listener&.stop
           @listener = nil
         end
       end

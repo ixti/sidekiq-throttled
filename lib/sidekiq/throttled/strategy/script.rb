@@ -15,11 +15,11 @@ module Sidekiq
       # @private
       class Script
         # Script load command
-        LOAD = "load".freeze
+        LOAD = "load"
         private_constant :LOAD
 
         # Redis error fired when script ID is unkown
-        NOSCRIPT = "NOSCRIPT".freeze
+        NOSCRIPT = "NOSCRIPT"
         private_constant :NOSCRIPT
 
         # LUA script source.
@@ -47,11 +47,8 @@ module Sidekiq
             # XXX: this may happen **ONLY** if script digesting will be
             #   changed in redis, which is not likely gonna happen.
             unless @digest == digest
-              if @logger
-                @logger.warn \
-                  "Unexpected script SHA1 digest: " \
-                  "#{digest.inspect} (expected: #{@digest.inspect})"
-              end
+              @logger&.warn "Unexpected script SHA1 digest: " \
+                "#{digest.inspect} (expected: #{@digest.inspect})"
 
               @digest = digest.freeze
             end

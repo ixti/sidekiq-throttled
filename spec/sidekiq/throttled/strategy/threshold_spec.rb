@@ -178,7 +178,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
     describe "without a dynamic key suffix and static configration" do
       let(:kwargs) do
         {
-          :limit => 5,
+          :limit  => 5,
           :period => 10
         }
       end

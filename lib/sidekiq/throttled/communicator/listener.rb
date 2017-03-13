@@ -69,12 +69,12 @@ module Sidekiq
           @subscribed = false
         rescue StandardError => e
           @subscribed = false
-          handle_exception(e, { :context => "sidekiq:throttled".freeze })
+          handle_exception(e, { :context => "sidekiq:throttled" })
           sleep 1
         rescue Exception => e # rubocop:disable Lint/RescueException
           @terminated = true
           @subscribed = false
-          handle_exception(e, { :context => "sidekiq:throttled".freeze })
+          handle_exception(e, { :context => "sidekiq:throttled" })
           raise
         end
 

@@ -61,7 +61,7 @@ module Sidekiq
                   callback.call(payload)
                 rescue => e
                   handle_exception(e, {
-                    :context => "sidekiq:throttled".freeze
+                    :context => "sidekiq:throttled"
                   })
                 end
               end

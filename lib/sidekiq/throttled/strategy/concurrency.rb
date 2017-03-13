@@ -23,7 +23,7 @@ module Sidekiq
         # @param [#to_i] ttl Concurrency lock TTL in seconds.
         # @param [Proc] key_suffix Dynamic key suffix generator.
         def initialize(strategy_key, limit:, ttl: 900, key_suffix: nil)
-          @base_key   = "#{strategy_key}:concurrency".freeze
+          @base_key   = "#{strategy_key}:concurrency"
           @limit      = limit
           @ttl        = ttl.to_i
           @key_suffix = key_suffix

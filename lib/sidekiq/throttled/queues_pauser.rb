@@ -19,19 +19,19 @@ module Sidekiq
       # Redis key of Set with paused queues.
       #
       # @return [String]
-      PAUSED_QUEUES = "throttled:X:paused_queues".freeze
+      PAUSED_QUEUES = "throttled:X:paused_queues"
       private_constant :PAUSED_QUEUES
 
       # {Communicator} message used to notify that queue needs to be paused.
       #
       # @return [String]
-      PAUSE_MESSAGE = "pause".freeze
+      PAUSE_MESSAGE = "pause"
       private_constant :PAUSE_MESSAGE
 
       # {Communicator} message used to notify that queue needs to be resumed.
       #
       # @return [String]
-      RESUME_MESSAGE = "resume".freeze
+      RESUME_MESSAGE = "resume"
       private_constant :RESUME_MESSAGE
 
       # Initializes singleton instance.

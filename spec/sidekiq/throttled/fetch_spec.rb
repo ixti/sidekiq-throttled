@@ -118,8 +118,8 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
     context "with dynamic configuration" do
       before do
         working_class.sidekiq_throttle(:threshold => {
-          :limit  => ->(a, b, _) { a + b },
-          :period => ->(a, b, c) { a + b + c }
+          :limit  => -> (a, b, _) { a + b },
+          :period => -> (a, b, c) { a + b + c }
         })
       end
 

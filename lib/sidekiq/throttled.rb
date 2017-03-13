@@ -79,8 +79,8 @@ module Sidekiq
       # @return [Boolean]
       def throttled?(message)
         message = JSON.parse message
-        job = message.fetch("class".freeze) { return false }
-        jid = message.fetch("jid".freeze) { return false }
+        job = message.fetch("class") { return false }
+        jid = message.fetch("jid") { return false }
 
         Registry.get job do |strategy|
           return strategy.throttled?(jid, *message["args"])

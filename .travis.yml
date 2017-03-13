@@ -31,10 +31,6 @@ matrix:
       env: SUITE="rubocop"
       gemfile: Gemfile
     -
-      rvm: 2.4.0
-      env: SUITE="yardstick"
-      gemfile: Gemfile
-    -
       rvm: jruby-9.1.8.0
       env: JRUBY_OPTS="$JRUBY_OPTS --debug" WITH_REDIS_NAMESPACE="false"
       gemfile: Gemfile
