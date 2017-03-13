@@ -15,13 +15,10 @@ before_install:
 install: bundle install --without development doc
 
 env:
-  - JRUBY_OPTS="$JRUBY_OPTS --debug" WITH_REDIS_NAMESPACE="false"
-  - JRUBY_OPTS="$JRUBY_OPTS --debug" WITH_REDIS_NAMESPACE="true"
+  - WITH_REDIS_NAMESPACE="false"
+  - WITH_REDIS_NAMESPACE="true"
 
 rvm:
-  # Include JRuby first because it takes the longest
-  - jruby-9.1.7.0
-  - rbx-2
   - 2.2
   - 2.3.3
   - 2.4.0
@@ -29,13 +26,25 @@ rvm:
 matrix:
   fast_finish: true
   include:
-    # Only run RuboCop and Yardstick metrics on the latest MRI
-    - rvm: 2.4.0
+    -
+      rvm: 2.4.0
       env: SUITE="rubocop"
       gemfile: Gemfile
-    - rvm: 2.4.0
+    -
+      rvm: 2.4.0
       env: SUITE="yardstick"
       gemfile: Gemfile
+    -
+      rvm: jruby-9.1.8.0
+      env: JRUBY_OPTS="$JRUBY_OPTS --debug" WITH_REDIS_NAMESPACE="false"
+      gemfile: Gemfile
+    -
+      rvm: jruby-9.1.8.0
+      env: JRUBY_OPTS="$JRUBY_OPTS --debug" WITH_REDIS_NAMESPACE="true"
+      gemfile: Gemfile
+  allow_failures:
+    -
+      rvm: jruby-9.1.8.0
 
 gemfile:
   - gemfiles/sidekiq_4.0.gemfile
