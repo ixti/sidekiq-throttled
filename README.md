@@ -156,6 +156,8 @@ appraisal rspec     # run rspec against each gemfile
 bundle exec rubocop # run static code analysis
 ```
 
+Don't forget to run `appraisal update` after any changes to `Gemfile`.
+
 
 ## Copyright
 
