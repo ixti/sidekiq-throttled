@@ -47,8 +47,10 @@ module Sidekiq
             # XXX: this may happen **ONLY** if script digesting will be
             #   changed in redis, which is not likely gonna happen.
             unless @digest == digest
-              @logger&.warn "Unexpected script SHA1 digest: " \
-                "#{digest.inspect} (expected: #{@digest.inspect})"
+              if @logger
+                @logger.warn "Unexpected script SHA1 digest: " \
+                  "#{digest.inspect} (expected: #{@digest.inspect})"
+              end
 
               @digest = digest.freeze
             end

@@ -54,7 +54,7 @@ module Sidekiq
       # @return [void]
       def stop_listener
         @mutex.synchronize do
-          @listener&.stop
+          @listener.stop if @listener
           @listener = nil
         end
       end
