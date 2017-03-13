@@ -132,6 +132,7 @@ This library aims to support work with following [Sidekiq][sidekiq] versions:
 
 * Sidekiq 4.0.x
 * Sidekiq 4.1.x
+* Sidekiq 4.2.x
 
 
 ## Contributing
@@ -142,6 +143,17 @@ This library aims to support work with following [Sidekiq][sidekiq] versions:
 * Send a pull request
 * If we like them we'll merge them
 * If we've accepted a patch, feel free to ask for commit access!
+
+
+## Development
+
+```
+bundle update
+appraisal install   # install dependencies for all gemfiles
+appraisal update    # update dependencies for all gemfiles
+appraisal rspec     # run rspec against each gemfile
+bundle exec rubocop # run static code analysis
+```
 
 
 ## Copyright
