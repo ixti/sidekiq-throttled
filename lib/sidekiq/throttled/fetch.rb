@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "sidekiq"
+require "sidekiq/throttled/expirable_list"
 require "sidekiq/throttled/fetch/unit_of_work"
 require "sidekiq/throttled/queues_pauser"
 require "sidekiq/throttled/queue_name"
@@ -11,11 +12,14 @@ module Sidekiq
     #
     # @private
     class Fetch
+      # Timeout to sleep between fetch retries in case of no job received,
+      # as well as timeout to wait for redis to give us something to work.
       TIMEOUT = 2
-      private_constant :TIMEOUT
 
       # Initializes fetcher instance.
       def initialize(options)
+        @paused = ExpirableList.new(TIMEOUT)
+
         @strict = options[:strict]
         @queues = options[:queues].map { |q| QueueName.expand q }
 
@@ -33,7 +37,7 @@ module Sidekiq
         return work unless work.throttled?
 
         work.requeue_throttled
-        sleep TIMEOUT
+        @paused << QueueName.expand(work.queue_name)
 
         nil
       end
@@ -78,7 +82,7 @@ module Sidekiq
       # @param [Array<String>] queues
       # @return [Array<String>]
       def filter_queues(queues)
-        QueuesPauser.instance.filter(queues)
+        QueuesPauser.instance.filter(queues) - @paused.to_a
       end
     end
   end

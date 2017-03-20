@@ -2,13 +2,13 @@
 require "sidekiq/throttled/fetch"
 
 RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
+  subject(:fetcher) { described_class.new options }
+
   let(:options)       { { :queues => %w(foo bar) } }
   let(:pauser)        { Sidekiq::Throttled::QueuesPauser.instance }
   let(:paused_queues) { pauser.instance_variable_get :@paused_queues }
 
   before { paused_queues.clear }
-
-  subject(:fetcher) { described_class.new options }
 
   let! :working_class do
     klass = Class.new do
@@ -26,9 +26,45 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
   end
 
   describe ".bulk_requeue"
-  it "sleeps instead of BRPOP when queues list is empty"
 
   describe "#retrieve_work" do
+    it "sleeps instead of BRPOP when queues list is empty" do
+      expect(fetcher).to receive(:filter_queues).and_return([])
+      expect(fetcher).to receive(:sleep).with(described_class::TIMEOUT)
+
+      Sidekiq.redis do |redis|
+        expect(redis).not_to receive(:brpop)
+        expect(fetcher.retrieve_work).to be nil
+      end
+    end
+
+    context "when received job is throttled", :time => :frozen do
+      before do
+        Sidekiq::Client.push_bulk({
+          "class" => working_class,
+          "args"  => Array.new(3) { [] }
+        })
+      end
+
+      it "pauses job's queue for TIMEOUT seconds" do
+        Sidekiq.redis do |redis|
+          expect(Sidekiq::Throttled).to receive(:throttled?).and_return(true)
+
+          queue_regexp = /^queue:(foo|bar)$/
+          expect(redis).to receive(:brpop)
+            .with(queue_regexp, queue_regexp, an_instance_of(Integer))
+            .and_call_original
+
+          expect(fetcher.retrieve_work).to be nil
+
+          expect(redis).to receive(:brpop)
+            .with("queue:bar", an_instance_of(Integer))
+
+          expect(fetcher.retrieve_work).to be nil
+        end
+      end
+    end
+
     shared_examples "expected behavior" do
       before do
         Sidekiq::Client.push_bulk({
