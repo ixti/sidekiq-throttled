@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 group :red_green_refactor, :halt_on_fail => true do
-  guard :rspec, cmd: "bundle exec rspec --no-profile" do
+  guard :rspec, :cmd => "bundle exec rspec --no-profile" do
     require "guard/rspec/dsl"
     dsl = Guard::RSpec::Dsl.new(self)
 
