@@ -174,7 +174,7 @@ Don't forget to run `appraisal update` after any changes to `Gemfile`.
 
 ## Copyright
 
-Copyright (c) 2015-2016 SensorTower Inc.
+Copyright (c) 2015-2017 SensorTower Inc.
 See LICENSE.md for further details.
 
 
