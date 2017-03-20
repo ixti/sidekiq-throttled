@@ -12,7 +12,7 @@ before_install:
   - gem install bundler --no-rdoc --no-ri
   - bundle --version
 
-install: bundle install --without development doc
+install: bundle install --without development
 
 env:
   - WITH_REDIS_NAMESPACE="false"

@@ -9,6 +9,12 @@ gem "rspec"
 gem "rubocop", "~> 0.47.0", :require => false
 gem "sidekiq"
 
+group :development do
+  gem "guard",         :require => false
+  gem "guard-rspec",   :require => false
+  gem "guard-rubocop", :require => false
+end
+
 group :test do
   gem "coveralls", :require => false
   gem "rack-test"
