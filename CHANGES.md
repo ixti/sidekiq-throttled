@@ -1,3 +1,9 @@
+## 0.6.7 (2017-03-21)
+
+* Fix fetcher causing workers starvation upon low concurrency thresholds.
+  ([@ixti])
+
+
 ## 0.6.6 (2016-10-16)
 
 * [#24](https://github.com/sensortower/sidekiq-throttled/pull/24)
