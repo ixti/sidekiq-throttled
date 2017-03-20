@@ -49,16 +49,9 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
       it "pauses job's queue for TIMEOUT seconds" do
         Sidekiq.redis do |redis|
           expect(Sidekiq::Throttled).to receive(:throttled?).and_return(true)
-
-          queue_regexp = /^queue:(foo|bar)$/
-          expect(redis).to receive(:brpop)
-            .with(queue_regexp, queue_regexp, an_instance_of(Integer))
-            .and_call_original
-
           expect(fetcher.retrieve_work).to be nil
 
-          expect(redis).to receive(:brpop)
-            .with("queue:bar", an_instance_of(Integer))
+          expect(redis).to receive(:brpop).with("queue:bar", 2)
 
           expect(fetcher.retrieve_work).to be nil
         end
