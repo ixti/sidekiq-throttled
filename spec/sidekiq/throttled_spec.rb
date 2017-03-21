@@ -18,37 +18,6 @@ RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
     end
   end
 
-  describe ".pause!" do
-    it "delegates call to QueuesPauser instance" do
-      queue = double
-
-      expect(Sidekiq::Throttled::QueuesPauser.instance)
-        .to receive(:pause!).with(queue)
-
-      described_class.pause!(queue)
-    end
-  end
-
-  describe ".resume!" do
-    it "delegates call to QueuesPauser instance" do
-      queue = double
-
-      expect(Sidekiq::Throttled::QueuesPauser.instance)
-        .to receive(:resume!).with(queue)
-
-      described_class.resume!(queue)
-    end
-  end
-
-  describe ".paused_queues" do
-    it "delegates call to QueuesPauser instance" do
-      expect(Sidekiq::Throttled::QueuesPauser.instance)
-        .to receive(:paused_queues)
-
-      described_class.paused_queues
-    end
-  end
-
   describe ".throttled?" do
     it "tolerates invalid JSON message" do
       expect(described_class.throttled?("][")).to be false

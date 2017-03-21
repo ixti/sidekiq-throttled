@@ -58,21 +58,6 @@ module Sidekiq
         end
       end
 
-      # (see QueuesPauser#pause!)
-      def pause!(queue)
-        QueuesPauser.instance.pause!(queue)
-      end
-
-      # (see QueuesPauser#resume!)
-      def resume!(queue)
-        QueuesPauser.instance.resume!(queue)
-      end
-
-      # (see QueuesPauser#paused_queues)
-      def paused_queues
-        QueuesPauser.instance.paused_queues
-      end
-
       # Tells whenever job is throttled or not.
       #
       # @param [String] message Job's JSON payload
