@@ -88,6 +88,15 @@ module Sidekiq
         end
       end
 
+      # Checks if given `queue` is paused.
+      #
+      # @param queue [#to_s]
+      # @return [Boolean]
+      def paused?(queue)
+        queue = QueueName.normalize queue.to_s
+        Sidekiq.redis { |conn| conn.sismember(PAUSED_QUEUES, queue) }
+      end
+
       # Resumes given `queue`.
       #
       # @param [#to_s] queue
