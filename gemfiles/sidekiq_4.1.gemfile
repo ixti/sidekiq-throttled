@@ -16,6 +16,7 @@ group :development do
 end
 
 group :test do
+  gem "capybara"
   gem "coveralls", :require => false
   gem "rack-test"
   gem "simplecov", ">= 0.9"
