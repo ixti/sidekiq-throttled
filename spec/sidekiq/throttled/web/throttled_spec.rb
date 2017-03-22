@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require "rack/test"
 
 require "sidekiq/throttled/web"
@@ -26,7 +27,6 @@ RSpec.describe Sidekiq::Throttled::Web do
 
     specify { expect(last_response.status).to eq 200 }
     specify { expect(last_response.body).to include "Throttled" }
-    specify { expect(last_response.body).to include "throttled" }
   end
 
   describe "GET /throttled" do

@@ -3,6 +3,7 @@
 require "set"
 require "singleton"
 
+require "sidekiq/throttled/patches/queue"
 require "sidekiq/throttled/communicator"
 require "sidekiq/throttled/queue_name"
 
@@ -45,6 +46,8 @@ module Sidekiq
       # @private
       # @return [void]
       def setup!
+        Patches::Queue.apply!
+
         Sidekiq.configure_server do
           @communicator.receive PAUSE_MESSAGE do |queue|
             @paused_queues << QueueName.expand(queue)

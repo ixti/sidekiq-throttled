@@ -1,29 +1,17 @@
 # frozen_string_literal: true
+
 require "sidekiq/throttled/fetch"
+
+require "support/working_class_hero"
 
 RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
   subject(:fetcher) { described_class.new options }
 
-  let(:options)       { { :queues => %w(foo bar) } }
+  let(:options)       { { :queues => %w(heros dreamers) } }
   let(:pauser)        { Sidekiq::Throttled::QueuesPauser.instance }
   let(:paused_queues) { pauser.instance_variable_get :@paused_queues }
 
   before { paused_queues.clear }
-
-  let! :working_class do
-    klass = Class.new do
-      include Sidekiq::Worker
-      include Sidekiq::Throttled::Worker
-
-      sidekiq_options :queue => :foo
-
-      def self.name
-        "WorkingClass"
-      end
-    end
-
-    stub_const(klass.name, klass)
-  end
 
   describe ".bulk_requeue"
 
@@ -41,7 +29,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
     context "when received job is throttled", :time => :frozen do
       before do
         Sidekiq::Client.push_bulk({
-          "class" => working_class,
+          "class" => WorkingClassHero,
           "args"  => Array.new(3) { [] }
         })
       end
@@ -51,7 +39,8 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
           expect(Sidekiq::Throttled).to receive(:throttled?).and_return(true)
           expect(fetcher.retrieve_work).to be nil
 
-          expect(redis).to receive(:brpop).with("queue:bar", 2)
+          expect(redis).to receive(:brpop)
+            .with("queue:dreamers", 2)
 
           expect(fetcher.retrieve_work).to be nil
         end
@@ -61,7 +50,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
     shared_examples "expected behavior" do
       before do
         Sidekiq::Client.push_bulk({
-          "class" => working_class,
+          "class" => WorkingClassHero,
           "args"  => Array.new(10) { [2, 3, 5] }
         })
       end
@@ -75,7 +64,8 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
         it "builds correct redis brpop command" do
           Sidekiq.redis do |conn|
-            expect(conn).to receive(:brpop).with("queue:foo", "queue:bar", 2)
+            expect(conn).to receive(:brpop)
+              .with("queue:heros", "queue:dreamers", 2)
             fetcher.retrieve_work
           end
         end
@@ -85,7 +75,8 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
           paused_queues.replace %w(queue:xxx)
 
           Sidekiq.redis do |conn|
-            expect(conn).to receive(:brpop).with("queue:foo", "queue:bar", 2)
+            expect(conn).to receive(:brpop)
+              .with("queue:heros", "queue:dreamers", 2)
             fetcher.retrieve_work
           end
         end
@@ -96,7 +87,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
         it "builds correct redis brpop command" do
           Sidekiq.redis do |conn|
-            queue_regexp = /^queue:(foo|bar)$/
+            queue_regexp = /^queue:(heros|dreamers)$/
             expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, 2)
             fetcher.retrieve_work
           end
@@ -107,7 +98,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
           paused_queues.replace %w(queue:xxx)
 
           Sidekiq.redis do |conn|
-            queue_regexp = /^queue:(foo|bar)$/
+            queue_regexp = /^queue:(heros|dreamers)$/
             expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, 2)
             fetcher.retrieve_work
           end
@@ -135,7 +126,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
     context "with static configuration" do
       before do
-        working_class.sidekiq_throttle(:threshold => {
+        WorkingClassHero.sidekiq_throttle(:threshold => {
           :limit  => 5,
           :period => 10
         })
@@ -146,7 +137,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
     context "with dynamic configuration" do
       before do
-        working_class.sidekiq_throttle(:threshold => {
+        WorkingClassHero.sidekiq_throttle(:threshold => {
           :limit  => -> (a, b, _) { a + b },
           :period => -> (a, b, c) { a + b + c }
         })

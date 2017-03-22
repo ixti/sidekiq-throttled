@@ -1,0 +1,39 @@
+<h3>Pauser</h3>
+
+<div class="table_container">
+  <table class="queues table table-hover table-bordered table-striped table-white">
+    <thead>
+      <th><%= t('Queue') %></th>
+      <th><%= t('Size') %></th>
+      <th><%= t('Actions') %></th>
+    </thead>
+    <% @queues.each do |queue| %>
+      <tr>
+        <td>
+          <a href="<%= root_path %>queues/<%= queue.name %>"><%= queue.name %></a>
+        </td>
+        <td><%= number_with_delimiter(queue.size) %> </td>
+        <td width="20%">
+          <form action="<%=root_path %>pauser/<%= CGI.escape queue.name %>" method="post">
+            <%= csrf_tag %>
+            <% if queue.paused? %>
+              <button class="btn btn-primary btn-pauser-resume btn-xs" type="submit" name="action" value="resume">Resume</button>
+            <% else %>
+              <button class="btn btn-danger btn-xs" type="submit" name="action" value="pause">Pause</button>
+            <% end %>
+          </form>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+</div>
+
+<style>
+.btn-pauser-resume {
+  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #00b13e), color-stop(100%, #009835));
+  background-image: -webkit-linear-gradient(#00b13e, #009835);
+  background-image: -moz-linear-gradient(#00b13e, #009835);
+  background-image: -o-linear-gradient(#00b13e, #009835);
+  background-image: linear-gradient(#00b13e, #009835);
+}
+</style>

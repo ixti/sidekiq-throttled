@@ -35,6 +35,7 @@ RSpec.configure do |config|
     when :fake      then Sidekiq::Testing.fake!(&example)
     when :inline    then Sidekiq::Testing.inline!(&example)
     when :disabled  then Sidekiq::Testing.disable!(&example)
+    when :enabled   then Sidekiq::Testing.__set_test_mode(nil, &example)
     else                 Sidekiq::Testing.fake!(&example)
     end
   end
