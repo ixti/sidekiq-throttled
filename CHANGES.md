@@ -1,8 +1,7 @@
-## 0.6.8 (2017-03-22)
+## 0.7.0 (2017-03-22)
 
 * Expose pause/resume queues hidden feature to UI. This was available via API
-  since v0.6.0 and today it's finally got it's UI. However this feature most
-  likely will be extracted into a standalone gem in future.
+  since v0.6.0 and today it's finally got it's UI.
   ([@ixti])
 
 
