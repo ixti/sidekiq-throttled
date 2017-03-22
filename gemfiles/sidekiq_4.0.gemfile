@@ -10,6 +10,7 @@ gem "rubocop", "~> 0.47.0", :require => false
 gem "sidekiq", "~> 4.0.0"
 
 group :development do
+  gem "byebug"
   gem "guard", :require => false
   gem "guard-rspec", :require => false
   gem "guard-rubocop", :require => false
