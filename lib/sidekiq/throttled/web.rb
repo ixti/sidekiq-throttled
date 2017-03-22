@@ -19,17 +19,18 @@ module Sidekiq
     module Web
       VIEWS         = Pathname.new(__dir__).join("web")
       THROTTLED_TPL = VIEWS.join("throttled.html.erb").read.freeze
-      PAUSER_TPL    = VIEWS.join("pauser.html.erb").read.freeze
+      QUEUES_TPL    = VIEWS.join("queues.html.erb").read.freeze
 
       class << self
+        # @api private
         def registered(app)
-          register_throttled app
-          register_pauser app
+          register_throttled_tab app
+          register_enhanced_queues_tab app
         end
 
         private
 
-        def register_throttled(app)
+        def register_throttled_tab(app)
           app.get("/throttled") { erb THROTTLED_TPL.dup }
 
           app.delete("/throttled/:id") do
@@ -39,21 +40,22 @@ module Sidekiq
         end
 
         # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-        def register_pauser(app)
+        def register_enhanced_queues_tab(app)
           pauser = QueuesPauser.instance
 
-          app.get("/pauser") do
+          app.get("/enhanced-queues") do
             @queues = Sidekiq::Queue.all
-            erb PAUSER_TPL.dup
+            erb QUEUES_TPL.dup
           end
 
-          app.post("/pauser/:queue") do
-            if "pause" == params[:action]
-              pauser.pause!(params[:queue])
-            else
-              pauser.resume!(params[:queue])
+          app.post("/enhanced-queues/:name") do
+            case params[:action]
+            when "delete" then Sidekiq::Queue.new(params[:name]).clear
+            when "pause"  then pauser.pause!(params[:name])
+            else               pauser.resume!(params[:name])
             end
-            redirect "#{root_path}pauser"
+
+            redirect "#{root_path}enhanced-queues"
           end
         end
         # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
@@ -64,4 +66,4 @@ end
 
 Sidekiq::Web.register Sidekiq::Throttled::Web
 Sidekiq::Web.tabs["Throttled"] = "throttled"
-Sidekiq::Web.tabs["Pauser"] = "pauser"
+Sidekiq::Web.tabs["Enhanced Queues"] = "enhanced-queues"
