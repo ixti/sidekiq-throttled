@@ -1,3 +1,11 @@
+## 0.6.8 (2017-03-22)
+
+* Expose pause/resume queues hidden feature to UI. This was available via API
+  since v0.6.0 and today it's finally got it's UI. However this feature most
+  likely will be extracted into a standalone gem in future.
+  ([@ixti])
+
+
 ## 0.6.7 (2017-03-21)
 
 * Fix fetcher causing workers starvation upon low concurrency thresholds.
