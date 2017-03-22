@@ -7,7 +7,7 @@ class WorkingClassHero
   sidekiq_options :queue => :heros
 
   def perform
-    puts <<~TEXT
+    puts <<-TEXT
     As soon as you're born they make you feel small
     By giving you no time instead of it all
     Till the pain is so big you feel nothing at all
