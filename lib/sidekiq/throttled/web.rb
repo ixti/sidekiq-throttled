@@ -14,14 +14,27 @@ require "sidekiq/throttled/web/stats"
 module Sidekiq
   module Throttled
     # Provides Sidekiq tab to monitor and reset throttled stats.
-    #
-    # @private
     module Web
       VIEWS         = Pathname.new(__dir__).join("web")
       THROTTLED_TPL = VIEWS.join("throttled.html.erb").read.freeze
       QUEUES_TPL    = VIEWS.join("queues.html.erb").read.freeze
 
       class << self
+        # Replace default Queues tab with enhanced one.
+        def enhance_queues_tab!
+          Sidekiq::Web::DEFAULT_TABS["Queues"] = "enhanced-queues"
+          Sidekiq::Web.tabs.delete("Enhanced Queues")
+        end
+
+        # Restore original Queues tab.
+        #
+        # @api There's next to absolutely no value in this method for real
+        #   users. The only it's purpose is to restore virgin state in specs.
+        def restore_queues_tab!
+          Sidekiq::Web::DEFAULT_TABS["Queues"] = "queues"
+          Sidekiq::Web.tabs["Enhanced Queues"] = "enhanced-queues"
+        end
+
         # @api private
         def registered(app)
           register_throttled_tab app
