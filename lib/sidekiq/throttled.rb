@@ -3,7 +3,7 @@
 require "sidekiq"
 
 # internal
-require "sidekiq/version"
+require "sidekiq/throttled/version"
 require "sidekiq/throttled/communicator"
 require "sidekiq/throttled/queues_pauser"
 require "sidekiq/throttled/registry"
