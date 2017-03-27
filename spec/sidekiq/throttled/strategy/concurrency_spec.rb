@@ -14,6 +14,19 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
       before { 4.times { strategy.throttled? jid } }
       it { is_expected.to be false }
     end
+
+    context "when dynamic limit returns nil" do
+      let(:strategy) { described_class.new :test, :limit => proc { |*| nil } }
+
+      it { is_expected.to be false }
+
+      it "does not uses redis" do
+        Sidekiq.redis do |redis|
+          expect(redis).not_to receive(:evalsha)
+          strategy.throttled? jid
+        end
+      end
+    end
   end
 
   describe "#count" do

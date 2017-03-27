@@ -1,5 +1,6 @@
 # frozen_string_literal: true
-# internal
+
+require "sidekiq/throttled/strategy/base"
 require "sidekiq/throttled/strategy/script"
 
 module Sidekiq
@@ -7,13 +8,17 @@ module Sidekiq
     class Strategy
       # Concurrency throttling strategy
       class Concurrency
+        include Base
+
         # LUA script used to limit fetch concurrency.
         # Logic behind the scene can be described in following pseudo code:
         #
-        #     return 1 if @limit <= LLEN(@key)
-        #
-        #     PUSH(@key, @jid)
-        #     return 0
+        #     if @limit <= LLEN(@key)
+        #       return 1
+        #     else
+        #       PUSH(@key, @jid)
+        #       return 0
+        #     end
         SCRIPT = Script.read "#{__dir__}/concurrency.lua"
         private_constant :SCRIPT
 
@@ -29,12 +34,6 @@ module Sidekiq
           @key_suffix = key_suffix
         end
 
-        # @return [Integer] Amount of allowed concurrent job processors
-        def limit(job_args = nil)
-          return @limit.to_i unless @limit.respond_to? :call
-          @limit.call(*job_args).to_i
-        end
-
         # @return [Boolean] Whenever strategy has dynamic config
         def dynamic?
           @key_suffix || @limit.respond_to?(:call)
@@ -42,7 +41,12 @@ module Sidekiq
 
         # @return [Boolean] whenever job is throttled or not
         def throttled?(jid, *job_args)
-          1 == SCRIPT.eval([key(job_args)], [jid.to_s, limit(job_args), @ttl])
+          return false unless (job_limit = limit(job_args))
+
+          keys = [key(job_args)]
+          args = [jid.to_s, job_limit, @ttl]
+
+          1 == SCRIPT.eval(keys, args)
         end
 
         # @return [Integer] Current count of jobs
@@ -60,14 +64,6 @@ module Sidekiq
         # @return [void]
         def finalize!(jid, *job_args)
           Sidekiq.redis { |conn| conn.srem(key(job_args), jid.to_s) }
-        end
-
-        private
-
-        def key(job_args)
-          key = @base_key.dup
-          key << ":#{@key_suffix.call(*job_args)}" if @key_suffix
-          key
         end
       end
     end
