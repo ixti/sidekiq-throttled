@@ -1,3 +1,14 @@
+## 0.7.1 (2017-03-30)
+
+* Fix summary bar queues link when queue ui was enhanced.
+  ([@ixti])
+
+* [#31](https://github.com/sensortower/sidekiq-throttled/pull/31)
+  [#30](https://github.com/sensortower/sidekiq-throttled/issues/30)
+  Do not throttle if limit is `nil`.
+  ([@ixti])
+
+
 ## 0.7.0 (2017-03-22)
 
 * Expose pause/resume queues hidden feature to UI. This was available via API
