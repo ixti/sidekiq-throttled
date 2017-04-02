@@ -4,6 +4,8 @@ require "rack/test"
 
 require "sidekiq/throttled/web"
 
+require "support/capybara"
+
 RSpec.describe Sidekiq::Throttled::Web do
   include Rack::Test::Methods
 
@@ -19,18 +21,23 @@ RSpec.describe Sidekiq::Throttled::Web do
       .and include('<a href="/enhanced-queues">Enhanced Queues')
   end
 
-  describe ".enhance_queues_tab!" do
+  describe ".enhance_queues_tab!", :type => :feature do
     before { Sidekiq::Throttled::Web.enhance_queues_tab! }
     after { Sidekiq::Throttled::Web.restore_queues_tab! }
 
-    it "replaces default Queues tab with Enhanced" do
-      get "/"
+    it "replaces default Queues tab with Enhanced in top navbar" do
+      visit "/"
 
-      expect(last_response.body)
-        .to include('<a href="/enhanced-queues">Queues')
+      expect(page)
+        .to have_link(:href => "/enhanced-queues", :text => "Queues")
 
-      expect(last_response.body)
-        .not_to include('<a href="/enhanced-queues">Enhanced Queues')
+      expect(page)
+        .not_to have_link(:href => "/queues", :text => "Queues")
+    end
+
+    it "replaces enqueued link with enhanced queues in summar bar", :js do
+      visit "/"
+      expect(page).not_to have_link(:href => "/queues")
     end
   end
 end

@@ -8,10 +8,18 @@ module Sidekiq
 
         class << self
           attr_accessor :enabled
+
+          def apply!(app)
+            if "4.2.0" <= Sidekiq::VERSION
+              Sidekiq::WebAction.send(:prepend, SummaryFix)
+            else
+              app.send(:prepend, SummaryFix)
+            end
+          end
         end
 
         def display_custom_head
-          SummaryFix.enabled ? "#{super}#{HTML}" : super
+          "#{super}#{HTML if SummaryFix.enabled}"
         end
       end
     end

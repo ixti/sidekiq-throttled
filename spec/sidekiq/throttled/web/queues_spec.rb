@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require "rack/test"
-require "capybara/rspec"
 
 require "sidekiq/throttled/web"
 
+require "support/capybara"
 require "support/working_class_hero"
 
 RSpec.describe Sidekiq::Throttled::Web, :sidekiq => :enabled do
@@ -70,8 +70,6 @@ RSpec.describe Sidekiq::Throttled::Web, :sidekiq => :enabled do
   end
 
   describe "Enhanced Queues UI", :type => :feature do
-    before { Capybara.app = Sidekiq::Web }
-
     it "allows resuming paused queues" do
       visit "/enhanced-queues"
 

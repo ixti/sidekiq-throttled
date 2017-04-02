@@ -40,7 +40,7 @@ module Sidekiq
 
         # @api private
         def registered(app)
-          app.send(:include, SummaryFix)
+          SummaryFix.apply! app
           register_throttled_tab app
           register_enhanced_queues_tab app
         end
