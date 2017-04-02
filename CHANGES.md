@@ -1,3 +1,12 @@
+## 0.7.2 (2017-04-02)
+
+* Fix summary bar fixer on sidekiq 4.2+.
+  ([@ixti])
+
+* Fix regexp used to fix summay bar queues link when ui was enhanced.
+  ([@ixti])
+
+
 ## 0.7.1 (2017-03-30)
 
 * Fix summary bar queues link when queue ui was enhanced.
