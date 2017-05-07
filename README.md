@@ -180,6 +180,7 @@ This library aims to support work with following [Sidekiq][sidekiq] versions:
 * Sidekiq 4.0.x
 * Sidekiq 4.1.x
 * Sidekiq 4.2.x
+* Sidekiq 5.0.x
 
 
 ## Contributing
