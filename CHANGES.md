@@ -1,3 +1,10 @@
+## 0.7.3 (2017-06-26)
+
+* [#34](https://github.com/sensortower/sidekiq-throttled/issues/34)
+  Fix reset button for sidekiq `>= 4.2`.
+  ([@ixti])
+
+
 ## 0.7.2 (2017-04-02)
 
 * Fix summary bar fixer on sidekiq 4.2+.
