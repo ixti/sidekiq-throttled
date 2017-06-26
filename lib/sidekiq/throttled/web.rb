@@ -50,7 +50,7 @@ module Sidekiq
         def register_throttled_tab(app)
           app.get("/throttled") { erb THROTTLED_TPL.dup }
 
-          app.delete("/throttled/:id") do
+          app.post("/throttled/:id/reset") do
             Registry.get(params[:id], &:reset!)
             redirect "#{root_path}throttled"
           end

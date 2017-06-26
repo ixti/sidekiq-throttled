@@ -41,17 +41,17 @@ RSpec.describe Sidekiq::Throttled::Web do
     end
   end
 
-  describe "DELETE /throttled/:id" do
+  describe "POST /throttled/:id/reset" do
     context "when id is unknown" do
       it "does not fail" do
-        delete "/throttled/abc"
+        post "/throttled/abc/reset"
         expect(last_response.status).to eq 302
       end
     end
 
     context "when id is known" do
       it "does not fail" do
-        delete "/throttled/foo"
+        post "/throttled/foo/reset"
         expect(last_response.status).to eq 302
       end
 
@@ -59,7 +59,7 @@ RSpec.describe Sidekiq::Throttled::Web do
         strategy = Sidekiq::Throttled::Registry.get "foo"
         expect(strategy).to receive(:reset!)
 
-        delete "/throttled/foo"
+        post "/throttled/foo/reset"
       end
     end
   end
