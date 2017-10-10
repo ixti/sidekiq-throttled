@@ -7,7 +7,7 @@ require "support/working_class_hero"
 RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
   subject(:fetcher) { described_class.new options }
 
-  let(:options)       { { :queues => %w[heros dreamers] } }
+  let(:options)       { { :queues => %w[heroes dreamers] } }
   let(:pauser)        { Sidekiq::Throttled::QueuesPauser.instance }
   let(:paused_queues) { pauser.instance_variable_get :@paused_queues }
 
@@ -65,7 +65,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
         it "builds correct redis brpop command" do
           Sidekiq.redis do |conn|
             expect(conn).to receive(:brpop)
-              .with("queue:heros", "queue:dreamers", 2)
+              .with("queue:heroes", "queue:dreamers", 2)
             fetcher.retrieve_work
           end
         end
@@ -76,7 +76,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
           Sidekiq.redis do |conn|
             expect(conn).to receive(:brpop)
-              .with("queue:heros", "queue:dreamers", 2)
+              .with("queue:heroes", "queue:dreamers", 2)
             fetcher.retrieve_work
           end
         end
@@ -87,7 +87,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
         it "builds correct redis brpop command" do
           Sidekiq.redis do |conn|
-            queue_regexp = /^queue:(heros|dreamers)$/
+            queue_regexp = /^queue:(heroes|dreamers)$/
             expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, 2)
             fetcher.retrieve_work
           end
@@ -98,7 +98,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
           paused_queues.replace %w[queue:xxx]
 
           Sidekiq.redis do |conn|
-            queue_regexp = /^queue:(heros|dreamers)$/
+            queue_regexp = /^queue:(heroes|dreamers)$/
             expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, 2)
             fetcher.retrieve_work
           end

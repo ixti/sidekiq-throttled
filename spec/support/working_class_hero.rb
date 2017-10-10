@@ -4,7 +4,7 @@ class WorkingClassHero
   include Sidekiq::Worker
   include Sidekiq::Throttled::Worker
 
-  sidekiq_options :queue => :heros
+  sidekiq_options :queue => :heroes
 
   def perform
     puts <<-TEXT
