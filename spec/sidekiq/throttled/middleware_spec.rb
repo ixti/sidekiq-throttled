@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require "sidekiq/throttled/middleware"
 
 RSpec.describe Sidekiq::Throttled::Middleware do

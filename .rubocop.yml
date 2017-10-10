@@ -6,6 +6,34 @@ AllCops:
   DisplayCopNames: true
   TargetRubyVersion: 2.4
 
+## Layout ######################################################################
+
+Layout/AlignHash:
+  EnforcedHashRocketStyle: table
+
+Layout/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+
+Layout/IndentArray:
+  EnforcedStyle: consistent
+
+Layout/IndentHash:
+  EnforcedStyle: consistent
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+Layout/SpaceInLambdaLiteral:
+  EnforcedStyle: require_space
+
+## Layout ######################################################################
+
+# Adds useless noise. I would prefer it to enforce blind rescues instead of
+# rescue from StandardError. To me blind rescue is as natural as implicit
+# return.
+Lint/RescueWithoutErrorClass:
+  Enabled: false
+
 ## Metrics #####################################################################
 
 Metrics/BlockLength:
@@ -14,12 +42,6 @@ Metrics/BlockLength:
     - "spec/**/*"
 
 ## Styles ######################################################################
-
-Style/AlignHash:
-  EnforcedHashRocketStyle: table
-
-Style/AlignParameters:
-  EnforcedStyle: with_fixed_indentation
 
 Style/BracesAroundHashParameters:
   Enabled: false
@@ -33,20 +55,11 @@ Style/Encoding:
 Style/HashSyntax:
   EnforcedStyle: hash_rockets
 
-Style/IndentArray:
-  EnforcedStyle: consistent
-
-Style/IndentHash:
-  EnforcedStyle: consistent
-
 # Follow your heart where it makes sense to use lambda or lambda literal.
 # Enforcing it makes some pieces of code look REALLY terrible, e.g. in
 # case of empty (noop) lambdas: `lambda { |_| }`.
 Style/Lambda:
   Enabled: false
-
-Style/MultilineMethodCallIndentation:
-  EnforcedStyle: indented
 
 # Enabling this cop makes Guardfile (which is full of pathname regexps)
 # look absolutley style-inconsistent and terrible. In any case, this should
@@ -55,8 +68,9 @@ Style/MultilineMethodCallIndentation:
 Style/RegexpLiteral:
   Enabled: false
 
-Style/SpaceInLambdaLiteral:
-  EnforcedStyle: require_space
-
 Style/StringLiterals:
   EnforcedStyle: double_quotes
+
+# I prefer Yoda style instead, but there's no such enforcement style.
+Style/YodaCondition:
+  Enabled: false

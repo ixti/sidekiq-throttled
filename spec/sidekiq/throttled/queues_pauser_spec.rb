@@ -11,7 +11,7 @@ RSpec.describe Sidekiq::Throttled::QueuesPauser do
     let(:paused_queues) { pauser.instance_variable_get :@paused_queues }
 
     it "adds paused queue to the paused list" do
-      paused_queues.replace %w(queue:xxx queue:yyy)
+      paused_queues.replace %w[queue:xxx queue:yyy]
 
       expect(communicator).to receive(:receive).twice do |event, &block|
         block.call "zzz" if "pause" == event
@@ -19,11 +19,11 @@ RSpec.describe Sidekiq::Throttled::QueuesPauser do
 
       pauser.setup!
 
-      expect(paused_queues).to eq Set.new(%w(queue:xxx queue:yyy queue:zzz))
+      expect(paused_queues).to eq Set.new(%w[queue:xxx queue:yyy queue:zzz])
     end
 
     it "removes resumed queue from paused list" do
-      paused_queues.replace %w(queue:xxx queue:yyy)
+      paused_queues.replace %w[queue:xxx queue:yyy]
 
       expect(communicator).to receive(:receive).twice do |event, &block|
         block.call "yyy" if "resume" == event
@@ -31,7 +31,7 @@ RSpec.describe Sidekiq::Throttled::QueuesPauser do
 
       pauser.setup!
 
-      expect(paused_queues).to eq Set.new(%w(queue:xxx))
+      expect(paused_queues).to eq Set.new(%w[queue:xxx])
     end
 
     it "resets paused queues each time communicator becomes ready" do
@@ -40,10 +40,10 @@ RSpec.describe Sidekiq::Throttled::QueuesPauser do
       expect(communicator).to receive(:ready) do |&block|
         expect(pauser)
           .to receive(:paused_queues)
-          .and_return(%w(foo bar))
+          .and_return(%w[foo bar])
 
         block.call
-        expect(paused_queues).to eq Set.new(%w(queue:foo queue:bar))
+        expect(paused_queues).to eq Set.new(%w[queue:foo queue:bar])
       end
 
       pauser.setup!
@@ -52,18 +52,18 @@ RSpec.describe Sidekiq::Throttled::QueuesPauser do
 
   describe "#filter" do
     it "returns list without paused queues" do
-      queues = %w(queue:xxx queue:yyy queue:zzz)
-      paused = Set.new %w(queue:yyy queue:zzz)
+      queues = %w[queue:xxx queue:yyy queue:zzz]
+      paused = Set.new %w[queue:yyy queue:zzz]
 
       pauser.instance_variable_set(:@paused_queues, paused)
-      expect(pauser.filter(queues)).to eq %w(queue:xxx)
+      expect(pauser.filter(queues)).to eq %w[queue:xxx]
     end
   end
 
   describe "#paused_queues" do
     it "returns list of paused quques" do
-      %w(foo bar).each { |q| pauser.pause! q }
-      expect(pauser.paused_queues).to match_array %w(foo bar)
+      %w[foo bar].each { |q| pauser.pause! q }
+      expect(pauser.paused_queues).to match_array %w[foo bar]
     end
 
     it "fetches list from redis" do

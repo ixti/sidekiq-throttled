@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 appraise "sidekiq-4.0" do
   gem "sidekiq", "~> 4.0.0"
 end

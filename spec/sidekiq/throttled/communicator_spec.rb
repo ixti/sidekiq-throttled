@@ -42,7 +42,7 @@ RSpec.describe Sidekiq::Throttled::Communicator do
     end
 
     after do
-      %i(startup quiet).each do |event|
+      %i[startup quiet].each do |event|
         Sidekiq.options[:lifecycle_events][event].clear
       end
     end

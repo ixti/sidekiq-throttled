@@ -58,7 +58,7 @@ module Sidekiq
           end
 
           @communicator.ready do
-            @paused_queues.replace paused_queues.map { |q| QueueName.expand q }
+            @paused_queues.replace(paused_queues.map { |q| QueueName.expand q })
           end
         end
       end

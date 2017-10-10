@@ -6,7 +6,7 @@ gem "appraisal"
 gem "rake"
 gem "redis-namespace", :require => false
 gem "rspec"
-gem "rubocop", "~> 0.47.0", :require => false
+gem "rubocop", "~> 0.50.0", :require => false
 gem "sidekiq"
 
 group :development do

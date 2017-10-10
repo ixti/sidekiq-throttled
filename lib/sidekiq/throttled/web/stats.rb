@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Sidekiq
   module Throttled
     module Web

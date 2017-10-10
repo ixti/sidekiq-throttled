@@ -7,7 +7,7 @@ require "support/working_class_hero"
 RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
   subject(:fetcher) { described_class.new options }
 
-  let(:options)       { { :queues => %w(heros dreamers) } }
+  let(:options)       { { :queues => %w[heros dreamers] } }
   let(:pauser)        { Sidekiq::Throttled::QueuesPauser.instance }
   let(:paused_queues) { pauser.instance_variable_get :@paused_queues }
 
@@ -72,7 +72,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
         it "filters queues with QueuesPauser" do
           options[:queues] << "xxx"
-          paused_queues.replace %w(queue:xxx)
+          paused_queues.replace %w[queue:xxx]
 
           Sidekiq.redis do |conn|
             expect(conn).to receive(:brpop)
@@ -95,7 +95,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
         it "filters queues with QueuesPauser" do
           options[:queues] << "xxx"
-          paused_queues.replace %w(queue:xxx)
+          paused_queues.replace %w[queue:xxx]
 
           Sidekiq.redis do |conn|
             queue_regexp = /^queue:(heros|dreamers)$/

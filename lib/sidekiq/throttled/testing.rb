@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require "sidekiq/throttled/registry"
 
 RSpec.configure do |config|

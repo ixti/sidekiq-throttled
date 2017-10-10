@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
   subject(:strategy) { described_class.new :test, :limit => 5, :period => 10 }
 

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # internal
 require "sidekiq/throttled/strategy"
 

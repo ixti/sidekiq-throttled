@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require "bundler/gem_tasks"
 
 require "rspec/core/rake_task"
@@ -20,7 +21,7 @@ namespace :rubocop do
   end
 end
 
-default_suite = ENV["CI"] ? :spec : %i(spec rubocop)
+default_suite = ENV["CI"] ? :spec : %i[spec rubocop]
 named_suites  = { "rubocop" => :rubocop, "rspec" => :spec }
 
 task :default => named_suites.fetch(ENV["SUITE"], default_suite)
