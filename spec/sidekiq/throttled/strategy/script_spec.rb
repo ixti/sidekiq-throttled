@@ -7,6 +7,10 @@ RSpec.describe Sidekiq::Throttled::Strategy::Script do
 
   it "loads only when needed" do
     Sidekiq.redis do |conn|
+      if defined?(Redis::Namespace) && conn.is_a?(Redis::Namespace)
+        conn = conn.redis
+      end
+
       expect(conn).to receive(:script)
         .with("load", lua_script).and_call_original
       redis_script.eval

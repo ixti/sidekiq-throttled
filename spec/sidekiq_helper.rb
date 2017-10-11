@@ -42,6 +42,10 @@ RSpec.configure do |config|
 
   config.before :example do
     Sidekiq.redis do |conn|
+      if defined?(Redis::Namespace) && conn.is_a?(Redis::Namespace)
+        conn = conn.redis
+      end
+
       conn.flushdb
       conn.script("flush")
     end
