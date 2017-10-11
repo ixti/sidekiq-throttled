@@ -41,11 +41,7 @@ module Sidekiq
         # Loads script to redis
         # @return [void]
         def bootstrap!
-          Sidekiq.redis do |conn|
-            if defined?(Redis::Namespace) && conn.is_a?(Redis::Namespace)
-              conn = conn.redis
-            end
-
+          namespaceless_redis do |conn|
             digest = conn.script(LOAD, @source)
 
             # XXX: this may happen **ONLY** if script digesting will be
@@ -79,6 +75,19 @@ module Sidekiq
         # @return [Script]
         def self.read(file)
           new File.read file
+        end
+
+        private
+
+        # Yields real namespace-less redis client.
+        def namespaceless_redis
+          Sidekiq.redis do |conn|
+            if defined?(Redis::Namespace) && conn.is_a?(Redis::Namespace)
+              conn = conn.redis
+            end
+
+            yield conn
+          end
         end
       end
     end
