@@ -28,6 +28,14 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
         end
       end
     end
+
+    it "invalidates expired locks avoiding strategy starvation" do
+      5.times { strategy.throttled? jid }
+
+      Timecop.travel(Time.now + 900) do
+        expect(strategy.throttled?(jid)).to be false
+      end
+    end
   end
 
   describe "#count" do

@@ -28,7 +28,7 @@ module Sidekiq
         # @param [#to_i] ttl Concurrency lock TTL in seconds.
         # @param [Proc] key_suffix Dynamic key suffix generator.
         def initialize(strategy_key, limit:, ttl: 900, key_suffix: nil)
-          @base_key   = "#{strategy_key}:concurrency"
+          @base_key   = "#{strategy_key}:concurrency.v2"
           @limit      = limit
           @ttl        = ttl.to_i
           @key_suffix = key_suffix
@@ -43,15 +43,15 @@ module Sidekiq
         def throttled?(jid, *job_args)
           return false unless (job_limit = limit(job_args))
 
-          keys = [key(job_args)]
-          args = [jid.to_s, job_limit, @ttl]
+          keys = [key(job_args), jid.to_s]
+          args = [job_limit, @ttl, Time.now.to_f]
 
           1 == SCRIPT.eval(keys, args)
         end
 
         # @return [Integer] Current count of jobs
         def count(*job_args)
-          Sidekiq.redis { |conn| conn.scard(key(job_args)) }.to_i
+          Sidekiq.redis { |conn| conn.zcard(key(job_args)) }.to_i
         end
 
         # Resets count of jobs
@@ -63,7 +63,7 @@ module Sidekiq
         # Remove jid from the pool of jobs in progress
         # @return [void]
         def finalize!(jid, *job_args)
-          Sidekiq.redis { |conn| conn.srem(key(job_args), jid.to_s) }
+          Sidekiq.redis { |conn| conn.zrem(key(job_args), jid.to_s) }
         end
       end
     end
