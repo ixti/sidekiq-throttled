@@ -1,3 +1,10 @@
+## 0.8.0 (2017-10-11)
+
+* Refactor concurrency throttling internals to use sorted sets in order to avoid
+  starvation in case when finalize! was not called (OOM / redis issues).
+  ([@ixti])
+
+
 ## 0.7.3 (2017-06-26)
 
 * [#34](https://github.com/sensortower/sidekiq-throttled/issues/34)
