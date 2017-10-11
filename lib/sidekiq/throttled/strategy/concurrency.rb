@@ -43,8 +43,8 @@ module Sidekiq
         def throttled?(jid, *job_args)
           return false unless (job_limit = limit(job_args))
 
-          keys = [key(job_args), jid.to_s]
-          args = [job_limit, @ttl, Time.now.to_f]
+          keys = [key(job_args)]
+          args = [jid.to_s, job_limit, @ttl, Time.now.to_f]
 
           1 == SCRIPT.eval(keys, args)
         end
