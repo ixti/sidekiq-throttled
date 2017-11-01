@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# stdlib
+require "thread"
+
 # 3rd party
 require "sidekiq"
 
@@ -40,6 +43,9 @@ module Sidekiq
   #       end
   #     end
   module Throttled
+    MUTEX = Mutex.new
+    private_constant :MUTEX
+
     class << self
       # Hooks throttler into sidekiq.
       #
@@ -68,6 +74,8 @@ module Sidekiq
         job = message.fetch("class") { return false }
         jid = message.fetch("jid") { return false }
 
+        preload_constant! job
+
         Registry.get job do |strategy|
           return strategy.throttled?(jid, *message["args"])
         end
@@ -75,6 +83,34 @@ module Sidekiq
         false
       rescue
         false
+      end
+
+      private
+
+      # Tries to preload constant by it's name once.
+      #
+      # Somehow, sometimes, some classes are not eager loaded upon Rails init,
+      # leading to throttling config not being registered prior job perform.
+      # And that leaves us with concurrency limit + 1 situation upon Sidekiq
+      # server restart (becomes normal after all Sidekiq processes handled
+      # at leas onr job of that class).
+      #
+      # @return [void]
+      def preload_constant!(job)
+        MUTEX.synchronize do
+          @preloaded      ||= {}
+          @preloaded[job] ||= constantize(job) || true
+        end
+      end
+
+      # Resolve constant from it's name
+      def constantize(str)
+        str.sub(/^::/, "").split("::").inject(Object) do |const, name|
+          const.const_get(name)
+        end
+      rescue
+        Sidekiq.logger.warn { "Failed to constantize: #{str}" }
+        nil
       end
     end
   end
