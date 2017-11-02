@@ -1,3 +1,9 @@
+## 0.8.1 (2017-11-02)
+
+* Preload job class constant prior trying to get it's throttling strategy.
+  ([@ixti])
+
+
 ## 0.8.0 (2017-10-11)
 
 * Refactor concurrency throttling internals to use sorted sets in order to avoid
