@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
+require "redis/prescription"
+
 require "sidekiq/throttled/strategy/base"
-require "sidekiq/throttled/strategy/script"
 
 module Sidekiq
   module Throttled
@@ -19,7 +20,7 @@ module Sidekiq
         #       PUSH(@key, @jid)
         #       return 0
         #     end
-        SCRIPT = Script.read "#{__dir__}/concurrency.lua"
+        SCRIPT = Redis::Prescription.read "#{__dir__}/concurrency.lua"
         private_constant :SCRIPT
 
         # @param [#to_s] strategy_key
@@ -43,10 +44,12 @@ module Sidekiq
         def throttled?(jid, *job_args)
           return false unless (job_limit = limit(job_args))
 
-          keys = [key(job_args)]
-          args = [jid.to_s, job_limit, @ttl, Time.now.to_f]
+          kwargs = {
+            :keys => [key(job_args)],
+            :argv => [jid.to_s, job_limit, @ttl, Time.now.to_f]
+          }
 
-          1 == SCRIPT.eval(keys, args)
+          Sidekiq.redis { |redis| 1 == SCRIPT.eval(redis, kwargs) }
         end
 
         # @return [Integer] Current count of jobs
