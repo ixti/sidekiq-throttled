@@ -181,6 +181,7 @@ This library aims to support work with following [Sidekiq][sidekiq] versions:
 * Sidekiq 4.1.x
 * Sidekiq 4.2.x
 * Sidekiq 5.0.x
+* Sidekiq 5.1.x
 
 
 ## Contributing
@@ -197,10 +198,10 @@ This library aims to support work with following [Sidekiq][sidekiq] versions:
 
 ```
 bundle update
-appraisal install   # install dependencies for all gemfiles
-appraisal update    # update dependencies for all gemfiles
-appraisal rspec     # run rspec against each gemfile
-bundle exec rubocop # run static code analysis
+bundle exec appraisal install   # install dependencies for all gemfiles
+bundle exec appraisal update    # update dependencies for all gemfiles
+bundle exec appraisal rspec     # run rspec against each gemfile
+bundle exec rubocop             # run static code analysis
 ```
 
 Don't forget to run `appraisal update` after any changes to `Gemfile`.

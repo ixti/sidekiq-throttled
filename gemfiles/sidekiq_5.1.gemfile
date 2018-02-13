@@ -7,7 +7,7 @@ gem "rake"
 gem "redis-namespace", require: false
 gem "rspec"
 gem "rubocop", "~> 0.50.0", require: false
-gem "sidekiq", "~> 4.0.0"
+gem "sidekiq", "~> 5.1.0"
 
 group :development do
   gem "byebug"
