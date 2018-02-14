@@ -18,33 +18,19 @@ before_install:
 
 install: bundle install --without development
 
-env:
-  - WITH_REDIS_NAMESPACE="false"
-  - WITH_REDIS_NAMESPACE="true"
-
 rvm:
-  - 2.2.6
-  - 2.3.3
-  - 2.4.0
+  - 2.2
+  - 2.3
+  - 2.4
+  - 2.5
 
 matrix:
   fast_finish: true
   include:
     -
-      rvm: 2.4.0
+      rvm: 2.4
       env: SUITE="rubocop"
       gemfile: Gemfile
-    -
-      rvm: jruby-9.1.8.0
-      env: JRUBY_OPTS="$JRUBY_OPTS --debug" WITH_REDIS_NAMESPACE="false"
-      gemfile: Gemfile
-    -
-      rvm: jruby-9.1.8.0
-      env: JRUBY_OPTS="$JRUBY_OPTS --debug" WITH_REDIS_NAMESPACE="true"
-      gemfile: Gemfile
-  allow_failures:
-    -
-      rvm: jruby-9.1.8.0
 
 gemfile:
   - gemfiles/sidekiq_4.0.gemfile
