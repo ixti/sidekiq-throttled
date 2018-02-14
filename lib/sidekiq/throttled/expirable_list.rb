@@ -2,6 +2,8 @@
 
 require "monitor"
 
+require "concurrent/utility/monotonic_time"
+
 module Sidekiq
   module Throttled
     # List that tracks when elements were added and enumerates over those not
@@ -10,17 +12,21 @@ module Sidekiq
     # ## Implementation
     #
     # Internally list holds an array of arrays. Thus ecah element is a tuple of
-    # timestamp (when element was added) and element itself:
+    # monotonic timestamp (when element was added) and element itself:
     #
     #     [
-    #       [ 1234567890.12345, "default" ],
-    #       [ 1234567890.34567, "urgent" ],
-    #       [ 1234579621.56789, "urgent" ],
+    #       [ 123456.7890, "default" ],
+    #       [ 123456.7891, "urgent" ],
+    #       [ 123457.9621, "urgent" ],
     #       ...
     #     ]
     #
     # It does not deduplicates elements. Eviction happens only upon elements
     # retrieval (see {#each}).
+    #
+    # @see http://ruby-concurrency.github.io/concurrent-ruby/Concurrent.html#monotonic_time-class_method
+    # @see https://ruby-doc.org/core/Process.html#method-c-clock_gettime
+    # @see https://linux.die.net/man/3/clock_gettime
     #
     # @private
     class ExpirableList
@@ -38,7 +44,7 @@ module Sidekiq
       # @params element [Object]
       # @return [ExpirableList] self
       def <<(element)
-        @mon.synchronize { @arr << [Time.now.to_f, element] }
+        @mon.synchronize { @arr << [Concurrent.monotonic_time, element] }
         self
       end
 
@@ -52,7 +58,7 @@ module Sidekiq
         return to_enum __method__ unless block_given?
 
         @mon.synchronize do
-          horizon = Time.now.to_f - @ttl
+          horizon = Concurrent.monotonic_time - @ttl
 
           # drop all elements older than horizon
           @arr.shift while @arr[0] && @arr[0][0] < horizon
