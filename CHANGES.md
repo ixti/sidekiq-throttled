@@ -1,3 +1,12 @@
+## 0.8.2 (2018-02-14)
+
+* Extract redis LUA scripts stored procedures runner to redis-prescription gem.
+  ([@ixti])
+
+* Switch to Concurrent.monotonic_time to expire elements of ExpirableList.
+  ([@ixti])
+
+
 ## 0.8.1 (2017-11-02)
 
 * Preload job class constant prior trying to get it's throttling strategy.
