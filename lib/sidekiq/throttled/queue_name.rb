@@ -7,7 +7,7 @@ module Sidekiq
     # @private
     module QueueName
       # RegExp used to stip out any redisr-namespace prefixes with `queue:`.
-      QUEUE_NAME_PREFIX_RE = /^.*queue:/
+      QUEUE_NAME_PREFIX_RE = /.*queue:/
       private_constant :QUEUE_NAME_PREFIX_RE
 
       class << self
@@ -24,10 +24,10 @@ module Sidekiq
         #   QueueName.normalize "foo:bar:queue:default"
         #   # => "default"
         #
-        # @param [String]
+        # @param [#to_s]
         # @return [String]
         def normalize(queue)
-          queue.sub(QUEUE_NAME_PREFIX_RE, "")
+          queue.to_s.sub(QUEUE_NAME_PREFIX_RE, "")
         end
 
         # Prepends `queue:` prefix to given `queue` name.
@@ -35,7 +35,7 @@ module Sidekiq
         # @note It does not normalizes queue before expanding it, thus
         #   double-call of this method will potentially do some harm.
         #
-        # @param [String] queue Queue name
+        # @param [#to_s] queue Queue name
         # @return [String]
         def expand(queue)
           "queue:#{queue}"
