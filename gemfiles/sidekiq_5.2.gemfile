@@ -6,7 +6,7 @@ gem "appraisal"
 gem "rake"
 gem "rspec"
 gem "rubocop", "~> 0.50.0", require: false
-gem "sidekiq", "~> 4.2.0"
+gem "sidekiq", "~> 5.2.0"
 
 group :development do
   gem "byebug"

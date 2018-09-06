@@ -19,6 +19,7 @@ group :test do
   gem "capybara"
   gem "coveralls", :require => false
   gem "poltergeist"
+  gem "puma"
   gem "rack-test"
   gem "simplecov", ">= 0.9"
   gem "sinatra", "~> 1.4", ">= 1.4.6"
