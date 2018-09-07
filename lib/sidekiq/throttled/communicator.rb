@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "thread"
 require "singleton"
 
 require "sidekiq/exception_handler"
@@ -54,7 +53,7 @@ module Sidekiq
       # @return [void]
       def stop_listener
         @mutex.synchronize do
-          @listener.stop if @listener
+          @listener&.stop
           @listener = nil
         end
       end
@@ -110,7 +109,7 @@ module Sidekiq
       # @return [void]
       def ready(&handler)
         @callbacks.on("ready", &handler)
-        yield if @listener && @listener.ready?
+        yield if @listener&.ready?
       end
     end
   end

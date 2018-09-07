@@ -15,11 +15,3 @@ Metrics/MethodLength:
 Security/MarshalLoad:
   Exclude:
     - lib/sidekiq/throttled/communicator/listener.rb
-
-# Enable this cop once we drop Ruby 2.2.x support.
-Style/SafeNavigation:
-  Enabled: false
-
-# Enable this cop once we drop Ruby 2.2.x support.
-Style/NumericPredicate:
-  Enabled: false

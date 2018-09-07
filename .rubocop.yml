@@ -5,6 +5,8 @@ inherit_from: .rubocop.todo.yml
 AllCops:
   DisplayCopNames: true
   TargetRubyVersion: 2.3
+  Exclude:
+    - "gemfiles/*"
 
 ## Layout ######################################################################
 
@@ -26,14 +28,6 @@ Layout/MultilineMethodCallIndentation:
 Layout/SpaceInLambdaLiteral:
   EnforcedStyle: require_space
 
-## Layout ######################################################################
-
-# Adds useless noise. I would prefer it to enforce blind rescues instead of
-# rescue from StandardError. To me blind rescue is as natural as implicit
-# return.
-Lint/RescueWithoutErrorClass:
-  Enabled: false
-
 ## Metrics #####################################################################
 
 Metrics/BlockLength:
@@ -48,9 +42,6 @@ Style/BracesAroundHashParameters:
 
 Style/Documentation:
   Enabled: false
-
-Style/Encoding:
-  EnforcedStyle: when_needed
 
 Style/HashSyntax:
   EnforcedStyle: hash_rockets
@@ -67,6 +58,9 @@ Style/Lambda:
 # enforce to use `["foo"]` over `%w(foo)` and so on.
 Style/RegexpLiteral:
   Enabled: false
+
+Style/RescueStandardError:
+  EnforcedStyle: implicit
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes

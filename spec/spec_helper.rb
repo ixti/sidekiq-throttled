@@ -15,7 +15,8 @@ SimpleCov.start do
   minimum_coverage 90
 end
 
-$LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+
 require "sidekiq/throttled"
 require "sidekiq/throttled/testing"
 

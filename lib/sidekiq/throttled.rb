@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-# stdlib
-require "thread"
-
 # 3rd party
 require "sidekiq"
 

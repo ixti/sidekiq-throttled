@@ -14,9 +14,10 @@ module Sidekiq
 
         # @param [Strategy::Concurrency, Strategy::Threshold] strategy
         def initialize(strategy)
-          if strategy && strategy.dynamic?
+          if strategy&.dynamic?
             raise ArgumentError, "Can't handle dynamic strategies"
           end
+
           @strategy = strategy
         end
 
@@ -52,7 +53,9 @@ module Sidekiq
 
           TIME_CONVERSION.each do |(dimension, unit, units)|
             count = (int / dimension).to_i
-            next unless 0 < count
+
+            next unless count.positive?
+
             int -= count * dimension
             arr << "#{count} #{1 == count ? unit : units}"
           end
@@ -65,7 +68,7 @@ module Sidekiq
           digits = int.to_s.split ""
           str    = digits.shift(digits.count % 3).join("")
 
-          str << " " << digits.shift(3).join("") while 0 < digits.count
+          str << " " << digits.shift(3).join("") while digits.count.positive?
 
           str.strip
         end

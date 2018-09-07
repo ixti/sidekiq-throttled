@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "fiber"
-require "thread"
 
 require "sidekiq/exception_handler"
 

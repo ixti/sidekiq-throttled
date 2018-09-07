@@ -47,17 +47,17 @@ module Sidekiq
 
       # @return [Boolean] whenever strategy has dynamic config
       def dynamic?
-        return true if @concurrency && @concurrency.dynamic?
-        return true if @threshold && @threshold.dynamic?
+        return true if @concurrency&.dynamic?
+        return true if @threshold&.dynamic?
 
         false
       end
 
       # @return [Boolean] whenever job is throttled or not.
       def throttled?(jid, *job_args)
-        return true if @concurrency && @concurrency.throttled?(jid, *job_args)
+        return true if @concurrency&.throttled?(jid, *job_args)
 
-        if @threshold && @threshold.throttled?(*job_args)
+        if @threshold&.throttled?(*job_args)
           finalize!(jid, *job_args)
           return true
         end
@@ -68,14 +68,14 @@ module Sidekiq
       # Marks job as being processed.
       # @return [void]
       def finalize!(jid, *job_args)
-        @concurrency && @concurrency.finalize!(jid, *job_args)
+        @concurrency&.finalize!(jid, *job_args)
       end
 
       # Resets count of jobs of all avaliable strategies
       # @return [void]
       def reset!
-        @concurrency && @concurrency.reset!
-        @threshold && @threshold.reset!
+        @concurrency&.reset!
+        @threshold&.reset!
       end
     end
   end

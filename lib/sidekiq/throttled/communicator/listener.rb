@@ -67,7 +67,7 @@ module Sidekiq
         rescue Sidekiq::Shutdown
           @terminated = true
           @subscribed = false
-        rescue StandardError => e
+        rescue StandardError => e # rubocop:disable Style/RescueStandardError
           @subscribed = false
           handle_exception(e, { :context => "sidekiq:throttled" })
           sleep 1
