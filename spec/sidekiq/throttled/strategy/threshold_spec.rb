@@ -8,15 +8,17 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
 
     context "when limit exceeded" do
       before { 5.times { strategy.throttled? } }
+
       it { is_expected.to be true }
 
-      context "and chill period is over" do
+      context "when chill period is over" do
         it { Timecop.travel(Time.now + 11) { is_expected.to be false } }
       end
     end
 
     context "when limit is not exceded" do
       before { 4.times { strategy.throttled? } }
+
       it { is_expected.to be false }
     end
 
@@ -40,7 +42,9 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
 
   describe "#count" do
     subject { strategy.count }
+
     before { 3.times { strategy.throttled? } }
+
     it { is_expected.to eq 3 }
   end
 
@@ -59,34 +63,41 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
         :test, :limit => 5, :period => 10, :key_suffix => -> (i) { i }
       )
     end
+
     let(:initial_key_input) { 123 }
 
     describe "#throttled?" do
       subject { strategy.throttled?(key_input) }
+
       before { 5.times { strategy.throttled?(initial_key_input) } }
 
       describe "when limit exceeded for the same input" do
         let(:key_input) { initial_key_input }
+
         it { is_expected.to be true }
       end
 
       describe "when limit exceeded for a different input" do
         let(:key_input) { 456 }
+
         it { is_expected.to be false }
       end
     end
 
     describe "#count" do
       subject { strategy.count(key_input) }
+
       before { 3.times { strategy.throttled?(initial_key_input) } }
 
       describe "for the same input" do
         let(:key_input) { initial_key_input }
+
         it { is_expected.to eq 3 }
       end
 
       describe "for a different input" do
         let(:key_input) { 456 }
+
         it { is_expected.to eq 0 }
       end
     end
@@ -127,22 +138,26 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
 
       context "when limit exceeded" do
         before { 5.times { strategy.throttled? } }
+
         it { is_expected.to be true }
 
-        context "and chill period is over" do
+        context "when chill period is over" do
           it { Timecop.travel(Time.now + 11) { is_expected.to be false } }
         end
       end
 
       context "when limit is not exceded" do
         before { 4.times { strategy.throttled? } }
+
         it { is_expected.to be false }
       end
     end
 
     describe "#count" do
       subject { strategy.count }
+
       before { 3.times { strategy.throttled? } }
+
       it { is_expected.to eq 3 }
     end
 

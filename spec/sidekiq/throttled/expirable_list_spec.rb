@@ -12,7 +12,7 @@ RSpec.describe Sidekiq::Throttled::ExpirableList, :sidekiq => :disabled do
   describe "#each", :time => :frozen do
     before do
       5.times do |i|
-        expect(Concurrent)
+        allow(Concurrent)
           .to receive(:monotonic_time)
           .and_return(i.to_f)
 

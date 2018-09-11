@@ -62,8 +62,9 @@ RSpec.describe Sidekiq::Throttled::Registry do
   end
 
   describe ".get" do
-    let(:name) { "foo" }
     subject { described_class.get name }
+
+    let(:name) { "foo" }
 
     context "when strategy is not registered" do
       it { is_expected.to be nil }
@@ -71,6 +72,7 @@ RSpec.describe Sidekiq::Throttled::Registry do
 
     context "when strategy was registered" do
       before { described_class.add(name, threshold) }
+
       it { is_expected.to be_a Sidekiq::Throttled::Strategy }
     end
   end

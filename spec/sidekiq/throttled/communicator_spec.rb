@@ -4,6 +4,7 @@ RSpec.describe Sidekiq::Throttled::Communicator do
   subject(:communicator) { described_class.instance }
 
   let(:callbacks) { communicator.instance_variable_get(:@callbacks) }
+
   after { communicator.stop_listener }
 
   def run_callbacks(name, *args)

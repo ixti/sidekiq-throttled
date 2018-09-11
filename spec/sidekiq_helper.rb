@@ -21,7 +21,7 @@ RSpec.configure do |config|
   config.include JidGenerator
   config.extend  JidGenerator
 
-  config.around :example do |example|
+  config.around do |example|
     Sidekiq::Worker.clear_all
 
     case example.metadata[:sidekiq]
@@ -33,7 +33,7 @@ RSpec.configure do |config|
     end
   end
 
-  config.before :example do
+  config.before do
     Sidekiq.redis do |conn|
       conn.flushdb
       conn.script("flush")

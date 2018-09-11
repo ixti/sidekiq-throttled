@@ -48,11 +48,13 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
       context "when limit is not yet reached" do
         before { 3.times { strategy.throttled? jid } }
+
         it { is_expected.to be false }
       end
 
       context "when limit exceeded" do
         before { 10.times { strategy.throttled? jid } }
+
         it { is_expected.to be true }
       end
     end
@@ -62,11 +64,13 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
       context "when limit is not yet reached" do
         before { 6.times { strategy.throttled? jid } }
+
         it { is_expected.to be false }
       end
 
       context "when limit exceeded" do
         before { 7.times { strategy.throttled? jid } }
+
         it { is_expected.to be true }
       end
     end
@@ -74,8 +78,9 @@ RSpec.describe Sidekiq::Throttled::Strategy do
     context "when both concurrency and threshold given" do
       let(:options) { threshold.merge concurrency }
 
-      context "and threshold limit reached, while concurrency is not" do
+      context "when threshold limit reached, while concurrency is not" do
         before { 5.times { strategy.throttled? jid } }
+
         it { is_expected.to be true }
       end
 
@@ -90,10 +95,10 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           strategy.finalize! jid unless strategy.throttled? jid
         end
 
-        expect(subject).to be false
+        expect(strategy).not_to be_throttled(jid)
       end
 
-      context "and concurrency limit reached, while threshold is not" do
+      context "when concurrency limit reached, while threshold is not" do
         before do
           Timecop.travel ten_seconds_ago do
             4.times { strategy.throttled? jid }
@@ -105,7 +110,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         it { is_expected.to be true }
       end
 
-      context "end neither concurrency nor threshold limits are reached" do
+      context "when neither concurrency nor threshold limits are reached" do
         it { is_expected.to be false }
       end
     end
@@ -152,8 +157,9 @@ RSpec.describe Sidekiq::Throttled::Strategy do
   end
 
   describe "#dynamic?" do
-    let(:options) { concurrency.merge threshold }
     subject { strategy.dynamic? }
+
+    let(:options) { concurrency.merge threshold }
 
     context "when all upstream strategies are non-dynamic" do
       it { is_expected.to be_falsy }
@@ -161,7 +167,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
     context "when threshold upstream strategy is dynamic" do
       before do
-        expect(strategy.threshold).to receive(:dynamic?).and_return true
+        allow(strategy.threshold).to receive(:dynamic?).and_return true
       end
 
       it { is_expected.to be_truthy }
@@ -169,7 +175,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
     context "when concurrency upstream strategy is dynamic" do
       before do
-        expect(strategy.concurrency).to receive(:dynamic?).and_return true
+        allow(strategy.concurrency).to receive(:dynamic?).and_return true
       end
 
       it { is_expected.to be_truthy }

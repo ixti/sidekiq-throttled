@@ -6,7 +6,7 @@ require "timecop"
 Timecop.safe_mode = true
 
 RSpec.configure do |config|
-  config.around :example do |example|
+  config.around do |example|
     meta = example.metadata[:time]
     next example.call unless meta
 

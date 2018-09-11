@@ -48,14 +48,14 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
     end
 
     shared_examples "expected behavior" do
+      subject { fetcher.retrieve_work }
+
       before do
         Sidekiq::Client.push_bulk({
           "class" => WorkingClassHero,
           "args"  => Array.new(10) { [2, 3, 5] }
         })
       end
-
-      subject { fetcher.retrieve_work }
 
       it { is_expected.not_to be nil }
 
@@ -107,6 +107,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
       context "when limit is not yet reached" do
         before { 3.times { fetcher.retrieve_work } }
+
         it { is_expected.not_to be nil }
       end
 

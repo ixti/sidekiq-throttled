@@ -8,11 +8,13 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
 
     context "when limit exceeded" do
       before { 5.times { strategy.throttled? jid } }
+
       it { is_expected.to be true }
     end
 
     context "when limit is not exceded" do
       before { 4.times { strategy.throttled? jid } }
+
       it { is_expected.to be false }
     end
 
@@ -40,7 +42,9 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
 
   describe "#count" do
     subject { strategy.count }
+
     before { 3.times { strategy.throttled? jid } }
+
     it { is_expected.to eq 3 }
   end
 
@@ -78,34 +82,41 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
     subject(:strategy) do
       described_class.new :test, :limit => 5, :key_suffix => -> (i) { i }
     end
+
     let(:initial_key_input) { 123 }
 
     describe "#throttled?" do
       subject { strategy.throttled?(jid, key_input) }
+
       before { 5.times { strategy.throttled?(jid, initial_key_input) } }
 
       describe "when limit exceeded for the same input" do
         let(:key_input) { initial_key_input }
+
         it { is_expected.to be true }
       end
 
       describe "when limit exceeded for a different input" do
         let(:key_input) { 456 }
+
         it { is_expected.to be false }
       end
     end
 
     describe "#count" do
       subject { strategy.count(key_input) }
+
       before { 3.times { strategy.throttled?(jid, initial_key_input) } }
 
       describe "for the same input" do
         let(:key_input) { initial_key_input }
+
         it { is_expected.to eq 3 }
       end
 
       describe "for a different input" do
         let(:key_input) { 456 }
+
         it { is_expected.to eq 0 }
       end
     end
@@ -180,18 +191,22 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
 
       context "when limit exceeded" do
         before { 5.times { strategy.throttled? jid } }
+
         it { is_expected.to be true }
       end
 
       context "when limit is not exceded" do
         before { 4.times { strategy.throttled? jid } }
+
         it { is_expected.to be false }
       end
     end
 
     describe "#count" do
       subject { strategy.count }
+
       before { 3.times { strategy.throttled? jid } }
+
       it { is_expected.to eq 3 }
     end
 
@@ -231,16 +246,19 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
 
     describe "with a dynamic key suffix" do
       let(:kwargs) { { :limit => 5, :key_suffix => -> { "xxx" } } }
+
       it { is_expected.to be_truthy }
     end
 
     describe "with a dynamic limit" do
       let(:kwargs) { { :limit => -> { 5 } } }
+
       it { is_expected.to be_truthy }
     end
 
     describe "without a dynamic key suffix and static configration" do
       let(:kwargs) { { :limit => 5 } }
+
       it { is_expected.to be_falsy }
     end
   end

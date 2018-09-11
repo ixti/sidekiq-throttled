@@ -22,8 +22,9 @@ RSpec.describe Sidekiq::Throttled::Web do
   end
 
   describe ".enhance_queues_tab!", :type => :feature do
-    before { Sidekiq::Throttled::Web.enhance_queues_tab! }
-    after { Sidekiq::Throttled::Web.restore_queues_tab! }
+    before { described_class.enhance_queues_tab! }
+
+    after  { described_class.restore_queues_tab! }
 
     it "replaces default Queues tab with Enhanced in top navbar" do
       visit "/"

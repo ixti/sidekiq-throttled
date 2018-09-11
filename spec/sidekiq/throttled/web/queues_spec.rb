@@ -37,6 +37,7 @@ RSpec.describe Sidekiq::Throttled::Web, :sidekiq => :enabled do
 
     describe "GET /" do
       before { get "/" }
+
       specify { expect(last_response.status).to eq 200 }
       specify { expect(last_response.body).to include "Enhanced Queues" }
     end

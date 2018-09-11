@@ -118,13 +118,15 @@ RSpec.describe Sidekiq::Throttled::QueuesPauser do
       pauser.paused? "xxx"
     end
 
-    context "for paused queue" do
+    context "when queue is paused" do
       subject { pauser.paused? "xxx" }
+
       it { is_expected.to be true }
     end
 
-    context "for non-paused queue" do
+    context "when queue is not paused" do
       subject { pauser.paused? "yyy" }
+
       it { is_expected.to be false }
     end
   end

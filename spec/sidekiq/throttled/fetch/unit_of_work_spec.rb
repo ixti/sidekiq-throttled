@@ -3,10 +3,10 @@
 require "sidekiq/throttled/fetch/unit_of_work"
 
 RSpec.describe Sidekiq::Throttled::Fetch::UnitOfWork do
-  describe "#queue"
-  describe "#job"
-  describe "#queue_name"
-  describe "#requeue"
-  describe "#requeue_throttled"
-  describe "#throttled?"
+  pending "#queue"
+  pending "#job"
+  pending "#queue_name"
+  pending "#requeue"
+  pending "#requeue_throttled"
+  pending "#throttled?"
 end
