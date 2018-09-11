@@ -1,3 +1,16 @@
+## 0.9.9 (2018-09-11)
+
+* Add support of Sidekiq 5.2.x
+  ([@ixti])
+
+* Drop support of Sidekiq 4.x
+  ([@ixti])
+
+* Add concurrent-ruby as dependency which is no longer a dependency of
+  Sidekiq as 5.2+ version.
+  ([@ixti])
+
+
 ## 0.8.2 (2018-02-14)
 
 * Extract redis LUA scripts stored procedures runner to redis-prescription gem.
