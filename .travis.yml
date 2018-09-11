@@ -32,9 +32,6 @@ matrix:
       gemfile: Gemfile
 
 gemfile:
-  - gemfiles/sidekiq_4.0.gemfile
-  - gemfiles/sidekiq_4.1.gemfile
-  - gemfiles/sidekiq_4.2.gemfile
   - gemfiles/sidekiq_5.0.gemfile
   - gemfiles/sidekiq_5.1.gemfile
   - gemfiles/sidekiq_5.2.gemfile

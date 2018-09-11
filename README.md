@@ -177,9 +177,6 @@ dropped.
 
 This library aims to support work with following [Sidekiq][sidekiq] versions:
 
-* Sidekiq 4.0.x
-* Sidekiq 4.1.x
-* Sidekiq 4.2.x
 * Sidekiq 5.0.x
 * Sidekiq 5.1.x
 * Sidekiq 5.2.x
@@ -210,7 +207,7 @@ Don't forget to run `appraisal update` after any changes to `Gemfile`.
 
 ## Copyright
 
-Copyright (c) 2015-2017 SensorTower Inc.
+Copyright (c) 2015-2018 SensorTower Inc.
 See LICENSE.md for further details.
 
 
