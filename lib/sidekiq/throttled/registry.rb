@@ -53,8 +53,17 @@ module Sidekiq
         #   @yield [strategy] Gives found strategy to the block
         #   @return result of a block
         def get(name)
-          strategy = @strategies[name.to_s] || @aliases[name.to_s]
+          key = begin
+            Object.const_get(name).ancestors.map(&:name).find do |klass_name|
+              @strategies.key?(klass_name) || @aliases.key?(klass_name)
+            end
+          rescue NameError
+            name.to_s
+          end
+
+          strategy = @strategies[key] || @aliases[key]
           return yield strategy if strategy && block_given?
+
           strategy
         end
 

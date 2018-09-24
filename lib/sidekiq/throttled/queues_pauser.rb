@@ -2,6 +2,7 @@
 
 require "set"
 require "singleton"
+require "concurrent/timer_task"
 
 require "sidekiq/throttled/patches/queue"
 require "sidekiq/throttled/communicator"
