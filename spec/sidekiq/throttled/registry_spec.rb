@@ -75,6 +75,28 @@ RSpec.describe Sidekiq::Throttled::Registry do
 
       it { is_expected.to be_a Sidekiq::Throttled::Strategy }
     end
+
+    context "when strategy was registered on a parent class" do
+      let(:parent_class) do
+        class Parent
+        end
+
+        Parent
+      end
+
+      let(:child_class) do
+        class Child < Parent
+        end
+
+        Child
+      end
+
+      let(:name) { child_class.name }
+
+      before { described_class.add(parent_class.name, threshold) }
+
+      it { is_expected.to be_a Sidekiq::Throttled::Strategy }
+    end
   end
 
   describe ".each" do
