@@ -57,9 +57,7 @@ module Sidekiq
         #   @yield [strategy] Gives found strategy to the block
         #   @return result of a block
         def get(name)
-          lookup   = lazy_constantize(name)&.ancestors
-          name     = lookup&.find { |c| include? c.name }&.name || name.to_s
-          strategy = @strategies[name] || @aliases[name]
+          strategy = find(name.to_s) || find_by_class(name)
 
           return yield strategy if strategy && block_given?
 
@@ -95,19 +93,30 @@ module Sidekiq
           end
         end
 
-        # Tells if registry contains strategy with given name.
-        #
-        # @return [Boolean]
-        def include?(name)
-          @strategies.key?(name.to_s) || @aliases.key?(name.to_s)
-        end
-
         private
 
-        # Lazy-constantizes given name. Skips constantize lop if given name is
-        # module or class already.
-        def lazy_constantize(name)
-          name.is_a?(Module) ? name : constantize(name)
+        # Find strategy by it's name.
+        #
+        # @param name [String]
+        # @return [Strategy, nil]
+        def find(name)
+          @strategies[name] || @aliases[name]
+        end
+
+        # Find strategy by class or it's parents.
+        #
+        # @param name [Class, #to_s]
+        # @return [Strategy, nil]
+        def find_by_class(name)
+          const = name.is_a?(Class) ? name : constantize(name)
+          return unless const.is_a?(Class)
+
+          const.ancestors.each do |m|
+            strategy = find(m.name)
+            return strategy if strategy
+          end
+
+          nil
         end
       end
     end
