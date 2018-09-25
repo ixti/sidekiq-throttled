@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "support/helpers/stub_class"
+
 RSpec.describe Sidekiq::Throttled::Registry do
   let(:threshold)   { { :threshold => { :limit => 1, :period => 1 } } }
   let(:concurrency) { { :concurrency => { :limit => 1 } } }
@@ -77,19 +79,10 @@ RSpec.describe Sidekiq::Throttled::Registry do
     end
 
     context "when strategy was registered on a parent class" do
-      let(:parent_class) do
-        class Parent
-        end
+      include RSpec::Helpers::StubClass
 
-        Parent
-      end
-
-      let(:child_class) do
-        class Child < Parent
-        end
-
-        Child
-      end
+      let(:parent_class) { stub_class("Parent") }
+      let(:child_class)  { stub_class("Child", parent_class) }
 
       let(:name) { child_class.name }
 
