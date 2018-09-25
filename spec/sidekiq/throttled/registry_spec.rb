@@ -82,7 +82,7 @@ RSpec.describe Sidekiq::Throttled::Registry do
       include RSpec::Helpers::StubClass
 
       let(:parent_class) { stub_class("Parent") }
-      let(:child_class)  { stub_class("Child", parent_class) }
+      let(:child_class)  { stub_class("Nested::Child", parent_class) }
 
       let(:name) { child_class.name }
 

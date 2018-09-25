@@ -9,6 +9,7 @@ require "sidekiq/throttled/communicator"
 require "sidekiq/throttled/queues_pauser"
 require "sidekiq/throttled/registry"
 require "sidekiq/throttled/worker"
+require "sidekiq/throttled/utils"
 
 # @see https://github.com/mperham/sidekiq/
 module Sidekiq
@@ -44,6 +45,8 @@ module Sidekiq
     private_constant :MUTEX
 
     class << self
+      include Utils
+
       # Hooks throttler into sidekiq.
       #
       # @return [void]
@@ -98,16 +101,6 @@ module Sidekiq
           @preloaded      ||= {}
           @preloaded[job] ||= constantize(job) || true
         end
-      end
-
-      # Resolve constant from it's name
-      def constantize(str)
-        str.sub(/^::/, "").split("::").inject(Object) do |const, name|
-          const.const_get(name)
-        end
-      rescue
-        Sidekiq.logger.warn { "Failed to constantize: #{str}" }
-        nil
       end
     end
   end

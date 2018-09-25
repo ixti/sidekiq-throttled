@@ -2,6 +2,7 @@
 
 # internal
 require "sidekiq/throttled/strategy"
+require "sidekiq/throttled/utils"
 
 module Sidekiq
   module Throttled
@@ -13,6 +14,8 @@ module Sidekiq
       @aliases    = {}
 
       class << self
+        include Utils
+
         # Adds strategy to the registry.
         #
         # @note prints a warning to STDERR upon duplicate strategy name
@@ -49,19 +52,15 @@ module Sidekiq
         #
         # @overload get(name, &block)
         #   Yields control to the block if requested strategy was found.
+        #   @param [#to_s] name
         #   @yieldparam [Strategy] strategy
         #   @yield [strategy] Gives found strategy to the block
         #   @return result of a block
         def get(name)
-          key = begin
-            Object.const_get(name).ancestors.map(&:name).find do |klass_name|
-              @strategies.key?(klass_name) || @aliases.key?(klass_name)
-            end
-          rescue NameError
-            name.to_s
-          end
+          lookup   = lazy_constantize(name)&.ancestors
+          name     = lookup&.find { |c| include? c.name }&.name || name.to_s
+          strategy = @strategies[name] || @aliases[name]
 
-          strategy = @strategies[key] || @aliases[key]
           return yield strategy if strategy && block_given?
 
           strategy
@@ -94,6 +93,21 @@ module Sidekiq
           @strategies.each do |name, strategy|
             yield(name, strategy) unless strategy.dynamic?
           end
+        end
+
+        # Tells if registry contains strategy with given name.
+        #
+        # @return [Boolean]
+        def include?(name)
+          @strategies.key?(name.to_s) || @aliases.key?(name.to_s)
+        end
+
+        private
+
+        # Lazy-constantizes given name. Skips constantize lop if given name is
+        # module or class already.
+        def lazy_constantize(name)
+          name.is_a?(Module) ? name : constantize(name)
         end
       end
     end
