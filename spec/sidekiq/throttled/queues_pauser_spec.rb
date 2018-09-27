@@ -160,4 +160,13 @@ RSpec.describe Sidekiq::Throttled::QueuesPauser do
       end
     end
   end
+
+  describe "#sync!" do
+    it "is called once communicator is ready" do
+      allow(Sidekiq).to receive(:server?).and_return(true)
+      pauser.setup!
+      expect(pauser).to receive(:sync!).and_call_original
+      communicator.instance_variable_get(:@callbacks).run("ready")
+    end
+  end
 end
