@@ -56,7 +56,7 @@ module Sidekiq
 
           @communicator.receive(PAUSE_MESSAGE, &method(:add))
           @communicator.receive(RESUME_MESSAGE, &method(:delete))
-          @communicator.ready(&method(:sync!))
+          @communicator.ready { sync! }
         end
       end
 
