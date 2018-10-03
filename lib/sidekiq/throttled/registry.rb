@@ -108,6 +108,8 @@ module Sidekiq
         # @param name [Class, #to_s]
         # @return [Strategy, nil]
         def find_by_class(name)
+          return unless Throttled.configuration.inherit_strategies?
+
           const = name.is_a?(Class) ? name : constantize(name)
           return unless const.is_a?(Class)
 

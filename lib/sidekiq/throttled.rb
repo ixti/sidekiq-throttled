@@ -6,6 +6,7 @@ require "sidekiq"
 # internal
 require "sidekiq/throttled/version"
 require "sidekiq/throttled/communicator"
+require "sidekiq/throttled/configuration"
 require "sidekiq/throttled/queues_pauser"
 require "sidekiq/throttled/registry"
 require "sidekiq/throttled/worker"
@@ -46,6 +47,11 @@ module Sidekiq
 
     class << self
       include Utils
+
+      # @return [Configuration]
+      def configuration
+        @configuration ||= Configuration.new
+      end
 
       # Hooks throttler into sidekiq.
       #
