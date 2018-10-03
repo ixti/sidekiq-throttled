@@ -65,7 +65,10 @@ module Sidekiq
       # @private
       # @return [Array<String>]
       def filter(queues)
-        queues - @paused_queues.to_a
+        @mutex.synchronize { queues - @paused_queues.to_a }
+      rescue => e
+        Sidekiq.logger.error { "[#{self.class}] Failed filter queues: #{e}" }
+        queues
       end
 
       # Returns list of paused queues.
