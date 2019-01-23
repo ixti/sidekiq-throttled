@@ -11,9 +11,11 @@ module Sidekiq
 
       # Reset configuration to defaults.
       #
-      # @return [void]
+      # @return [self]
       def reset!
         @inherit_strategies = false
+
+        self
       end
 
       # Instructs throttler to lookup strategies in parent classes, if there's
