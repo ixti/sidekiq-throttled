@@ -9,8 +9,9 @@ cache: bundler
 before_install:
   - gem update --system
   - gem --version
-  - gem install bundler --no-rdoc --no-ri
+  - gem install bundler
   - bundle --version
+  # Install pahantomjs
   - mkdir travis-phantomjs
   - wget https://s3.amazonaws.com/travis-phantomjs/phantomjs-2.0.0-ubuntu-12.04.tar.bz2 -O $PWD/travis-phantomjs/phantomjs-2.0.0-ubuntu-12.04.tar.bz2
   - tar -xvf $PWD/travis-phantomjs/phantomjs-2.0.0-ubuntu-12.04.tar.bz2 -C $PWD/travis-phantomjs
