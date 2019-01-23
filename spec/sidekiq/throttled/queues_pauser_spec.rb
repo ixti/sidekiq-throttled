@@ -165,7 +165,7 @@ RSpec.describe Sidekiq::Throttled::QueuesPauser do
     it "is called once communicator is ready" do
       allow(Sidekiq).to receive(:server?).and_return(true)
       pauser.setup!
-      expect(pauser).to receive(:sync!).and_call_original
+      expect(pauser).to receive(:sync!).and_call_original.at_least(:once)
       communicator.instance_variable_get(:@callbacks).run("ready")
     end
   end
