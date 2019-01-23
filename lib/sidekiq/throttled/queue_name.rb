@@ -27,7 +27,7 @@ module Sidekiq
         # @param [#to_s]
         # @return [String]
         def normalize(queue)
-          queue.to_s.sub(QUEUE_NAME_PREFIX_RE, "")
+          -queue.to_s.sub(QUEUE_NAME_PREFIX_RE, "")
         end
 
         # Prepends `queue:` prefix to given `queue` name.
@@ -38,7 +38,7 @@ module Sidekiq
         # @param [#to_s] queue Queue name
         # @return [String]
         def expand(queue)
-          "queue:#{queue}"
+          -"queue:#{queue}"
         end
       end
     end
