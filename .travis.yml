@@ -20,15 +20,15 @@ before_install:
 install: bundle install --without development
 
 rvm:
-  - 2.3
   - 2.4
   - 2.5
+  - 2.6
 
 matrix:
   fast_finish: true
   include:
     -
-      rvm: 2.3
+      rvm: 2.4
       env: SUITE="rubocop"
       gemfile: Gemfile
 
