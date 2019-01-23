@@ -3,9 +3,24 @@
 RSpec.describe Sidekiq::Throttled::Communicator do
   subject(:communicator) { described_class.instance }
 
-  let(:callbacks) { communicator.instance_variable_get(:@callbacks) }
+  let(:callbacks) { described_class::Callbacks.new }
 
-  after { communicator.stop_listener }
+  around do |example|
+    begin
+      old_callbacks = communicator.instance_variable_get(:@callbacks)
+      old_listener  = communicator.instance_variable_get(:@listener)
+
+      communicator.instance_variable_set(:@callbacks, callbacks)
+      communicator.instance_variable_set(:@listener,  nil)
+
+      example.run
+    ensure
+      communicator.stop_listener
+
+      communicator.instance_variable_set(:@callbacks, old_callbacks)
+      communicator.instance_variable_set(:@listener,  old_listener)
+    end
+  end
 
   def run_callbacks(name, *args)
     callbacks.instance_variable_get(:@handlers).fetch(name).each do |b|
@@ -97,14 +112,7 @@ RSpec.describe Sidekiq::Throttled::Communicator do
 
     context "when listener already in ready state" do
       before do
-        listener = instance_double(Sidekiq::Throttled::Communicator::Listener, {
-          :ready? => true
-        })
-        communicator.instance_variable_set(:@listener, listener)
-      end
-
-      after do
-        communicator.instance_variable_set(:@listener, nil)
+        allow(communicator.start_listener).to receive(:ready?).and_return(true)
       end
 
       it "registers `ready` event handler and yields control to handler" do
