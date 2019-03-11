@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "json"
+
 RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
   describe ".setup!" do
     before do
@@ -47,6 +49,23 @@ RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
 
       payload_jid = jid
       message     = %({"class":"foo","jid":#{payload_jid.inspect}})
+
+      expect(strategy).to receive(:throttled?).with payload_jid
+
+      described_class.throttled? message
+    end
+
+    it "unwraps ActiveJob-jobs" do
+      strategy = Sidekiq::Throttled::Registry.add("wrapped-foo",
+        :threshold   => { :limit => 1, :period => 1 },
+        :concurrency => { :limit => 1 })
+
+      payload_jid = jid
+      message     = JSON.dump({
+        "class"   => "ActiveJob::QueueAdapters::SidekiqAdapter::JobWrapper",
+        "wrapped" => "wrapped-foo",
+        "jid"     => payload_jid
+      })
 
       expect(strategy).to receive(:throttled?).with payload_jid
 

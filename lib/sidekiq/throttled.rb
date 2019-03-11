@@ -77,6 +77,7 @@ module Sidekiq
       def throttled?(message)
         message = JSON.parse message
         job = message.fetch("class") { return false }
+        job = message.fetch("wrapped") { return false } if job == 'ActiveJob::QueueAdapters::SidekiqAdapter::JobWrapper'
         jid = message.fetch("jid") { return false }
 
         preload_constant! job
