@@ -74,7 +74,12 @@ module Sidekiq
         # @see Registry.add
         # @return [void]
         def sidekiq_throttle(**kwargs)
-          Registry.add(self, **kwargs)
+          if (name = kwargs.dig(:global_as, :name))
+            Registry.add(name, **kwargs) unless Registry.get(name)
+            sidekiq_throttle_as name
+          else
+            Registry.add(self, **kwargs)
+          end
         end
 
         # Adds current worker to preconfigured throtttling strtegy. Allows

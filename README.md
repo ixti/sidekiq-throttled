@@ -116,6 +116,91 @@ end
 if you are using dynamic limit/period options. Otherwise you risk getting into
 some trouble.
 
+### Global throttling
+
+Global Throttle works for jobs even enqueued in different queues. You can throttle jobs globally with `:global_as` option including specific `:name`:
+
+``` ruby
+class MyWorker
+  include Sidekiq::Worker
+  include Sidekiq::Throttled::Worker
+
+  sidekiq_options :queue => :my_queue
+
+  # Define a throttle globally with the name :global_throttle
+  sidekiq_throttle({
+    :concurrency => { :limit => 10 },
+    :threshold => { :limit => 1_000, :period => 1.hour },
+    :global_as => { :name => :global_throttle }
+  })
+
+  def perform
+    # ...
+  end
+end
+
+class AnotherWorker
+  include Sidekiq::Worker
+  include Sidekiq::Throttled::Worker
+
+  sidekiq_options :queue => :another_queue
+
+  # Define a throttle globally with the name :global_throttle
+  sidekiq_throttle({
+    :concurrency => { :limit => 10 },
+    :threshold => { :limit => 1_000, :period => 1.hour },
+    :global_as => { :name => :global_throttle }
+  })
+
+  def perform
+    # ...
+  end
+end
+```
+
+**NB** If the different `:concurrency` and/or `threshold` are defined in each job class, the configuration loaded first is only used. 
+
+You can also define Global Throttle in your initializer/bootstrap (e.g. `config/initializers/sidekiq.rb` if you are using Rails):
+
+``` ruby
+# Define a throttle globally with the name :global_throttle
+Sidekiq::Throttled::Registry.add(:global_throttle, {
+  :concurrency => { :limit => 10 },
+  :threshold => { :limit => 1_000, :period => 1.hour }
+})
+```
+
+Then, you can throttle jobs globally with `:sidekiq_throttle_as` option including the name:
+
+```ruby
+class MyWorker
+  include Sidekiq::Worker
+  include Sidekiq::Throttled::Worker
+
+  sidekiq_options :queue => :my_queue
+
+  # Apply global throttle defined as :global_throttle
+  sidekiq_throttle_as :global_throttle
+
+  def perform
+    # ...
+  end
+end
+
+class AnotherWorker
+  include Sidekiq::Worker
+  include Sidekiq::Throttled::Worker
+
+  sidekiq_options :queue => :another_queue
+
+  # Apply global throttle defined as :global_throttle
+  shared_throttle_as :global_throttle
+
+  def perform
+    # ...
+  end
+end
+```
 
 ## Enhanced Queues list
 

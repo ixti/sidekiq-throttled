@@ -26,7 +26,8 @@ module Sidekiq
 
           warn "Duplicate strategy name: #{name}" if @strategies[name]
 
-          @strategies[name] = Strategy.new(name, **kwargs)
+          args = kwargs.slice(:concurrency, :threshold, :key_suffix)
+          @strategies[name] = Strategy.new(name, args)
         end
 
         # Adds alias for existing strategy.

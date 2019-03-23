@@ -40,6 +40,16 @@ RSpec.describe Sidekiq::Throttled::Registry do
       expect(capture_output { described_class.add(working_class, threshold) })
         .to include "Duplicate strategy name: foo"
     end
+
+    context "with global_as argument" do
+      let(:global_as) { { :global_as => { :name => :global_throttle } } }
+      let(:args) { threshold.merge global_as }
+
+      it "does not raise ArgumentError" do
+        expect { described_class.add(working_class, args) }
+          .not_to raise_error ArgumentError
+      end
+    end
   end
 
   describe ".add_alias" do
