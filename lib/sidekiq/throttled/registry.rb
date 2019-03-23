@@ -26,7 +26,8 @@ module Sidekiq
 
           warn "Duplicate strategy name: #{name}" if @strategies[name]
 
-          args = kwargs.slice(:concurrency, :threshold, :key_suffix)
+          # FIXME: Modify to `kwargs.slice(:concurrency, :threshold, :key_suffix)` after EOL of Ruby 2.4
+          args = kwargs.select { |k,_| [:concurrency, :threshold, :key_suffix].include? k }
           @strategies[name] = Strategy.new(name, args)
         end
 
