@@ -117,6 +117,25 @@ if you are using dynamic limit/period options. Otherwise you risk getting into
 some trouble.
 
 
+### Concurrency throttling fine-tuning
+
+Concurrency throttling is based on distributed locks. Those locks have default
+time to live (TTL) set to 15 minutes. If your job takes more than 15 minutes
+to finish, lock will be released and you might end up with more jobs running
+concurrently than you expect.
+
+This is done to avoid deadlocks - when by any reason (e.g. Sidekiq process was
+OOM-killed) cleanup middleware wasn't executed and locks were not released.
+
+If your job takes more than 15 minutes to complete, you can tune concurrency
+lock TTL to fit your needs:
+
+``` ruby
+# Set concurrency strategy lock TTL to 1 hour.
+sidekiq_throttle(:concurrency => { :limit => 20, :ttl => 1.hour.to_i })
+```
+
+
 ## Enhanced Queues list
 
 This gem provides ability to pause/resume queues from processing by workers.
