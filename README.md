@@ -116,6 +116,19 @@ end
 if you are using dynamic limit/period options. Otherwise you risk getting into
 some trouble.
 
+### Timt To Live(ttl)
+
+Default lock ttl is 15 minutes, this means after 15 minutes of execution, a running job will release lock and a new job from queue will start processing, doesn't matter how much more time old job is taking to complete.
+
+This effectively implies that even though you set concurrency to x, for jobs taking more than 15 minutes to complete, you may end up having more than x jobs running at a time.
+
+It is not a good practice to have very long running jobs, but if you do need long running jobs, you can always adjust this setting using `ttl` key in `concurrency` argument:
+
+```
+sidekiq_throttle(concurrency: { limit: 20, ttl: 1.hour.to_i })
+```
+
+Above settings will allow at max 20 jobs at a time, with 1 hour lock ttl.
 
 ## Enhanced Queues list
 
