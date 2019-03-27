@@ -19,26 +19,25 @@ module Sidekiq
       #   @return [Strategy::Threshold, nil]
       attr_reader :threshold
 
+      # @!attribute [r] observe
+      #   @return [Proc, nil]
+      attr_reader :observe
+
       # @param [#to_s] name
       # @param [Hash] concurrency Concurrency options.
       #   See keyword args of {Strategy::Concurrency#initialize} for details.
       # @param [Hash] threshold Threshold options.
       #   See keyword args of {Strategy::Threshold#initialize} for details.
       # @param [#call] key_suffix Dynamic key suffix generator.
-      def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil)
+      # @param [#call] observe Process called after throttled.
+      def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil,
+        observe: nil)
+        @observe = observe
+
         key = "throttled:#{name}"
 
-        @concurrency =
-          if concurrency
-            concurrency[:key_suffix] ||= key_suffix
-            Concurrency.new(key, **concurrency)
-          end
-
-        @threshold =
-          if threshold
-            threshold[:key_suffix] ||= key_suffix
-            Threshold.new(key, **threshold)
-          end
+        @concurrency = initialize_of(:concurrency, key, key_suffix, concurrency)
+        @threshold   = initialize_of(:threshold, key, key_suffix, threshold)
 
         return if @concurrency || @threshold
 
@@ -55,9 +54,13 @@ module Sidekiq
 
       # @return [Boolean] whenever job is throttled or not.
       def throttled?(jid, *job_args)
-        return true if @concurrency&.throttled?(jid, *job_args)
+        if @concurrency&.throttled?(jid, *job_args)
+          @observe&.call(:concurrency, *job_args)
+          return true
+        end
 
         if @threshold&.throttled?(*job_args)
+          @observe&.call(:threshold, *job_args)
           finalize!(jid, *job_args)
           return true
         end
@@ -76,6 +79,14 @@ module Sidekiq
       def reset!
         @concurrency&.reset!
         @threshold&.reset!
+      end
+
+      private
+
+      def initialize_of(name, key, key_suffix, hash)
+        return nil unless hash
+        hash[:key_suffix] ||= key_suffix
+        Strategy.const_get(name.to_s.capitalize).new(key, **hash)
       end
     end
   end
