@@ -38,6 +38,17 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         :key_suffix => key_suffix
       })
     end
+
+    it "assigns given observe" do
+      observe = lambda { |_| }
+
+      strategy = described_class.new(:foo, :threshold => {
+        :limit  => 123,
+        :period => 657
+      }, :observe => observe)
+
+      expect(strategy.observe).to eq observe
+    end
   end
 
   describe "#throttled?" do
@@ -56,6 +67,16 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         before { 10.times { strategy.throttled? jid } }
 
         it { is_expected.to be true }
+
+        context "with observe" do
+          let(:observe) { lambda { |_| } }
+          let(:options) { threshold.merge(:observe => observe) }
+
+          it "calls observe" do
+            expect(observe).to receive(:call).with(:threshold)
+            strategy.throttled? jid
+          end
+        end
       end
     end
 
@@ -72,6 +93,16 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         before { 7.times { strategy.throttled? jid } }
 
         it { is_expected.to be true }
+
+        context "with observe" do
+          let(:observe) { lambda { |_| } }
+          let(:options) { concurrency.merge(:observe => observe) }
+
+          it "calls observe" do
+            expect(observe).to receive(:call).with(:concurrency)
+            strategy.throttled? jid
+          end
+        end
       end
     end
 
