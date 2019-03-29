@@ -82,6 +82,22 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
 
         it { is_expected.to be false }
       end
+
+      describe "when limit is 0" do
+        let(:key_input) { initial_key_input }
+        let(:strategy) { described_class.new :test, :limit => 0, :period => 10 }
+
+        it { is_expected.to be true }
+      end
+
+      describe "when limit is negative" do
+        let(:key_input) { initial_key_input }
+        let(:strategy) do
+          described_class.new :test, :limit => -5, :period => 10
+        end
+
+        it { is_expected.to be true }
+      end
     end
 
     describe "#count" do

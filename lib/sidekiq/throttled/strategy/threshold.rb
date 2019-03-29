@@ -58,7 +58,9 @@ module Sidekiq
 
         # @return [Boolean] whenever job is throttled or not
         def throttled?(*job_args)
-          return false unless (job_limit = limit(job_args))
+          job_limit = limit(job_args)
+          return false unless job_limit
+          return true if job_limit <= 0
 
           kwargs = {
             :keys => [key(job_args)],
