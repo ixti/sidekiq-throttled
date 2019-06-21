@@ -1,3 +1,18 @@
+## 0.10.0 (2019-06-22)
+
+* [#60](https://github.com/sensortower/sidekiq-throttled/pull/60)
+  Skip throttling check in redis if limit is 0.
+  ([@mstruve])
+
+* [#58](https://github.com/sensortower/sidekiq-throttled/pull/58)
+  Improve documentation bout TTL.
+  ([@ziaulrehman40])
+
+* Improve reliability of paused queues, by resyncing list of paused queues
+  on schedule.
+  ([@ixti])
+
+
 ## 0.9.0 (2018-09-11)
 
 * Add support of Sidekiq 5.2.x
@@ -176,3 +191,5 @@
 [@palanglung]: https://github.com/palanglung
 [@azach]: https://github.com/azach
 [@iporsut]: https://github.com/iporsut
+[@mstruve]: https://github.com/mstruve
+[@ziaulrehman40]: https://github.com/ziaulrehman40

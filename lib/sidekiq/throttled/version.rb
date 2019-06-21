@@ -3,6 +3,6 @@
 module Sidekiq
   module Throttled
     # Gem version
-    VERSION = "0.10.0.beta"
+    VERSION = "0.10.0"
   end
 end
