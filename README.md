@@ -61,32 +61,35 @@ end
 
 ### Observer
 
-You can specify an observer will be processed after throttled with `:observe` option:
+You can specify an observer that will be called on throttling. To do so pass an
+`:observer` option with callable object:
 
 ``` ruby
 class MyWorker
   include Sidekiq::Worker
   include Sidekiq::Throttled::Worker
 
-  sidekiq_options :queue => :my_queue
-
-  MY_OBSERVER = lambda do |strategy, url|
+  MY_OBSERVER = lambda do |strategy, *args|
     # do something
   end
 
-   sidekiq_throttle({
-     :concurrency => { ... },
-     :threshold => { ... },
-     :observe => MY_OBSERVER
-   })
+  sidekiq_options :queue => :my_queue
 
-  def perform(url)
+  sidekiq_throttle({
+    :concurrency => { :limit => 10 },
+    :threshold   => { :limit => 100, :period => 1.hour }
+    :observer    => MY_OBSERVER
+  })
+
+  def perform(*args)
     # ...
   end
 end
 ```
 
-`strategy` returns `:concurrency` or `:threshold` when throttled in each condition.
+Observer will receive `strategy, *args` arguments, where `strategy` is a Symbol
+`:concurrency` or `:threshold`, and `*args` are the arguements that were passed
+to the job.
 
 
 ### Dynamic throttling
