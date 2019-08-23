@@ -1,3 +1,10 @@
+## 0.11.0 (2019-08-24)
+
+* [#59](https://github.com/sensortower/sidekiq-throttled/pull/59)
+  Add throttling observer.
+  ([@ogins57])
+
+
 ## 0.10.0 (2019-06-22)
 
 * [#60](https://github.com/sensortower/sidekiq-throttled/pull/60)
@@ -193,3 +200,4 @@
 [@iporsut]: https://github.com/iporsut
 [@mstruve]: https://github.com/mstruve
 [@ziaulrehman40]: https://github.com/ziaulrehman40
+[@ogins57]: https://github.com/ogins57
