@@ -17,9 +17,9 @@ group :development do
 end
 
 group :test do
+  gem "apparition"
   gem "capybara"
   gem "coveralls", require: false
-  gem "poltergeist"
   gem "puma"
   gem "rack-test"
   gem "simplecov", ">= 0.9"
