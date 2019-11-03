@@ -41,7 +41,9 @@ RSpec.describe Sidekiq::Throttled::Strategy do
   end
 
   describe "#throttled?" do
-    subject { strategy.throttled? jid }
+    subject { strategy.throttled? jid, *job_args }
+
+    let(:job_args) { [] }
 
     context "when threshold constraints given" do
       let(:options) { threshold }
@@ -90,6 +92,67 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           it "notifies observer" do
             expect(observer).to receive(:call).with(:concurrency, 1, 2, 3)
             strategy.throttled?(jid, 1, 2, 3)
+          end
+        end
+      end
+    end
+
+    context "when array of concurrency constraints given" do
+      let(:options) { concurrency }
+
+      let(:concurrency) do
+        {
+          :concurrency => [
+            { :limit => 3, :key_suffix => -> (job_arg, *_rest) { job_arg } },
+            { :limit => 7, :key_suffix => -> (_job_arg, *_rest) { 1 } }
+          ]
+        }
+      end
+
+      context "with first concurrency rule" do
+        let(:job_args) { [11] }
+
+        context "when limit is not yet reached" do
+          before { 2.times { strategy.throttled? jid, *job_args } }
+
+          it { is_expected.to be false }
+        end
+
+        context "when limit exceeded with observe" do
+          let(:observer) { spy }
+          let(:options)  { concurrency.merge(:observer => observer) }
+
+          before { 3.times { strategy.throttled? jid, *job_args } }
+
+          it { is_expected.to be true }
+
+          it "notifies observer" do
+            expect(observer).to receive(:call).with(:concurrency, *job_args)
+            strategy.throttled?(jid, *job_args)
+          end
+        end
+      end
+
+      context "with second concurrency rule" do
+        let(:job_args) { [10] }
+
+        context "when limit is not yet reached" do
+          before { 6.times { |i| strategy.throttled? jid, i } }
+
+          it { is_expected.to be false }
+        end
+
+        context "when limit exceeded with observe" do
+          let(:observer) { spy }
+          let(:options)  { concurrency.merge(:observer => observer) }
+
+          before { 7.times { strategy.throttled? jid, *job_args } }
+
+          it { is_expected.to be true }
+
+          it "notifies observer" do
+            expect(observer).to receive(:call).with(:concurrency, *job_args)
+            strategy.throttled?(jid, *job_args)
           end
         end
       end

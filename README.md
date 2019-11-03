@@ -144,6 +144,30 @@ class MyWorker
 end
 ```
 
+You also can use several different keys to throttle one worker.
+
+``` ruby
+class MyWorker
+  include Sidekiq::Worker
+  include Sidekiq::Throttled::Worker
+
+  sidekiq_options :queue => :my_queue
+
+  sidekiq_throttle({
+    # Allow maximum 10 concurrent jobs per project at a time and maximum 2 jobs per user
+    :concurrency => [
+      { :limit => 10, :key_suffix => -> (project_id, user_id) { project_id } },
+      { :limit => 2, :key_suffix => -> (project_id, user_id) { user_id } }
+    ]
+    # For :threshold it works the same
+  })
+
+  def perform(project_id, user_id)
+    # ...
+  end
+end
+```
+
 **NB** Don't forget to specify `:key_suffix` and make it return different values
 if you are using dynamic limit/period options. Otherwise you risk getting into
 some trouble.

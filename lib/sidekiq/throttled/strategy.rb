@@ -2,6 +2,7 @@
 
 # internal
 require "sidekiq/throttled/errors"
+require "sidekiq/throttled/strategy_collection"
 require "sidekiq/throttled/strategy/concurrency"
 require "sidekiq/throttled/strategy/threshold"
 
@@ -34,11 +35,19 @@ module Sidekiq
         name,
         concurrency: nil, threshold: nil, key_suffix: nil, observer: nil
       )
-        @observer    = observer
-        @concurrency = make_strategy(Concurrency, name, key_suffix, concurrency)
-        @threshold   = make_strategy(Threshold, name, key_suffix, threshold)
+        @observer = observer
 
-        return if @concurrency || @threshold
+        @concurrency = StrategyCollection.new(
+          concurrency,
+          :strategy => Concurrency, :name => name, :key_suffix => key_suffix
+        )
+
+        @threshold = StrategyCollection.new(
+          threshold,
+          :strategy => Threshold, :name => name, :key_suffix => key_suffix
+        )
+
+        return if @concurrency.any? || @threshold.any?
 
         raise ArgumentError, "Neither :concurrency nor :threshold given"
       end
@@ -78,18 +87,6 @@ module Sidekiq
       def reset!
         @concurrency&.reset!
         @threshold&.reset!
-      end
-
-      private
-
-      # @return [Base, nil]
-      def make_strategy(strategy, name, key_suffix, options)
-        return unless options
-
-        strategy.new("throttled:#{name}", {
-          :key_suffix => key_suffix,
-          **options
-        })
       end
     end
   end
