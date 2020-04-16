@@ -36,6 +36,9 @@ require "sidekiq/throttled"
 Sidekiq::Throttled.setup!
 ```
 
+Load order can be an issue if you are using other Sidekiq plugins and/or middleware.
+To prevent any problems, add the `.setup!` call to the bottom of your init file.
+
 Once you've done that you can include `Sidekiq::Throttled::Worker` to your
 job classes and configure throttling:
 
