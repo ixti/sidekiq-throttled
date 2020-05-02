@@ -65,7 +65,9 @@ module Sidekiq
           keys = [key(job_args)]
           argv = [job_limit, period(job_args), Time.now.to_f]
 
-          Sidekiq.redis { |redis| 1 == SCRIPT.eval(redis, keys: keys, argv: argv) }
+          Sidekiq.redis do |redis|
+            1 == SCRIPT.eval(redis, :keys => keys, :argv => argv)
+          end
         end
 
         # @return [Integer] Current count of jobs
