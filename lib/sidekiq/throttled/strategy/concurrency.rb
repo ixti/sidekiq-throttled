@@ -46,12 +46,10 @@ module Sidekiq
           return false unless job_limit
           return true if job_limit <= 0
 
-          kwargs = {
-            :keys => [key(job_args)],
-            :argv => [jid.to_s, job_limit, @ttl, Time.now.to_f]
-          }
+          keys = [key(job_args)]
+          argv = [jid.to_s, job_limit, @ttl, Time.now.to_f]
 
-          Sidekiq.redis { |redis| 1 == SCRIPT.eval(redis, kwargs) }
+          Sidekiq.redis { |redis| 1 == SCRIPT.eval(redis, keys: keys, argv: argv) }
         end
 
         # @return [Integer] Current count of jobs
