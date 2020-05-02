@@ -143,10 +143,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
 
   describe "with a dynamic limit and period" do
     subject(:strategy) do
-      described_class.new(:test, {
-        :limit  => -> { 5 },
-        :period => -> { 10 }
-      })
+      described_class.new(:test, limit: -> { 5 }, period: -> { 10 })
     end
 
     describe "#throttled?" do
