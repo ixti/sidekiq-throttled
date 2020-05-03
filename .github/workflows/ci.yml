@@ -1,0 +1,14 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: "echo 'fixme'"
