@@ -89,9 +89,11 @@ RSpec.describe Sidekiq::Throttled::Communicator::Callbacks do
       it "not handled" do
         spy = double
 
+        # rubocop: disable Lint/RaiseException
         callbacks.on("xxx") { raise Exception }
         callbacks.on("xxx") { spy.touch }
         callbacks.on("xxx") { raise Exception }
+        # rubocop: enable Lint/RaiseException
 
         expect(spy).not_to receive(:touch)
         expect { callbacks.run("xxx") }.to raise_error(Exception)

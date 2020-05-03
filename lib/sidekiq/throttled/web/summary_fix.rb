@@ -11,7 +11,8 @@ module Sidekiq
           attr_accessor :enabled
 
           def apply!(app)
-            Sidekiq::WebAction.send(:prepend, SummaryFix)
+            Sidekiq::WebAction.prepend SummaryFix
+
             app.get("/throttled/summary_fix") do
               [200, HEADERS.dup, JAVASCRIPT.dup]
             end

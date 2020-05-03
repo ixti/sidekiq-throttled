@@ -17,9 +17,11 @@ RSpec.configure do |config|
         proc { Timecop.freeze(v, &a) }
       when :travel
         raise "You must specify time to travel to" unless v
+
         proc { Timecop.travel(v, &a) }
       when :scale
         raise "You must specify scale of a second" unless v
+
         proc { Timecop.scale(v, &a) }
       else
         raise "Unexpected timecop mode: #{k.inspect}"

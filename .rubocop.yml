@@ -14,23 +14,37 @@ AllCops:
 
 ## Layout ######################################################################
 
-Layout/AlignHash:
-  EnforcedHashRocketStyle: table
-
-Layout/AlignParameters:
+Layout/ArgumentAlignment:
   EnforcedStyle: with_fixed_indentation
 
-Layout/IndentArray:
+Layout/FirstArrayElementIndentation:
   EnforcedStyle: consistent
 
-Layout/IndentHash:
+Layout/FirstHashElementIndentation:
   EnforcedStyle: consistent
+
+Layout/HashAlignment:
+  EnforcedHashRocketStyle: table
 
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented
 
+Layout/ParameterAlignment:
+  EnforcedStyle: with_fixed_indentation
+
+Layout/SpaceAroundMethodCallOperator:
+  Enabled: true
+
 Layout/SpaceInLambdaLiteral:
   EnforcedStyle: require_space
+
+## Lint ########################################################################
+
+Lint/RaiseException:
+  Enabled: true
+
+Lint/StructNewOverride:
+  Enabled: true
 
 ## Metrics #####################################################################
 
@@ -41,14 +55,23 @@ Metrics/BlockLength:
 
 ## Styles ######################################################################
 
-Style/BracesAroundHashParameters:
-  Enabled: false
-
 Style/Documentation:
   Enabled: false
 
+Style/ExponentialNotation:
+  Enabled: true
+
+Style/HashEachMethods:
+  Enabled: true
+
 Style/HashSyntax:
   EnforcedStyle: hash_rockets
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true
 
 # Follow your heart where it makes sense to use lambda or lambda literal.
 # Enforcing it makes some pieces of code look REALLY terrible, e.g. in

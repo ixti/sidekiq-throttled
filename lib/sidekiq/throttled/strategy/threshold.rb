@@ -48,6 +48,7 @@ module Sidekiq
         # @return [Float] Period in seconds
         def period(job_args = nil)
           return @period.to_f unless @period.respond_to? :call
+
           @period.call(*job_args).to_f
         end
 

@@ -74,6 +74,7 @@ module Sidekiq
         #   @return [Registry]
         def each
           return to_enum(__method__) unless block_given?
+
           @strategies.each { |*args| yield(*args) }
           self
         end
@@ -88,6 +89,7 @@ module Sidekiq
         #   @return [Registry]
         def each_with_static_keys
           return to_enum(__method__) unless block_given?
+
           @strategies.each do |name, strategy|
             yield(name, strategy) unless strategy.dynamic?
           end

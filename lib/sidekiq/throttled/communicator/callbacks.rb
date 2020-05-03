@@ -43,6 +43,7 @@ module Sidekiq
         # @return [self]
         def on(event, &handler)
           raise ArgumentError, "No block given" unless handler
+
           @mutex.synchronize { @handlers[event.to_s] << handler }
           self
         end
