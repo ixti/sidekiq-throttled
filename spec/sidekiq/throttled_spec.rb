@@ -33,10 +33,9 @@ RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
     end
 
     it "passes JID to registered strategy" do
-      strategy = Sidekiq::Throttled::Registry.add("foo", {
+      strategy = Sidekiq::Throttled::Registry.add("foo",
         :threshold   => { :limit => 1, :period => 1 },
-        :concurrency => { :limit => 1 }
-      })
+        :concurrency => { :limit => 1 })
 
       payload_jid = jid
       message     = %({"class":"foo","jid":#{payload_jid.inspect}})

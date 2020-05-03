@@ -27,16 +27,16 @@ RSpec.describe Sidekiq::Throttled::Registry do
       expect(Sidekiq::Throttled::Strategy)
         .to receive(:new).with("foo", threshold)
 
-      described_class.add(working_class, threshold)
+      described_class.add(working_class, **threshold)
     end
 
     it "registers strategy with with it's #to_s name" do
-      described_class.add(working_class, threshold)
+      described_class.add(working_class, **threshold)
       expect(described_class.get("foo")).to be_a Sidekiq::Throttled::Strategy
     end
 
     it "warns upon duplicate name given" do
-      described_class.add(working_class, threshold)
+      described_class.add(working_class, **threshold)
       expect(capture_output { described_class.add(working_class, threshold) })
         .to include "Duplicate strategy name: foo"
     end
@@ -44,14 +44,14 @@ RSpec.describe Sidekiq::Throttled::Registry do
 
   describe ".add_alias" do
     it "adds aliased name of rquested strategy" do
-      existing_strategy = described_class.add(:foo, concurrency)
+      existing_strategy = described_class.add(:foo, **concurrency)
       described_class.add_alias(:bar, :foo)
       expect(described_class.get(:bar)).to be existing_strategy
     end
 
     it "warns upon duplicate name" do
-      described_class.add(:foo, concurrency)
-      described_class.add(:bar, concurrency)
+      described_class.add(:foo, **concurrency)
+      described_class.add(:bar, **concurrency)
 
       expect(capture_output { described_class.add_alias(:bar, :foo) })
         .to include "Duplicate strategy name: bar"
@@ -73,7 +73,7 @@ RSpec.describe Sidekiq::Throttled::Registry do
     end
 
     context "when strategy was registered" do
-      before { described_class.add(name, threshold) }
+      before { described_class.add(name, **threshold) }
 
       it { is_expected.to be_a Sidekiq::Throttled::Strategy }
     end
@@ -86,7 +86,7 @@ RSpec.describe Sidekiq::Throttled::Registry do
 
       let(:name) { child_class.name }
 
-      before { described_class.add(parent_class.name, threshold) }
+      before { described_class.add(parent_class.name, **threshold) }
 
       it { is_expected.to be_nil }
 
@@ -103,7 +103,7 @@ RSpec.describe Sidekiq::Throttled::Registry do
   describe ".each" do
     let(:names) { %w[foo bar baz] }
 
-    before { names.each { |name| described_class.add(name, threshold) } }
+    before { names.each { |name| described_class.add(name, **threshold) } }
 
     context "when no block given" do
       it "returns Enumerator" do
@@ -130,8 +130,8 @@ RSpec.describe Sidekiq::Throttled::Registry do
 
   describe ".each_with_static_keys" do
     before do
-      described_class.add("foo", threshold)
-      described_class.add("bar", threshold.merge(:key_suffix => -> (i) { i }))
+      described_class.add("foo", **threshold)
+      described_class.add("bar", **threshold.merge(:key_suffix => -> (i) { i }))
     end
 
     it "yields once for each strategy without dynamic key suffixes" do
