@@ -7,8 +7,45 @@ on:
     branches: [ master ]
 
 jobs:
-  ubuntu:
+  rspec:
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis
+        ports: ["6379:6379"]
+        options: "--entrypoint redis-server"
+
+    strategy:
+      matrix:
+        ruby: [ ruby-2.4, ruby-2.5, ruby-2.6, ruby-2.7 ]
+        sidekiq: [ sidekiq-5.0, sidekiq-5.1, sidekiq-5.2, sidekiq-6.0 ]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+
+      - name: bundle install
+        run: |
+          gem install bundler
+          bundle install --jobs 4 --retry 3
+          bundle exec appraisal ${{ matrix.sidekiq }} install
+      - run: bundle exec appraisal ${{ matrix.sidekiq }} rspec
+
+  rubocop:
     runs-on: ubuntu-latest
 
     steps:
-      - run: "echo 'fixme'"
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ruby-2.4
+      - name: bundle install
+        run: |
+          gem install bundler
+          bundle install --jobs 4 --retry 3
+      - run: bundle exec rubocop
+
