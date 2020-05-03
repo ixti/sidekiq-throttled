@@ -5,8 +5,9 @@ source "https://rubygems.org"
 gem "appraisal"
 gem "rake"
 gem "rspec"
-gem "rubocop",       "~> 0.82.0", :require => false
-gem "rubocop-rspec", "~> 1.39.0", :require => false
+gem "rubocop",             "~> 0.82.0", :require => false
+gem "rubocop-performance", "~>1.5.2",   :require => false
+gem "rubocop-rspec",       "~> 1.39.0", :require => false
 gem "sidekiq"
 
 group :development do
