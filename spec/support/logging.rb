@@ -21,7 +21,11 @@ class PseudoLogger < Logger
   end
 end
 
-Sidekiq::Logging.logger = PseudoLogger.instance
+if Sidekiq::VERSION < "6.0.0"
+  Sidekiq::Logging.logger = PseudoLogger.instance
+else
+  Sidekiq.logger = PseudoLogger.instance
+end
 
 RSpec.configure do |config|
   config.after { PseudoLogger.instance.reset! }

@@ -93,7 +93,7 @@ RSpec.describe Sidekiq::Throttled::Communicator::Listener do
     end
 
     it "logs exception occurence" do
-      expect(Sidekiq::Logging.logger.output)
+      expect(PseudoLogger.instance.output)
         .to include "StandardError: Oops, I did it again..."
     end
 
@@ -118,7 +118,7 @@ RSpec.describe Sidekiq::Throttled::Communicator::Listener do
     end
 
     it "logs exception occurence" do
-      expect(Sidekiq::Logging.logger.output).to include "Exception: die!!!"
+      expect(PseudoLogger.instance.output).to include "Exception: die!!!"
     end
 
     it "does not recovers" do

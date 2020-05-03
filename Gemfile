@@ -22,8 +22,8 @@ group :test do
   gem "coveralls", :require => false
   gem "puma"
   gem "rack-test"
-  gem "simplecov", ">= 0.9"
-  gem "sinatra", "~> 1.4", ">= 1.4.6"
+  gem "simplecov"
+  gem "sinatra"
   gem "timecop"
 end
 

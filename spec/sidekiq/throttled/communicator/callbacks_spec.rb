@@ -66,7 +66,7 @@ RSpec.describe Sidekiq::Throttled::Communicator::Callbacks do
         callbacks.on("xxx") { raise "boom" }
         callbacks.run("xxx")
 
-        log = Sidekiq::Logging.logger.output
+        log = PseudoLogger.instance.output
 
         expect(log).to include("RuntimeError: boom")
       end
