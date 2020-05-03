@@ -13,5 +13,5 @@ appraise "sidekiq-5.2" do
 end
 
 appraise "sidekiq-6.0" do
-  gem "sidekiq", "~> 5.0.0"
+  gem "sidekiq", "~> 6.0.0"
 end
