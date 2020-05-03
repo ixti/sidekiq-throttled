@@ -28,11 +28,17 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
 
+      - name: Cache dependencies
+        uses: actions/cache@v1
+        with:
+          path: vendor/bundle
+          key: rspec-${{ matrix.ruby }}-${{ hashFiles('Gemfile.lock') }}
+
       - name: bundle install
         run: |
-          gem install bundler
-          bundle install --jobs 4 --retry 3
-          bundle exec appraisal ${{ matrix.sidekiq }} install
+          bundle install --jobs 4 --retry 3 --path vendor/bundle
+          bundle exec appraisal install
+
       - run: bundle exec appraisal ${{ matrix.sidekiq }} rspec
 
   rubocop:
@@ -40,12 +46,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ruby-2.4
-      - name: bundle install
-        run: |
-          gem install bundler
-          bundle install --jobs 4 --retry 3
-      - run: bundle exec rubocop
 
+      - name: Cache dependencies
+        uses: actions/cache@v1
+        with:
+          path: vendor/bundle
+          key: rubocop-${{ hashFiles('Gemfile.lock') }}
+
+      - name: bundle install
+        run: bundle install --jobs 4 --retry 3 --path vendor/bundle
+
+      - run: bundle exec rubocop
