@@ -23,9 +23,6 @@ jobs:
         ports: ["6379:6379"]
         options: "--entrypoint redis-server"
 
-    env:
-      GEMFILE: gemfiles/${{ matrix.sidekiq }}.gemfile
-
     steps:
       - uses: actions/checkout@v2
 
