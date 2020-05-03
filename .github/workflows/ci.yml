@@ -38,7 +38,7 @@ jobs:
           bundle install --jobs 4 --retry 3
           bundle exec appraisal install
 
-      - run: bundle appraisal ${{ matrix.sidekiq }} rspec
+      - run: bundle exec appraisal ${{ matrix.sidekiq }} rspec
 
   rubocop:
     runs-on: ubuntu-latest
