@@ -40,7 +40,7 @@ jobs:
       - name: bundle install
         run: |
           bundle install --jobs 4 --retry 3 --path vendor/bundle
-          bundle exec appraisal install --jobs 4 --retry 3 --path vendor/bundle
+          bundle exec appraisal install
 
       - run: bundle appraisal ${{ matrix.sidekiq }} rspec
 
