@@ -115,7 +115,7 @@ RSpec.describe Sidekiq::Throttled::Web::Stats do
       end
     end
 
-    context "with Threshold strategy with a dynamic limit" do
+    context "with Threshold strategy with a dynamic period" do
       let :strategy do
         Sidekiq::Throttled::Strategy::Threshold.new(
           :foo, :limit => 10, :period => -> (_) { 75 }
