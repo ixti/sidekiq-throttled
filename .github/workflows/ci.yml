@@ -8,23 +8,25 @@ on:
 
 jobs:
   rspec:
+    name: "rspec (ruby:${{ matrix.ruby }} sidekiq:${{ matrix.sidekiq }})"
+
     strategy:
       matrix:
-        ruby: [ ruby-2.4, ruby-2.5, ruby-2.6, ruby-2.7 ]
+        ruby: [ "2.4", "2.5", "2.6", "2.7" ]
         sidekiq: [ "5.0", "5.1", "5.2", "6.0" ]
         exclude:
-          - { ruby: ruby-2.4, sidekiq: "6.0" }
+          - { ruby: "2.4", sidekiq: "6.0" }
 
     runs-on: ubuntu-latest
-
-    env:
-      GEMFILE: gemfiles/sidekiq_${{ matrix.sidekiq }}.gemfile
 
     services:
       redis:
         image: redis
         ports: ["6379:6379"]
         options: "--entrypoint redis-server"
+
+    env:
+      GEMFILE: gemfiles/sidekiq_${{ matrix.sidekiq }}.gemfile
 
     steps:
       - uses: actions/checkout@v2
@@ -36,7 +38,7 @@ jobs:
       - name: bundle install
         run: bundle install --without development --jobs 4 --retry 3
 
-      - run: bundle exec  rspec
+      - run: bundle exec rspec
 
   rubocop:
     runs-on: ubuntu-latest
@@ -46,7 +48,7 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ruby-2.4
+          ruby-version: "2.4"
 
       - name: bundle install
         run: bundle install --without development --jobs 4 --retry 3
