@@ -11,14 +11,11 @@ jobs:
     strategy:
       matrix:
         ruby: [ ruby-2.4, ruby-2.5, ruby-2.6, ruby-2.7 ]
-        sidekiq: [ "5.0", "5.1", "5.2", "6.0" ]
+        sidekiq: [ sidekiq-5.0, sidekiq-5.1, sidekiq-5.2, sidekiq-6.0 ]
         exclude:
-          - { ruby: ruby-2.4, sidekiq: "6.0" }
+          - { ruby: ruby-2.4, sidekiq: sidekiq-6.0 }
 
     runs-on: ubuntu-latest
-
-    env:
-      GEMFILE: gemfiles/sidekiq_${{ matrix.sidekiq }}.gemfile
 
     services:
       redis:
@@ -34,9 +31,12 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
 
       - name: bundle install
-        run: bundle install --without development --jobs 4 --retry 3
+        run: GEMFILE=./Gemfile bundle install --without development --jobs 4 --retry 3
 
-      - run: bundle exec  rspec
+      - name: appraisal install
+        run: bundle exec appraisal install
+
+      - run: bundle exec appraisal ${{ matrix.sidekiq }} rspec
 
   rubocop:
     runs-on: ubuntu-latest
