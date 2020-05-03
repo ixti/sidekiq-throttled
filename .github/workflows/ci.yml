@@ -31,15 +31,9 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
 
-      - name: Cache dependencies
-        uses: actions/cache@v1
-        with:
-          path: vendor/bundle
-          key: rspec-${{ matrix.ruby }}-${{ hashFiles('Gemfile.lock') }}
-
       - name: bundle install
         run: |
-          bundle install --jobs 4 --retry 3 --path vendor/bundle
+          bundle install --jobs 4 --retry 3
           bundle exec appraisal install
 
       - run: bundle appraisal ${{ matrix.sidekiq }} rspec
@@ -54,13 +48,7 @@ jobs:
         with:
           ruby-version: ruby-2.4
 
-      - name: Cache dependencies
-        uses: actions/cache@v1
-        with:
-          path: vendor/bundle
-          key: rubocop-${{ hashFiles('Gemfile.lock') }}
-
       - name: bundle install
-        run: bundle install --jobs 4 --retry 3 --path vendor/bundle
+        run: bundle install --jobs 4 --retry 3
 
       - run: bundle exec rubocop
