@@ -91,7 +91,7 @@ end
 ```
 
 Observer will receive `strategy, *args` arguments, where `strategy` is a Symbol
-`:concurrency` or `:threshold`, and `*args` are the arguements that were passed
+`:concurrency` or `:threshold`, and `*args` are the arguments that were passed
 to the job.
 
 
