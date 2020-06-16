@@ -15,6 +15,29 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
   describe ".bulk_requeue"
 
+  describe "#initialize" do
+    context "with throttled_queue_timeout set" do
+      let(:throttled_queue_timeout) { 1 }
+      let(:options) do
+        super().merge(:throttled_queue_timeout => throttled_queue_timeout)
+      end
+
+      it "sets ExpirableList ttl to throttled_queue_timeout" do
+        expect(Sidekiq::Throttled::ExpirableList).to receive(:new)
+          .with(throttled_queue_timeout)
+        fetcher
+      end
+    end
+
+    context "without a throttled_queue_timeout set" do
+      it "sets ExpirableList ttl to TIMEOUT" do
+        expect(Sidekiq::Throttled::ExpirableList).to receive(:new)
+          .with(described_class::TIMEOUT)
+        fetcher
+      end
+    end
+  end
+
   describe "#retrieve_work" do
     it "sleeps instead of BRPOP when queues list is empty" do
       expect(fetcher).to receive(:filter_queues).and_return([])

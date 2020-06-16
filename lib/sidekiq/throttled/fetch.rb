@@ -18,7 +18,9 @@ module Sidekiq
 
       # Initializes fetcher instance.
       def initialize(options)
-        @paused = ExpirableList.new(TIMEOUT)
+        @paused = ExpirableList.new(
+          options[:throttled_queue_timeout] || TIMEOUT
+        )
 
         @strict = options[:strict]
         @queues = options[:queues].map { |q| QueueName.expand q }

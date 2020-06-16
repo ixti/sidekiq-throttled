@@ -11,7 +11,7 @@ module Sidekiq
     #
     # ## Implementation
     #
-    # Internally list holds an array of arrays. Thus ecah element is a tuple of
+    # Internally list holds an array of arrays. Thus each element is a tuple of
     # monotonic timestamp (when element was added) and element itself:
     #
     #     [
