@@ -26,6 +26,9 @@ Layout/FirstHashElementIndentation:
 Layout/HashAlignment:
   EnforcedHashRocketStyle: table
 
+Layout/LineLength:
+  Max: 100
+
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented
 
