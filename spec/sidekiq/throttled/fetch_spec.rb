@@ -7,7 +7,8 @@ require "support/working_class_hero"
 RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
   subject(:fetcher) { described_class.new options }
 
-  let(:options)       { { :queues => %w[heroes dreamers] } }
+  let(:options)       { { :queues => queues } }
+  let(:queues)        { %w[heroes dreamers] }
   let(:pauser)        { Sidekiq::Throttled::QueuesPauser.instance }
   let(:paused_queues) { pauser.instance_variable_get :@paused_queues }
 
@@ -15,26 +16,37 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
   describe ".bulk_requeue"
 
-  describe "#initialize" do
-    context "with throttled_queue_timeout set" do
-      let(:throttled_queue_timeout) { 1 }
-      let(:options) do
-        super().merge(:throttled_queue_timeout => throttled_queue_timeout)
-      end
-
-      it "sets ExpirableList ttl to throttled_queue_timeout" do
-        expect(Sidekiq::Throttled::ExpirableList).to receive(:new)
-          .with(throttled_queue_timeout)
-        fetcher
-      end
+  describe ".new" do
+    it "fails if :queues are missing" do
+      expect { described_class.new({}) }.to raise_error(KeyError, /:queues/)
     end
 
-    context "without a throttled_queue_timeout set" do
-      it "sets ExpirableList ttl to TIMEOUT" do
-        expect(Sidekiq::Throttled::ExpirableList).to receive(:new)
-          .with(described_class::TIMEOUT)
-        fetcher
-      end
+    it "fails if :queues are empty" do
+      expect { described_class.new(:queues => []) }
+        .to raise_error(ArgumentError, /:queues/)
+    end
+
+    it "is non-strict by default" do
+      fetcher = described_class.new(:queues => queues)
+      expect(fetcher.instance_variable_get(:@strict)).to be_falsy
+    end
+
+    it "cooldowns queues with TIMEOUT by default" do
+      expect(Sidekiq::Throttled::ExpirableList)
+        .to receive(:new)
+        .with(described_class::TIMEOUT)
+        .and_call_original
+
+      described_class.new(:queues => queues)
+    end
+
+    it "allows override throttled queues cooldown period" do
+      expect(Sidekiq::Throttled::ExpirableList)
+        .to receive(:new)
+        .with(1312)
+        .and_call_original
+
+      described_class.new(:queues => queues, :throttled_queue_cooldown => 1312)
     end
   end
 

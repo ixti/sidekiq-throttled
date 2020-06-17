@@ -17,13 +17,19 @@ module Sidekiq
       TIMEOUT = 2
 
       # Initializes fetcher instance.
+      # @param options [Hash]
+      # @option options [Integer] :throttled_queue_cooldown (TIMEOUT)
+      #   Min delay in seconds before queue will be polled again after
+      #   throttled job.
+      # @option options [Boolean] :strict (false)
+      # @option options [Array<#to_s>] :queue
       def initialize(options)
-        @paused = ExpirableList.new(
-          options[:throttled_queue_timeout] || TIMEOUT
-        )
+        @paused = ExpirableList.new(options.fetch(:throttled_queue_cooldown, TIMEOUT))
 
-        @strict = options[:strict]
-        @queues = options[:queues].map { |q| QueueName.expand q }
+        @strict = options.fetch(:strict, false)
+        @queues = options.fetch(:queues).map { |q| QueueName.expand q }
+
+        raise ArgumentError, "empty :queues" if @queues.empty?
 
         @queues.uniq! if @strict
       end
