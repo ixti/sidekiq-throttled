@@ -14,9 +14,7 @@ module Sidekiq
 
         # @param [Strategy::Concurrency, Strategy::Threshold] strategy
         def initialize(strategy)
-          if strategy&.dynamic?
-            raise ArgumentError, "Can't handle dynamic strategies"
-          end
+          raise ArgumentError, "Can't handle dynamic strategies" if strategy&.dynamic?
 
           @strategy = strategy
         end
@@ -27,9 +25,7 @@ module Sidekiq
 
           html = humanize_integer(@strategy.limit) << " jobs"
 
-          if @strategy.respond_to? :period
-            html << " per " << humanize_duration(@strategy.period)
-          end
+          html << " per " << humanize_duration(@strategy.period) if @strategy.respond_to?(:period)
 
           html << "<br />" << colorize_count(@strategy.count, @strategy.limit)
         end
