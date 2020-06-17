@@ -1,13 +1,13 @@
 # Sidekiq::Throttled
 
-[![Gem Version](https://badge.fury.io/rb/sidekiq-throttled.svg)](http://rubygems.org/gems/sidekiq-throttled)
-[![Build Status](https://travis-ci.org/sensortower/sidekiq-throttled.svg?branch=master)](https://travis-ci.org/sensortower/sidekiq-throttled)
-[![Code Climate](https://codeclimate.com/github/sensortower/sidekiq-throttled.svg?branch=master)](https://codeclimate.com/github/sensortower/sidekiq-throttled)
-[![Coverage Status](https://coveralls.io/repos/github/sensortower/sidekiq-throttled/badge.svg?branch=master)](https://coveralls.io/github/sensortower/sidekiq-throttled?branch=master)
-[![API Docs](http://inch-ci.org/github/sensortower/sidekiq-throttled.svg?branch=master)](http://inch-ci.org/github/sensortower/sidekiq-throttled)
+[![Latest Version](https://badge.fury.io/rb/sidekiq-throttled.svg)](http://rubygems.org/gems/sidekiq-throttled)
+[![CI Status](https://github.com/sensortower/sidekiq-throttled/workflows/CI/badge.svg?branch=master)](https://github.com/sensortower/sidekiq-throttled/actions?query=workflow%3ACI+branch%3Amaster)
+[![Code Quality](https://codeclimate.com/github/sensortower/sidekiq-throttled.svg?branch=master)](https://codeclimate.com/github/sensortower/sidekiq-throttled)
+[![Code Coverage](https://coveralls.io/repos/github/sensortower/sidekiq-throttled/badge.svg?branch=master)](https://coveralls.io/github/sensortower/sidekiq-throttled?branch=master)
+[![API Docs Quality](http://inch-ci.org/github/sensortower/sidekiq-throttled.svg?branch=master)](http://inch-ci.org/github/sensortower/sidekiq-throttled)
+[![API Docs](https://img.shields.io/badge/yard-docs-blue.svg)](http://www.rubydoc.info/gems/sidekiq-throttled)
 
 Concurrency and threshold throttling for [Sidekiq][sidekiq].
-
 
 ## Installation
 
