@@ -1,3 +1,14 @@
+## 0.12.0 (2020-06-22)
+
+* [#80](https://github.com/sensortower/sidekiq-throttled/pull/80)
+  Allow override cooldown timeout of queues with throttled jobs.
+  ([@vaot])
+
+* [#76](https://github.com/sensortower/sidekiq-throttled/pull/76)
+  Fix warnings on Ruby 2.7
+  ([@lenon])
+
+
 ## 0.11.0 (2019-08-24)
 
 * [#59](https://github.com/sensortower/sidekiq-throttled/pull/59)
@@ -201,3 +212,5 @@
 [@mstruve]: https://github.com/mstruve
 [@ziaulrehman40]: https://github.com/ziaulrehman40
 [@ogins57]: https://github.com/ogins57
+[@lenon]: https://github.com/lenon
+[@vaot]: https://github.com/vaot
