@@ -5,7 +5,7 @@ RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
     before do
       # #setup! initializes the fetch strategy
       # and raises when queues is empty
-      Sidekiq.options[:queues] = ['default']
+      Sidekiq.options[:queues] = ["default"]
 
       require "sidekiq/processor"
       allow(Sidekiq).to receive(:server?).and_return true
