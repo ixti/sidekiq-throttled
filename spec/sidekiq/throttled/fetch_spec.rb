@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "sidekiq/api"
 require "sidekiq/throttled/fetch"
 
 require "support/working_class_hero"
@@ -13,8 +14,6 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
   let(:paused_queues) { pauser.instance_variable_get :@paused_queues }
 
   before { paused_queues.clear }
-
-  describe ".bulk_requeue"
 
   describe ".new" do
     it "fails if :queues are missing" do
@@ -47,6 +46,28 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
         .and_call_original
 
       described_class.new(:queues => queues, :throttled_queue_cooldown => 1312)
+    end
+  end
+
+  describe "#bulk_requeue" do
+    before do
+      Sidekiq.redis do |conn|
+        conn.rpush("queue:heroes", %w[bob bar])
+        conn.rpush("queue:dreamers", "widget")
+      end
+    end
+
+    let(:q1) { Sidekiq::Queue.new("heroes") }
+    let(:q2) { Sidekiq::Queue.new("dreamers") }
+
+    it "requeues" do
+      works = 3.times.map { fetcher.retrieve_work }
+      expect(q1.size).to eq(0)
+      expect(q2.size).to eq(0)
+
+      fetcher.bulk_requeue(works, { queues => [] })
+      expect(q1.size).to eq(2)
+      expect(q2.size).to eq(1)
     end
   end
 
