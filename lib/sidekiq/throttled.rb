@@ -61,11 +61,7 @@ module Sidekiq
         QueuesPauser.instance.setup!
 
         Sidekiq.configure_server do |config|
-          require "sidekiq/throttled/fetch"
-          Sidekiq.options[:fetch] = Sidekiq::Throttled::Fetch.new(
-            Sidekiq.options
-          )
-
+          setup_strategy!
           require "sidekiq/throttled/middleware"
           config.server_middleware do |chain|
             chain.add Sidekiq::Throttled::Middleware
@@ -94,6 +90,26 @@ module Sidekiq
       end
 
       private
+
+      # Setup for the sidekiq fetch strategy
+      #
+      # With sidekiq -> 6.1 the internal API of sidekiq changed slightly.
+      # Versions below sidekiq 6.1 needs to initialize the fetcher
+      # instead of passing the fetch class.
+      #
+      # @return [void]
+      def setup_strategy!
+        require "sidekiq/throttled/fetch"
+
+        sidekiq_version = Gem.loaded_specs["sidekiq"].version
+        Sidekiq.options[:fetch] = if sidekiq_version < Gem::Version.create("6.1")
+                                    Sidekiq::Throttled::Fetch
+                                  else
+                                    Sidekiq::Throttled::Fetch.new(
+                                      Sidekiq.options
+                                    )
+                                  end
+      end
 
       # Tries to preload constant by it's name once.
       #

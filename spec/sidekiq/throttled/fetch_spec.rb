@@ -69,6 +69,16 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
       expect(q1.size).to eq(2)
       expect(q2.size).to eq(1)
     end
+
+    it "is also available on class level for sidekiq < 6.1" do
+      works = 3.times.map { fetcher.retrieve_work }
+      expect(q1.size).to eq(0)
+      expect(q2.size).to eq(0)
+
+      described_class.bulk_requeue(works, { queues => [] })
+      expect(q1.size).to eq(2)
+      expect(q2.size).to eq(1)
+    end
   end
 
   describe "#retrieve_work" do
