@@ -30,7 +30,7 @@ module Sidekiq
       end
 
       # https://github.com/mperham/sidekiq/commit/fce05c9d4b4c0411c982078a4cf3a63f20f739bc
-      if Gem::Version.new("6.1.0") < Gem::Version.new(Sidekiq::VERSION)
+      if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("6.1.0")
         extend BulkRequeue
       else
         include BulkRequeue

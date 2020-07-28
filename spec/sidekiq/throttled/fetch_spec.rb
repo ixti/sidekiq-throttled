@@ -68,7 +68,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
     end
   end
 
-  if Gem::Version.new("6.1.0") < Gem::Version.new(Sidekiq::VERSION)
+  if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("6.1.0")
     context "when sidekiq version < 6.1.0" do
       describe ".bulk_requeue" do
         include_examples "provides bulk requeue API", described_class
