@@ -13,11 +13,10 @@ RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
     end
 
     it "presets Sidekiq fetch strategy to Sidekiq::Throttled::Fetch" do
-      sidekiq_version = Gem.loaded_specs["sidekiq"].version
-      if sidekiq_version < Gem::Version.create("6.1")
-        expect(Sidekiq.options[:fetch]).to be(Sidekiq::Throttled::Fetch)
-      else
+      if Gem::Version.new("6.1.0") <= Gem::Version.new(Sidekiq::VERSION)
         expect(Sidekiq.options[:fetch]).to be_a(Sidekiq::Throttled::Fetch)
+      else
+        expect(Sidekiq.options[:fetch]).to be Sidekiq::Throttled::Fetch
       end
     end
 
