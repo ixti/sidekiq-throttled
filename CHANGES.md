@@ -1,3 +1,9 @@
+## 0.13.0 (2020-07-28)
+
+* [#85](https://github.com/sensortower/sidekiq-throttled/pull/85)
+  Add Sidekiq 6.1+ support.
+  ([@hmaack])
+
 ## 0.12.0 (2020-06-22)
 
 * [#80](https://github.com/sensortower/sidekiq-throttled/pull/80)
@@ -214,3 +220,4 @@
 [@ogins57]: https://github.com/ogins57
 [@lenon]: https://github.com/lenon
 [@vaot]: https://github.com/vaot
+[@hmaack]: https://github.com/hmaack
