@@ -13,36 +13,28 @@ module Sidekiq
     # @private
     class Fetch
       module BulkRequeue
-        # Make .bulk_requeue available on instance and class level
+        # Requeues all given units as a single operation.
         #
-        # With sidekiq >= 6.1 the .bulk_requeue method must be available
-        # at the instance level because the internal sidekiq API changed.
-        # For all versions < 6.1 it has to be available at the class level.
-        #
-        def self.included(base)
-          base.extend(ClassMethods)
-          base.include(ClassMethods)
-        end
-
-        module ClassMethods
-          # Requeues all given units as a single operation.
-          #
-          # @see http://www.rubydoc.info/github/redis/redis-rb/master/Redis#pipelined-instance_method
-          # @param [Array<Fetch::UnitOfWork>] units
-          # @return [void]
-          def bulk_requeue(units, _options)
-            return if units.empty?
-
-            Sidekiq.logger.debug { "Re-queueing terminated jobs" }
-            Sidekiq.redis { |conn| conn.pipelined { units.each(&:requeue) } }
-            Sidekiq.logger.info("Pushed #{units.size} jobs back to Redis")
-          rescue => e
-            Sidekiq.logger.warn("Failed to requeue #{units.size} jobs: #{e}")
-          end
+        # @see http://www.rubydoc.info/github/redis/redis-rb/master/Redis#pipelined-instance_method
+        # @param [Array<Fetch::UnitOfWork>] units
+        # @return [void]
+        def bulk_requeue(units, _options)
+          return if units.empty?
+          
+          Sidekiq.logger.debug { "Re-queueing terminated jobs" }
+          Sidekiq.redis { |conn| conn.pipelined { units.each(&:requeue) } }
+          Sidekiq.logger.info("Pushed #{units.size} jobs back to Redis")
+        rescue => e
+          Sidekiq.logger.warn("Failed to requeue #{units.size} jobs: #{e}")
         end
       end
-
-      include BulkRequeue
+      
+      # https://github.com/mperham/sidekiq/commit/fce05c9d4b4c0411c982078a4cf3a63f20f739bc
+      if Gem::Version.new("6.1.0") <= Gem::Version.new(Sidekiq::VERSION)
+        include BulkRequeue
+      else
+        extend BulkRequeue
+      end
       # Timeout to sleep between fetch retries in case of no job received,
       # as well as timeout to wait for redis to give us something to work.
       TIMEOUT = 2
