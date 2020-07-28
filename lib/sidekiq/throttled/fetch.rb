@@ -20,7 +20,7 @@ module Sidekiq
         # @return [void]
         def bulk_requeue(units, _options)
           return if units.empty?
-          
+
           Sidekiq.logger.debug { "Re-queueing terminated jobs" }
           Sidekiq.redis { |conn| conn.pipelined { units.each(&:requeue) } }
           Sidekiq.logger.info("Pushed #{units.size} jobs back to Redis")
@@ -28,12 +28,12 @@ module Sidekiq
           Sidekiq.logger.warn("Failed to requeue #{units.size} jobs: #{e}")
         end
       end
-      
+
       # https://github.com/mperham/sidekiq/commit/fce05c9d4b4c0411c982078a4cf3a63f20f739bc
-      if Gem::Version.new("6.1.0") <= Gem::Version.new(Sidekiq::VERSION)
-        include BulkRequeue
-      else
+      if Gem::Version.new("6.1.0") < Gem::Version.new(Sidekiq::VERSION)
         extend BulkRequeue
+      else
+        include BulkRequeue
       end
       # Timeout to sleep between fetch retries in case of no job received,
       # as well as timeout to wait for redis to give us something to work.

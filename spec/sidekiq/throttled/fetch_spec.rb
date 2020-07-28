@@ -49,35 +49,36 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
     end
   end
 
-  describe "#bulk_requeue" do
+  shared_examples "provides bulk requeue API" do |scope|
     before do
-      Sidekiq.redis do |conn|
-        conn.rpush("queue:heroes", %w[bob bar])
-        conn.rpush("queue:dreamers", "widget")
-      end
+      Sidekiq::Client.push_bulk({
+        "class" => WorkingClassHero,
+        "args"  => Array.new(3) { [1, 2, 3] }
+      })
     end
 
-    let(:q1) { Sidekiq::Queue.new("heroes") }
-    let(:q2) { Sidekiq::Queue.new("dreamers") }
+    let(:queue) { Sidekiq::Queue.new("heroes") }
 
     it "requeues" do
       works = 3.times.map { fetcher.retrieve_work }
-      expect(q1.size).to eq(0)
-      expect(q2.size).to eq(0)
+      expect(queue.size).to eq(0)
 
-      fetcher.bulk_requeue(works, { queues => [] })
-      expect(q1.size).to eq(2)
-      expect(q2.size).to eq(1)
+      scope.bulk_requeue(works, options)
+      expect(queue.size).to eq(3)
     end
+  end
 
-    it "is also available on class level for sidekiq < 6.1" do
-      works = 3.times.map { fetcher.retrieve_work }
-      expect(q1.size).to eq(0)
-      expect(q2.size).to eq(0)
-
-      described_class.bulk_requeue(works, { queues => [] })
-      expect(q1.size).to eq(2)
-      expect(q2.size).to eq(1)
+  if Gem::Version.new("6.1.0") < Gem::Version.new(Sidekiq::VERSION)
+    context "when sidekiq version < 6.1.0" do
+      describe ".bulk_requeue" do
+        include_examples "provides bulk requeue API", described_class
+      end
+    end
+  else
+    context "when sidekiq version >= 6.1.0" do
+      describe "#bulk_requeue" do
+        include_examples "provides bulk requeue API", described_class.new({ :queues => %w[heroes] })
+      end
     end
   end
 
