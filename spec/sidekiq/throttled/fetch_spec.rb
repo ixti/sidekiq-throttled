@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "sidekiq/api"
 require "sidekiq/throttled/fetch"
 
 require "support/working_class_hero"
@@ -13,8 +14,6 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
   let(:paused_queues) { pauser.instance_variable_get :@paused_queues }
 
   before { paused_queues.clear }
-
-  describe ".bulk_requeue"
 
   describe ".new" do
     it "fails if :queues are missing" do
@@ -47,6 +46,39 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
         .and_call_original
 
       described_class.new(:queues => queues, :throttled_queue_cooldown => 1312)
+    end
+  end
+
+  shared_examples "provides bulk requeue API" do |scope|
+    before do
+      Sidekiq::Client.push_bulk({
+        "class" => WorkingClassHero,
+        "args"  => Array.new(3) { [1, 2, 3] }
+      })
+    end
+
+    let(:queue) { Sidekiq::Queue.new("heroes") }
+
+    it "requeues" do
+      works = 3.times.map { fetcher.retrieve_work }
+      expect(queue.size).to eq(0)
+
+      scope.bulk_requeue(works, options)
+      expect(queue.size).to eq(3)
+    end
+  end
+
+  if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("6.1.0")
+    context "when sidekiq version < 6.1.0" do
+      describe ".bulk_requeue" do
+        include_examples "provides bulk requeue API", described_class
+      end
+    end
+  else
+    context "when sidekiq version >= 6.1.0" do
+      describe "#bulk_requeue" do
+        include_examples "provides bulk requeue API", described_class.new({ :queues => %w[heroes] })
+      end
     end
   end
 

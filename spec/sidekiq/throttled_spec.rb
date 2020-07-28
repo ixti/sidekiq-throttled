@@ -3,13 +3,21 @@
 RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
   describe ".setup!" do
     before do
+      # #setup! initializes the fetch strategy
+      # and raises when queues is empty
+      Sidekiq.options[:queues] = ["default"]
+
       require "sidekiq/processor"
       allow(Sidekiq).to receive(:server?).and_return true
       described_class.setup!
     end
 
     it "presets Sidekiq fetch strategy to Sidekiq::Throttled::Fetch" do
-      expect(Sidekiq.options[:fetch]).to be Sidekiq::Throttled::Fetch
+      if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("6.1.0")
+        expect(Sidekiq.options[:fetch]).to be(Sidekiq::Throttled::Fetch)
+      else
+        expect(Sidekiq.options[:fetch]).to be_a Sidekiq::Throttled::Fetch
+      end
     end
 
     it "injects Sidekiq::Throttled::Middleware server middleware" do

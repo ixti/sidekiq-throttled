@@ -12,6 +12,29 @@ module Sidekiq
     #
     # @private
     class Fetch
+      module BulkRequeue
+        # Requeues all given units as a single operation.
+        #
+        # @see http://www.rubydoc.info/github/redis/redis-rb/master/Redis#pipelined-instance_method
+        # @param [Array<Fetch::UnitOfWork>] units
+        # @return [void]
+        def bulk_requeue(units, _options)
+          return if units.empty?
+
+          Sidekiq.logger.debug { "Re-queueing terminated jobs" }
+          Sidekiq.redis { |conn| conn.pipelined { units.each(&:requeue) } }
+          Sidekiq.logger.info("Pushed #{units.size} jobs back to Redis")
+        rescue => e
+          Sidekiq.logger.warn("Failed to requeue #{units.size} jobs: #{e}")
+        end
+      end
+
+      # https://github.com/mperham/sidekiq/commit/fce05c9d4b4c0411c982078a4cf3a63f20f739bc
+      if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("6.1.0")
+        extend BulkRequeue
+      else
+        include BulkRequeue
+      end
       # Timeout to sleep between fetch retries in case of no job received,
       # as well as timeout to wait for redis to give us something to work.
       TIMEOUT = 2
@@ -48,23 +71,6 @@ module Sidekiq
         @paused << QueueName.expand(work.queue_name)
 
         nil
-      end
-
-      class << self
-        # Requeues all given units as a single operation.
-        #
-        # @see http://www.rubydoc.info/github/redis/redis-rb/master/Redis#pipelined-instance_method
-        # @param [Array<Fetch::UnitOfWork>] units
-        # @return [void]
-        def bulk_requeue(units, _options)
-          return if units.empty?
-
-          Sidekiq.logger.debug { "Re-queueing terminated jobs" }
-          Sidekiq.redis { |conn| conn.pipelined { units.each(&:requeue) } }
-          Sidekiq.logger.info("Pushed #{units.size} jobs back to Redis")
-        rescue => e
-          Sidekiq.logger.warn("Failed to requeue #{units.size} jobs: #{e}")
-        end
       end
 
       private
