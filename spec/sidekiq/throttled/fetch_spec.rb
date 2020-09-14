@@ -17,12 +17,12 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
   describe ".new" do
     it "fails if :queues are missing" do
-      expect { described_class.new({}) }.to raise_error(KeyError, /:queues/)
+      expect { described_class.new({}) }.to raise_error(KeyError, %r{:queues})
     end
 
     it "fails if :queues are empty" do
       expect { described_class.new(:queues => []) }
-        .to raise_error(ArgumentError, /:queues/)
+        .to raise_error(ArgumentError, %r{:queues})
     end
 
     it "is non-strict by default" do
@@ -60,7 +60,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
     let(:queue) { Sidekiq::Queue.new("heroes") }
 
     it "requeues" do
-      works = 3.times.map { fetcher.retrieve_work }
+      works = Array.new(3) { fetcher.retrieve_work }
       expect(queue.size).to eq(0)
 
       scope.bulk_requeue(works, options)
@@ -154,7 +154,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
         it "builds correct redis brpop command" do
           Sidekiq.redis do |conn|
-            queue_regexp = /^queue:(heroes|dreamers)$/
+            queue_regexp = %r{^queue:(heroes|dreamers)$}
             expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, 2)
             fetcher.retrieve_work
           end
@@ -165,7 +165,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
           paused_queues.replace %w[queue:xxx]
 
           Sidekiq.redis do |conn|
-            queue_regexp = /^queue:(heroes|dreamers)$/
+            queue_regexp = %r{^queue:(heroes|dreamers)$}
             expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, 2)
             fetcher.retrieve_work
           end
@@ -206,8 +206,8 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
     context "with dynamic configuration" do
       before do
         WorkingClassHero.sidekiq_throttle(:threshold => {
-          :limit  => -> (a, b, _) { a + b },
-          :period => -> (a, b, c) { a + b + c }
+          :limit  => ->(a, b, _) { a + b },
+          :period => ->(a, b, c) { a + b + c }
         })
       end
 

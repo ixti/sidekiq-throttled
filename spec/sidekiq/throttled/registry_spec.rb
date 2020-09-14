@@ -21,7 +21,7 @@ RSpec.describe Sidekiq::Throttled::Registry do
   end
 
   describe ".add" do
-    let(:working_class) { double :to_s => "foo" }
+    let(:working_class) { :foo }
 
     it "initializes new Strategy" do
       expect(Sidekiq::Throttled::Strategy)
@@ -131,7 +131,7 @@ RSpec.describe Sidekiq::Throttled::Registry do
   describe ".each_with_static_keys" do
     before do
       described_class.add("foo", **threshold)
-      described_class.add("bar", **threshold.merge(:key_suffix => -> (i) { i }))
+      described_class.add("bar", **threshold.merge(:key_suffix => ->(i) { i }))
     end
 
     it "yields once for each strategy without dynamic key suffixes" do

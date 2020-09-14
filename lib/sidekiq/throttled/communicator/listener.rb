@@ -62,7 +62,7 @@ module Sidekiq
         # - `Exception` is recorded to the log and re-raised.
         #
         # @return [void]
-        def listen
+        def listen # rubocop:disable Metrics/MethodLength
           subscribe
         rescue Sidekiq::Shutdown
           @terminated = true
@@ -88,7 +88,7 @@ module Sidekiq
         # @see http://redis.io/commands/subscribe
         # @see Callbacks#run
         # @return [void]
-        def subscribe
+        def subscribe # rubocop:disable Metrics/MethodLength
           Sidekiq.redis do |conn|
             conn.subscribe @channel do |on|
               on.subscribe do
@@ -97,7 +97,7 @@ module Sidekiq
               end
 
               on.message do |_channel, data|
-                message, payload = Marshal.load(data)
+                message, payload = Marshal.load(data) # rubocop:disable Security/MarshalLoad:
                 @callbacks.run("message:#{message}", payload)
               end
             end

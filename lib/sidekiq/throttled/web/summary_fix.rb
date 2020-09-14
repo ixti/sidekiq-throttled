@@ -4,7 +4,7 @@ module Sidekiq
   module Throttled
     module Web
       module SummaryFix
-        JAVASCRIPT = [File.read(__FILE__.sub(/\.rb$/, ".js")).freeze].freeze
+        JAVASCRIPT = [File.read(File.expand_path("summary_fix.js", __dir__)).freeze].freeze
         HEADERS    = { "Content-Type" => "application/javascript" }.freeze
 
         class << self

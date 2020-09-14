@@ -80,7 +80,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
 
   describe "with a dynamic key suffix" do
     subject(:strategy) do
-      described_class.new :test, :limit => 5, :key_suffix => -> (i) { i }
+      described_class.new :test, :limit => 5, :key_suffix => ->(i) { i }
     end
 
     let(:initial_key_input) { 123 }

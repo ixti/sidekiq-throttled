@@ -57,7 +57,7 @@ module Sidekiq
         end
 
         # rubocop:disable Metrics/AbcSize
-        def register_enhanced_queues_tab(app)
+        def register_enhanced_queues_tab(app) # rubocop:disable Metrics/MethodLength
           pauser = QueuesPauser.instance
 
           app.get("/enhanced-queues") do

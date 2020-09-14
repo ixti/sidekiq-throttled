@@ -53,19 +53,19 @@ module Sidekiq
         # @param [#to_s] event
         # @param [Object] payload
         # @return [void]
-        def run(event, payload = nil)
+        def run(event, payload = nil) # rubocop:disable Metrics/MethodLength
           @mutex.synchronize do
-            Fiber.new do
+            fiber = Fiber.new do
               @handlers[event.to_s].each do |callback|
                 begin
                   callback.call(payload)
                 rescue => e
-                  handle_exception(e, {
-                    :context => "sidekiq:throttled"
-                  })
+                  handle_exception(e, :context => "sidekiq:throttled")
                 end
               end
-            end.resume
+            end
+
+            fiber.resume
           end
         end
       end

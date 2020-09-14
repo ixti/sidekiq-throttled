@@ -13,7 +13,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
     end
 
     it "passes given concurrency suffix generator" do
-      key_suffix = lambda { |_| }
+      key_suffix = ->(_) {}
 
       expect(Sidekiq::Throttled::Strategy::Concurrency).to receive(:new)
         .with("throttled:foo", include(:key_suffix => key_suffix))
@@ -26,7 +26,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
     end
 
     it "passes given threshold suffix generator" do
-      key_suffix = lambda { |_| }
+      key_suffix = ->(_) {}
 
       expect(Sidekiq::Throttled::Strategy::Threshold).to receive(:new)
         .with("throttled:foo", include(:key_suffix => key_suffix))

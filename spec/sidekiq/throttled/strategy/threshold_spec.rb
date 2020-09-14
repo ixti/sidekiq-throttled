@@ -60,7 +60,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
   describe "with a dynamic key suffix" do
     subject(:strategy) do
       described_class.new(
-        :test, :limit => 5, :period => 10, :key_suffix => -> (i) { i }
+        :test, :limit => 5, :period => 10, :key_suffix => ->(i) { i }
       )
     end
 

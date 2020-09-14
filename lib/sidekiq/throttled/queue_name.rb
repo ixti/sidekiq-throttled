@@ -7,7 +7,7 @@ module Sidekiq
     # @private
     module QueueName
       # RegExp used to stip out any redisr-namespace prefixes with `queue:`.
-      QUEUE_NAME_PREFIX_RE = /.*queue:/.freeze
+      QUEUE_NAME_PREFIX_RE = %r{.*queue:}.freeze
       private_constant :QUEUE_NAME_PREFIX_RE
 
       class << self

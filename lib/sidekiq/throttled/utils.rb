@@ -9,7 +9,7 @@ module Sidekiq
       # @param name [#to_s] Constant name
       # @return [Object, nil] Resolved constant or nil if failed.
       def constantize(name)
-        name.to_s.sub(/^::/, "").split("::").inject(Object, &:const_get)
+        name.to_s.sub(%r{^::}, "").split("::").inject(Object, &:const_get)
       rescue NameError
         Sidekiq.logger.warn { "Failed to constantize: #{name}" }
         nil
