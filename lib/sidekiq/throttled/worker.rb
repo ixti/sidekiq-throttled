@@ -85,7 +85,7 @@ module Sidekiq
         #     # Create google_api throttling strategy
         #     Sidekiq::Throttled::Registry.add(:google_api, {
         #       :threshold => { :limit => 123, :period => 1.hour },
-        #       :concurrency => { :limit => 123 }
+        #       :concurrency => { :limit => 10 }
         #     })
         #
         # Now we can assign it to our workers:
