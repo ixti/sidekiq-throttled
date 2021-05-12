@@ -49,12 +49,12 @@ class MyWorker
 
   sidekiq_options :queue => :my_queue
 
-  sidekiq_throttle({
+  sidekiq_throttle(
     # Allow maximum 10 concurrent jobs of this class at a time.
     :concurrency => { :limit => 10 },
     # Allow maximum 1K jobs being processed within one hour window.
     :threshold => { :limit => 1_000, :period => 1.hour }
-  })
+  )
 
   def perform
     # ...
@@ -78,11 +78,11 @@ class MyWorker
 
   sidekiq_options :queue => :my_queue
 
-  sidekiq_throttle({
+  sidekiq_throttle(
     :concurrency => { :limit => 10 },
     :threshold   => { :limit => 100, :period => 1.hour }
     :observer    => MY_OBSERVER
-  })
+  )
 
   def perform(*args)
     # ...
@@ -106,10 +106,10 @@ class MyWorker
 
   sidekiq_options :queue => :my_queue
 
-  sidekiq_throttle({
+  sidekiq_throttle(
     # Allow maximum 10 concurrent jobs per user at a time.
     :concurrency => { :limit => 10, :key_suffix => -> (user_id) { user_id } }
-  })
+  )
 
   def perform(user_id)
     # ...
@@ -128,7 +128,7 @@ class MyWorker
 
   sidekiq_options :queue => :my_queue
 
-  sidekiq_throttle({
+  sidekiq_throttle(
     # Allow maximum 1000 concurrent jobs of this class at a time for VIPs and 10 for all other users.
     :concurrency => {
       :limit      => ->(user_id) { User.vip?(user_id) ? 1_000 : 10 },
@@ -139,7 +139,7 @@ class MyWorker
       :limit      => ->(user_id) { User.vip?(user_id) ? 1_000 : 10 },
       :period     => ->(user_id) { User.vip?(user_id) ? 1.hour : 1.day },
       :key_suffix => ->(user_id) { User.vip?(user_id) ? "vip" : "std" }
-  })
+  )
 
   def perform(user_id)
     # ...
@@ -156,14 +156,14 @@ class MyWorker
 
   sidekiq_options :queue => :my_queue
 
-  sidekiq_throttle({
+  sidekiq_throttle(
     # Allow maximum 10 concurrent jobs per project at a time and maximum 2 jobs per user
     :concurrency => [
       { :limit => 10, :key_suffix => -> (project_id, user_id) { project_id } },
       { :limit => 2, :key_suffix => -> (project_id, user_id) { user_id } }
     ]
     # For :threshold it works the same
-  })
+  )
 
   def perform(project_id, user_id)
     # ...
