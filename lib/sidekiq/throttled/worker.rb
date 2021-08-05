@@ -77,7 +77,7 @@ module Sidekiq
           Registry.add(self, **kwargs)
         end
 
-        # Adds current worker to preconfigured throtttling strtegy. Allows
+        # Adds current worker to preconfigured throttling strategy. Allows
         # sharing same pool for multiple workers.
         #
         # First of all we need to create shared throttling strategy:
