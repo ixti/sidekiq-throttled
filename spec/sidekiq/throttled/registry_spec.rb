@@ -34,12 +34,6 @@ RSpec.describe Sidekiq::Throttled::Registry do
       described_class.add(working_class, **threshold)
       expect(described_class.get("foo")).to be_a Sidekiq::Throttled::Strategy
     end
-
-    it "warns upon duplicate name given" do
-      described_class.add(working_class, **threshold)
-      expect(capture_output { described_class.add(working_class, threshold) })
-        .to include "Duplicate strategy name: foo"
-    end
   end
 
   describe ".add_alias" do
