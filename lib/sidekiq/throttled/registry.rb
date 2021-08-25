@@ -23,9 +23,6 @@ module Sidekiq
         # @return [Strategy]
         def add(name, **kwargs)
           name = name.to_s
-
-          warn "Duplicate strategy name: #{name}" if @strategies[name]
-
           @strategies[name] = Strategy.new(name, **kwargs)
         end
 
