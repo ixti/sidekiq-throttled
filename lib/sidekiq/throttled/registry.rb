@@ -18,20 +18,16 @@ module Sidekiq
 
         # Adds strategy to the registry.
         #
-        # @note prints a warning to STDERR upon duplicate strategy name
         # @param (see Strategy#initialize)
         # @return [Strategy]
         def add(name, **kwargs)
           name = name.to_s
-
-          warn "Duplicate strategy name: #{name}" if @strategies[name]
 
           @strategies[name] = Strategy.new(name, **kwargs)
         end
 
         # Adds alias for existing strategy.
         #
-        # @note prints a warning to STDERR upon duplicate strategy name
         # @param (#to_s) new_name
         # @param (#to_s) old_name
         # @raise [RuntimeError] if no strategy found with `old_name`
@@ -40,7 +36,6 @@ module Sidekiq
           new_name = new_name.to_s
           old_name = old_name.to_s
 
-          warn "Duplicate strategy name: #{new_name}" if @strategies[new_name]
           raise "Strategy not found: #{old_name}" unless @strategies[old_name]
 
           @aliases[new_name] = @strategies[old_name]
