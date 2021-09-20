@@ -43,14 +43,6 @@ RSpec.describe Sidekiq::Throttled::Registry do
       expect(described_class.get(:bar)).to be existing_strategy
     end
 
-    it "warns upon duplicate name" do
-      described_class.add(:foo, **concurrency)
-      described_class.add(:bar, **concurrency)
-
-      expect(capture_output { described_class.add_alias(:bar, :foo) })
-        .to include "Duplicate strategy name: bar"
-    end
-
     it "fails if there's no strategy registered with old name" do
       expect { described_class.add_alias(:bar, :foo) }
         .to raise_error "Strategy not found: foo"
