@@ -235,7 +235,6 @@ versions:
 
 * Ruby 2.6.x
 * Ruby 2.7.x
-* Ruby 3.0.x
 
 If something doesn't work on one of these versions, it's a bug.
 
