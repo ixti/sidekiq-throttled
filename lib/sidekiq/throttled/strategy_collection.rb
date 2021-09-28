@@ -62,8 +62,7 @@ module Sidekiq
 
         strategy.new("throttled:#{name}",
           :key_suffix => key_suffix,
-          **options
-        )
+          **options)
       end
     end
   end
