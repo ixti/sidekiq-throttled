@@ -46,7 +46,7 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "2.4"
+          ruby-version: "2.6"
 
       - name: bundle install
         run: bundle install --without development --jobs 4 --retry 3
