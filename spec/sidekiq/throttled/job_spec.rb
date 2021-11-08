@@ -1,7 +1,11 @@
 # frozen_string_literal: true
 
-RSpec.describe Sidekiq::Throttled::Worker do
-  let(:working_class) { Class.new { include Sidekiq::Throttled::Worker } }
+RSpec.describe Sidekiq::Throttled::Job do
+  let(:working_class) { Class.new { include Sidekiq::Throttled::Job } }
+
+  it "aliased as Sidekiq::Throttled::Worker" do
+    expect(::Sidekiq::Throttled::Worker).to be described_class
+  end
 
   describe ".sidekiq_throttle" do
     it "delegates call to Registry.register" do

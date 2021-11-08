@@ -9,6 +9,7 @@ require "sidekiq/throttled/communicator"
 require "sidekiq/throttled/configuration"
 require "sidekiq/throttled/queues_pauser"
 require "sidekiq/throttled/registry"
+require "sidekiq/throttled/job"
 require "sidekiq/throttled/worker"
 require "sidekiq/throttled/utils"
 
