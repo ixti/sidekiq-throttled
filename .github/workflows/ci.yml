@@ -33,9 +33,7 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-
-      - name: bundle install
-        run: bundle install --without development --jobs 4 --retry 3
+          bundler-cache: true
 
       - run: bundle exec rspec
 
@@ -48,8 +46,6 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "2.6"
-
-      - name: bundle install
-        run: bundle install --without development --jobs 4 --retry 3
+          bundler-cache: true
 
       - run: bundle exec rubocop
