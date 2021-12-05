@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Sidekiq::Throttled::StrategyCollection do
-  let(:collection) { described_class.new(strategies, options) }
+  let(:collection) { described_class.new(strategies, **options) }
 
   let(:options) do
     {
