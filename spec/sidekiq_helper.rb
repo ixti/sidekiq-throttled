@@ -3,6 +3,7 @@
 require "securerandom"
 
 require "sidekiq/testing"
+require "sidekiq/web"
 
 module JidGenerator
   def jid
@@ -16,6 +17,8 @@ end
 
 Sidekiq.configure_server(&configure_redis)
 Sidekiq.configure_client(&configure_redis)
+
+Sidekiq::Web.use Rack::Session::Cookie, secret: SecureRandom.hex(32), same_site: true, max_age: 86400
 
 RSpec.configure do |config|
   config.include JidGenerator
