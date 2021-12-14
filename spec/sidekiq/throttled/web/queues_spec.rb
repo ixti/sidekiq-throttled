@@ -55,7 +55,7 @@ RSpec.describe Sidekiq::Throttled::Web, :sidekiq => :enabled do
       let(:csrf_token) { SecureRandom.base64(32) }
 
       before do
-        env "rack.session", { :csrf => csrf_token }
+        env "rack.session", :csrf => csrf_token
       end
 
       it "allows pausing the queue" do
