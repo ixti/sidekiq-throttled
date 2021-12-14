@@ -52,19 +52,25 @@ RSpec.describe Sidekiq::Throttled::Web, :sidekiq => :enabled do
     end
 
     describe "POST /enhanced-queues/:queue" do
+      let(:csrf_token) { SecureRandom.base64(32) }
+
+      before do
+        env "rack.session", { :csrf => csrf_token }
+      end
+
       it "allows pausing the queue" do
         expect(pauser).to receive(:pause!).with("xxx")
-        post "/enhanced-queues/xxx", :action => "pause"
+        post "/enhanced-queues/xxx", :action => "pause", :authenticity_token => csrf_token
       end
 
       it "allows resuming the queue" do
         expect(pauser).to receive(:resume!).with("xxx")
-        post "/enhanced-queues/xxx", :action => "resume"
+        post "/enhanced-queues/xxx", :action => "resume", :authenticity_token => csrf_token
       end
 
       it "allows deleting the queue" do
         expect(::Sidekiq::Queue.new("xxx").size).to be >= 1
-        post "/enhanced-queues/xxx", :action => "delete"
+        post "/enhanced-queues/xxx", :action => "delete", :authenticity_token => csrf_token
         expect(::Sidekiq::Queue.new("xxx").size).to eq 0
       end
     end
