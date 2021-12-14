@@ -60,10 +60,9 @@ module Sidekiq
       def make_strategy(strategy, name, key_suffix, options)
         return unless options
 
-        strategy.new("throttled:#{name}", {
+        strategy.new("throttled:#{name}",
           :key_suffix => key_suffix,
-          **options
-        })
+          **options)
       end
     end
   end
