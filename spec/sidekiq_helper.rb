@@ -3,7 +3,6 @@
 require "securerandom"
 
 require "sidekiq/testing"
-require "sidekiq/web"
 
 module JidGenerator
   def jid
@@ -18,7 +17,11 @@ end
 Sidekiq.configure_server(&configure_redis)
 Sidekiq.configure_client(&configure_redis)
 
-Sidekiq::Web.use Rack::Session::Cookie, :secret => SecureRandom.hex(32), :same_site => true, :max_age => 86_400
+# See https://github.com/mperham/sidekiq/blob/v6.2.0/Changes.md
+if Gem::Version.new(Sidekiq::VERSION) >= Gem::Version.new("6.2.0")
+  require "sidekiq/web"
+  Sidekiq::Web.use Rack::Session::Cookie, secret: SecureRandom.hex(32), same_site: true, max_age: 86_400
+end
 
 RSpec.configure do |config|
   config.include JidGenerator
