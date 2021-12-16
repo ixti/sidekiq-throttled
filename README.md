@@ -235,6 +235,7 @@ versions:
 
 * Ruby 2.6.x
 * Ruby 2.7.x
+* Ruby 3.0.x
 
 If something doesn't work on one of these versions, it's a bug.
 
@@ -286,7 +287,7 @@ Don't forget to run `appraisal update` after any changes to `Gemfile`.
 
 ## Copyright
 
-Copyright (c) 2015-2020 SensorTower Inc.
+Copyright (c) 2020-2021 Alexey Zapparov, SensorTower Inc.
 See LICENSE.md for further details.
 
 

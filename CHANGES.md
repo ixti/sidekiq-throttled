@@ -1,3 +1,29 @@
+## the future is unwritten
+
+* [#102](https://github.com/sensortower/sidekiq-throttled/pull/102)
+  Support Ruby 3.0 and Sidekiq 6.2+.
+  ([@ybiquitous])
+
+* [#97](https://github.com/sensortower/sidekiq-throttled/pull/97)
+  Fix kwargs usage in strategy collection.
+  ([@baptistejub])
+
+## 0.14.0 (2021-09-21)
+
+* [#98](https://github.com/sensortower/sidekiq-throttled/pull/98)
+  Remove warning for strategy override.
+  ([@mattiagiuffrida-st])
+
+* [#65](https://github.com/sensortower/sidekiq-throttled/pull/65)
+  Support composite (multi-key) strategies.
+  ([@holyketzer])
+
+* [#89](https://github.com/sensortower/sidekiq-throttled/pull/89),
+  [#96](https://github.com/sensortower/sidekiq-throttled/pull/96), and
+  [#93](https://github.com/sensortower/sidekiq-throttled/pull/93)
+  Improve documentation.
+  ([@hubertjakubiak], [@khaile], and [@kylerippey])
+
 ## 0.13.0 (2020-07-28)
 
 * [#85](https://github.com/sensortower/sidekiq-throttled/pull/85)
@@ -221,3 +247,10 @@
 [@lenon]: https://github.com/lenon
 [@vaot]: https://github.com/vaot
 [@hmaack]: https://github.com/hmaack
+[@holyketzer]: https://github.com/holyketzer
+[@hubertjakubiak]: https://github.com/hubertjakubiak
+[@kylerippey]: https://github.com/kylerippey
+[@khaile]: https://github.com/khaile
+[@mattiagiuffrida-st]: https://github.com/mattiagiuffrida-st
+[@baptistejub]: https://github.com/baptistejub
+[@ybiquitous]: https://github.com/ybiquitous
