@@ -260,6 +260,8 @@ This library aims to support work with following [Sidekiq][sidekiq] versions:
 * Sidekiq 5.2.x
 * Sidekiq 6.0.x
 * Sidekiq 6.1.x
+* Sidekiq 6.2.x
+* Sidekiq 6.3.x
 
 
 ## Contributing
