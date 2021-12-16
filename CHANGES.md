@@ -1,4 +1,4 @@
-## the future is unwritten
+## 0.15.0 (2021-12-16)
 
 * [#102](https://github.com/sensortower/sidekiq-throttled/pull/102)
   Support Ruby 3.0 and Sidekiq 6.2+.
