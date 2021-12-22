@@ -12,8 +12,12 @@ module Sidekiq
 
         def key(job_args)
           key = @base_key.dup
-          key << ":#{@key_suffix.call(*job_args)}" if @key_suffix
-          key
+          return key unless @key_suffix
+
+          key << ":#{@key_suffix.call(*job_args)}"
+        rescue => e
+          Sidekiq.logger.error "Failed to get key suffix: #{e}"
+          raise e
         end
       end
     end
