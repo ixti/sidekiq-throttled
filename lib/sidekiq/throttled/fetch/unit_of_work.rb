@@ -49,9 +49,14 @@ module Sidekiq
         #   process was terminated. It is a reverse of whatever fetcher was
         #   doing to pull the job out of queue.
         #
+        # @param [Redis] pipelined connection for requeing via Redis#pipelined
         # @return [void]
-        def requeue
-          Sidekiq.redis { |conn| conn.rpush(QueueName.expand(queue_name), job) }
+        def requeue(pipeline = nil)
+          if pipeline
+            pipeline.rpush(QueueName.expand(queue_name), job)
+          else
+            Sidekiq.redis { |conn| conn.rpush(QueueName.expand(queue_name), job) }
+          end
         end
 
         # Pushes job back to the head of the queue, so that job won't be tried
