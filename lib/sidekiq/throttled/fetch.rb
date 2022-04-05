@@ -22,7 +22,11 @@ module Sidekiq
           return if units.empty?
 
           Sidekiq.logger.debug { "Re-queueing terminated jobs" }
-          Sidekiq.redis { |conn| conn.pipelined { units.each(&:requeue) } }
+          Sidekiq.redis do |conn|
+            conn.pipelined do |pipeline|
+              units.each { |unit| unit.requeue(pipeline) }
+            end
+          end
           Sidekiq.logger.info("Pushed #{units.size} jobs back to Redis")
         rescue => e
           Sidekiq.logger.warn("Failed to requeue #{units.size} jobs: #{e}")
