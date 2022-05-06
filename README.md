@@ -287,11 +287,5 @@ bundle exec rubocop             # run static code analysis
 Don't forget to run `appraisal update` after any changes to `Gemfile`.
 
 
-## Copyright
-
-Copyright (c) 2020-2021 Alexey Zapparov, SensorTower Inc.
-See LICENSE.md for further details.
-
-
 [travis]: http://travis-ci.org/sensortower/sidekiq-throttled
 [sidekiq]: https://github.com/mperham/sidekiq

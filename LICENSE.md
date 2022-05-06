@@ -1,5 +1,6 @@
 The MIT License (MIT)
 
+Copyright (c) 2022 Alexey Zapparov
 Copyright (c) 2020-2021 Alexey Zapparov, SensorTower Inc.
 Copyright (c) 2015-2020 SensorTower Inc.
 
