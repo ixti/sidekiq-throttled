@@ -10,6 +10,7 @@ require "sidekiq/throttled/configuration"
 require "sidekiq/throttled/queues_pauser"
 require "sidekiq/throttled/registry"
 require "sidekiq/throttled/worker"
+require "sidekiq/throttled/job"
 require "sidekiq/throttled/utils"
 
 # @see https://github.com/mperham/sidekiq/
