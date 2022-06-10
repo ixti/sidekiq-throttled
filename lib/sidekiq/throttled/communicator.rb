@@ -2,7 +2,7 @@
 
 require "singleton"
 
-require "sidekiq/exception_handler"
+require "sidekiq/throttled/communicator/exception_handler"
 require "sidekiq/throttled/communicator/listener"
 require "sidekiq/throttled/communicator/callbacks"
 

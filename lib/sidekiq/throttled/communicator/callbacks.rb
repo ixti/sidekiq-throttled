@@ -2,7 +2,7 @@
 
 require "fiber"
 
-require "sidekiq/exception_handler"
+require "sidekiq/throttled/communicator/exception_handler"
 
 module Sidekiq
   module Throttled
