@@ -37,7 +37,8 @@ module Sidekiq
           percentile = 100.00 * int / max
           lvl = if    80 <= percentile then "danger"
                 elsif 60 <= percentile then "warning"
-                else                        "success"
+                else
+                  "success"
                 end
 
           %(<span class="label label-#{lvl}">#{int}</span>)
@@ -61,10 +62,10 @@ module Sidekiq
 
         # @return [String]
         def humanize_integer(int)
-          digits = int.to_s.split ""
-          str    = digits.shift(digits.count % 3).join("")
+          digits = int.to_s.chars
+          str    = digits.shift(digits.count % 3).join
 
-          str << " " << digits.shift(3).join("") while digits.count.positive?
+          str << " " << digits.shift(3).join while digits.count.positive?
 
           str.strip
         end

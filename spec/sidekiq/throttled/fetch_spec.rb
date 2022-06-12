@@ -89,7 +89,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
       Sidekiq.redis do |redis|
         expect(redis).not_to receive(:brpop)
-        expect(fetcher.retrieve_work).to be nil
+        expect(fetcher.retrieve_work).to be_nil
       end
     end
 
@@ -104,12 +104,12 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
       it "pauses job's queue for TIMEOUT seconds" do
         Sidekiq.redis do |redis|
           expect(Sidekiq::Throttled).to receive(:throttled?).and_return(true)
-          expect(fetcher.retrieve_work).to be nil
+          expect(fetcher.retrieve_work).to be_nil
 
           expect(redis).to receive(:brpop)
             .with("queue:dreamers", 2)
 
-          expect(fetcher.retrieve_work).to be nil
+          expect(fetcher.retrieve_work).to be_nil
         end
       end
     end
@@ -124,7 +124,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
         })
       end
 
-      it { is_expected.not_to be nil }
+      it { is_expected.not_to be_nil }
 
       context "with strictly ordered queues" do
         before { options[:strict] = true }
@@ -175,13 +175,13 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
       context "when limit is not yet reached" do
         before { 3.times { fetcher.retrieve_work } }
 
-        it { is_expected.not_to be nil }
+        it { is_expected.not_to be_nil }
       end
 
       context "when limit exceeded" do
         before { 5.times { fetcher.retrieve_work } }
 
-        it { is_expected.to be nil }
+        it { is_expected.to be_nil }
 
         it "pushes fetched job back to the queue" do
           Sidekiq.redis do |conn|

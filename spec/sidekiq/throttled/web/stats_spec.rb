@@ -63,7 +63,7 @@ RSpec.describe Sidekiq::Throttled::Web::Stats do
     context "with Threshold strategy" do
       let :strategy do
         Sidekiq::Throttled::Strategy::Threshold.new(:foo, :limit  => 10,
-                                                          :period => 75)
+          :period => 75)
       end
 
       it { is_expected.to start_with "10 jobs per 1 minute 15 seconds<br />" }

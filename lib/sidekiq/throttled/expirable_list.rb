@@ -2,8 +2,6 @@
 
 require "monitor"
 
-require "concurrent/utility/monotonic_time"
-
 module Sidekiq
   module Throttled
     # List that tracks when elements were added and enumerates over those not
@@ -24,7 +22,6 @@ module Sidekiq
     # It does not deduplicates elements. Eviction happens only upon elements
     # retrieval (see {#each}).
     #
-    # @see http://ruby-concurrency.github.io/concurrent-ruby/Concurrent.html#monotonic_time-class_method
     # @see https://ruby-doc.org/core/Process.html#method-c-clock_gettime
     # @see https://linux.die.net/man/3/clock_gettime
     #
@@ -44,7 +41,7 @@ module Sidekiq
       # @params element [Object]
       # @return [ExpirableList] self
       def <<(element)
-        @mon.synchronize { @arr << [Concurrent.monotonic_time, element] }
+        @mon.synchronize { @arr << [::Process.clock_gettime(::Process::CLOCK_MONOTONIC), element] }
         self
       end
 
@@ -58,7 +55,7 @@ module Sidekiq
         return to_enum __method__ unless block_given?
 
         @mon.synchronize do
-          horizon = Concurrent.monotonic_time - @ttl
+          horizon = ::Process.clock_gettime(::Process::CLOCK_MONOTONIC) - @ttl
 
           # drop all elements older than horizon
           @arr.shift while @arr[0] && @arr[0][0] < horizon

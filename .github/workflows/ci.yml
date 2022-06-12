@@ -2,19 +2,19 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
-  rspec:
+  test:
     name: "rspec (ruby:${{ matrix.ruby }} sidekiq:${{ matrix.sidekiq }})"
 
     strategy:
       fail-fast: false
       matrix:
-        ruby: [ "2.6", "2.7", "3.0", "3.1" ]
-        sidekiq: [ "5.0", "5.1", "5.2", "6.0", "6.1", "6.2", "6.3" ]
+        ruby: [ "2.7", "3.0", "3.1" ]
+        sidekiq: [ "6.0", "6.1", "6.2", "6.3", "6.4", "6.5" ]
 
     runs-on: ubuntu-latest
 
@@ -35,7 +35,8 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
 
-      - run: bundle exec rspec
+      - name: bundle exec rspec
+        run: bundle exec rspec --format progress --force-colour
 
   rubocop:
     runs-on: ubuntu-latest
@@ -45,7 +46,7 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "2.6"
+          ruby-version: "2.7"
           bundler-cache: true
 
       - run: bundle exec rubocop

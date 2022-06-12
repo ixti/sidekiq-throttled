@@ -25,7 +25,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
     context "when dynamic limit returns nil" do
       let(:strategy) do
         described_class.new :test,
-          :limit  => proc { |*| nil },
+          :limit  => proc { |*| },
           :period => 10
       end
 

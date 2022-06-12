@@ -31,7 +31,6 @@ RSpec.configure do |config|
     Sidekiq::Worker.clear_all
 
     case example.metadata[:sidekiq]
-    when :fake      then Sidekiq::Testing.fake!(&example)
     when :inline    then Sidekiq::Testing.inline!(&example)
     when :disabled  then Sidekiq::Testing.disable!(&example)
     when :enabled   then Sidekiq::Testing.__set_test_mode(nil, &example)

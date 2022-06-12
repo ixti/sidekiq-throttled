@@ -1,19 +1,20 @@
 require:
   - rubocop-performance
+  - rubocop-rake
   - rubocop-rspec
 
 inherit_from:
   - .rubocop_todo.yml
-  - .rubocop/layout.yml
-  - .rubocop/lint.yml
-  - .rubocop/metrics.yml
-  - .rubocop/performance.yml
-  - .rubocop/rspec.yml
-  - .rubocop/style.yml
+  - rubocop/layout.yml
+  - rubocop/lint.yml
+  - rubocop/metrics.yml
+  - rubocop/performance.yml
+  - rubocop/rspec.yml
+  - rubocop/style.yml
 
 AllCops:
   Exclude:
     - gemfiles/**/*
     - vendor/**/*
   NewCops: enable
-  TargetRubyVersion: 2.6
+  TargetRubyVersion: 2.7

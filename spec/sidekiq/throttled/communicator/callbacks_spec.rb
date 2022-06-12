@@ -12,7 +12,7 @@ RSpec.describe Sidekiq::Throttled::Communicator::Callbacks do
     end
 
     it "normalized given name" do
-      proc_spy = proc { nil }
+      proc_spy = proc {}
       payload  = double
 
       expect(proc_spy).to receive(:call).with(payload)
@@ -24,7 +24,7 @@ RSpec.describe Sidekiq::Throttled::Communicator::Callbacks do
 
   describe "#run" do
     it "normalized given name" do
-      proc_spy = proc { nil }
+      proc_spy = proc {}
       payload  = double
 
       expect(proc_spy).to receive(:call).with(payload)
@@ -36,7 +36,7 @@ RSpec.describe Sidekiq::Throttled::Communicator::Callbacks do
     it "runs handlers in separate thread" do
       Thread.current[:context] = 1
 
-      callbacks.on("xxx") { expect(Thread.current[:context]).to be nil }
+      callbacks.on("xxx") { expect(Thread.current[:context]).to be_nil }
 
       thread = Thread.new do
         Thread.current[:context] = 2

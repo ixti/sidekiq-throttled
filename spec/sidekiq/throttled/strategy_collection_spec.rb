@@ -44,7 +44,7 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
     context "with no dynamic strategy" do
       let(:strategies) { { :limit => 5 } }
 
-      it { is_expected.to eq false }
+      it { is_expected.to be false }
     end
 
     context "with one dynamic strategy" do
@@ -55,7 +55,7 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
         ]
       end
 
-      it { is_expected.to eq true }
+      it { is_expected.to be true }
     end
   end
 
@@ -79,7 +79,7 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
         allow(strategy1).to receive(:throttled?).with(*args).and_return(false)
         allow(strategy2).to receive(:throttled?).with(*args).and_return(false)
 
-        expect(throttled?).to eq false
+        expect(throttled?).to be false
       end
     end
 
@@ -88,7 +88,7 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
         allow(strategy1).to receive(:throttled?).with(*args).and_return(false)
         allow(strategy2).to receive(:throttled?).with(*args).and_return(true)
 
-        expect(throttled?).to eq true
+        expect(throttled?).to be true
       end
     end
   end

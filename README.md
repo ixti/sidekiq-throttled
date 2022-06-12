@@ -1,10 +1,7 @@
 # Sidekiq::Throttled
 
+[![CI Status](https://github.com/ixti/sidekiq-throttled/actions/workflows/ci.yml/badge.svg)](https://github.com/ixti/sidekiq-throttled/actions/workflows/ci.yml)
 [![Latest Version](https://badge.fury.io/rb/sidekiq-throttled.svg)](http://rubygems.org/gems/sidekiq-throttled)
-[![CI Status](https://github.com/sensortower/sidekiq-throttled/workflows/CI/badge.svg?branch=master)](https://github.com/sensortower/sidekiq-throttled/actions?query=workflow%3ACI+branch%3Amaster)
-[![Code Quality](https://codeclimate.com/github/sensortower/sidekiq-throttled.svg?branch=master)](https://codeclimate.com/github/sensortower/sidekiq-throttled)
-[![Code Coverage](https://coveralls.io/repos/github/sensortower/sidekiq-throttled/badge.svg?branch=master)](https://coveralls.io/github/sensortower/sidekiq-throttled?branch=master)
-[![API Docs Quality](http://inch-ci.org/github/sensortower/sidekiq-throttled.svg?branch=master)](http://inch-ci.org/github/sensortower/sidekiq-throttled)
 [![API Docs](https://img.shields.io/badge/yard-docs-blue.svg)](http://www.rubydoc.info/gems/sidekiq-throttled)
 
 Concurrency and threshold throttling for [Sidekiq][sidekiq].
@@ -230,12 +227,12 @@ end
 
 ## Supported Ruby Versions
 
-This library aims to support and is [tested against][travis] the following Ruby
+This library aims to support and is [tested against][ci] the following Ruby
 versions:
 
-* Ruby 2.6.x
 * Ruby 2.7.x
 * Ruby 3.0.x
+* Ruby 3.1.x
 
 If something doesn't work on one of these versions, it's a bug.
 
@@ -255,13 +252,12 @@ dropped.
 
 This library aims to support work with following [Sidekiq][sidekiq] versions:
 
-* Sidekiq 5.0.x
-* Sidekiq 5.1.x
-* Sidekiq 5.2.x
 * Sidekiq 6.0.x
 * Sidekiq 6.1.x
 * Sidekiq 6.2.x
 * Sidekiq 6.3.x
+* Sidekiq 6.4.x
+* Sidekiq 6.5.x
 
 
 ## Contributing
@@ -287,5 +283,5 @@ bundle exec rubocop             # run static code analysis
 Don't forget to run `appraisal update` after any changes to `Gemfile`.
 
 
-[travis]: http://travis-ci.org/sensortower/sidekiq-throttled
+[ci]: https://github.com/ixti/sidekiq-throttled/actions/workflows/ci.yml
 [sidekiq]: https://github.com/mperham/sidekiq

@@ -2,21 +2,6 @@
 
 ENV["RACK_ENV"] ||= "test"
 
-require "simplecov"
-require "coveralls"
-
-SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
-  SimpleCov::Formatter::HTMLFormatter,
-  Coveralls::SimpleCov::Formatter
-])
-
-SimpleCov.start do
-  add_filter "/spec/"
-  minimum_coverage 90
-end
-
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
-
 require "sidekiq/throttled"
 require "sidekiq/throttled/testing"
 

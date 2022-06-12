@@ -24,4 +24,4 @@ end
 default_suite = ENV["CI"] ? :spec : %i[spec rubocop]
 named_suites  = { "rubocop" => :rubocop, "rspec" => :spec }
 
-task :default => named_suites.fetch(ENV["SUITE"], default_suite)
+task :default => named_suites.fetch(ENV.fetch("SUITE", nil), default_suite)

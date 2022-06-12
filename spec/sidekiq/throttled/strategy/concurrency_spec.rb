@@ -19,7 +19,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
     end
 
     context "when dynamic limit returns nil" do
-      let(:strategy) { described_class.new :test, :limit => proc { |*| nil } }
+      let(:strategy) { described_class.new :test, :limit => proc { |*| } }
 
       it { is_expected.to be false }
 
