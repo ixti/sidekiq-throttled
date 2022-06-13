@@ -1,3 +1,30 @@
+## 0.16.0 (2022-06-13)
+
+* Drop Ruby 2.6 support.
+
+* Drop Sidekiq 5.X support.
+
+* [#121](https://github.com/sensortower/sidekiq-throttled/pull/121)
+  Sidekiq 6.5 compatibility.
+  ([@hieuk09])
+
+* [#116](https://github.com/sensortower/sidekiq-throttled/pull/116)
+  Unwrap ActiveJob JobWrapper
+  ([@holstvoogd])
+
+* [#115](https://github.com/sensortower/sidekiq-throttled/pull/115)
+  Fix Redis 4.6 deprecation warnings.
+  ([@dbackeus])
+
+* [#113](https://github.com/sensortower/sidekiq-throttled/pull/113)
+  Add Ruby 3.1 to CI.
+  ([@petergoldstein])
+
+* [#103](https://github.com/sensortower/sidekiq-throttled/pull/103)
+  Rename Sidekiq::Throttled::Worker to Sidekiq::Throttled::Job, and alias it
+  as Sidekiq::Throttled::Worker.
+  ([@CHTJonas])
+
 ## 0.15.0 (2021-12-16)
 
 * [#102](https://github.com/sensortower/sidekiq-throttled/pull/102)
@@ -254,3 +281,8 @@
 [@mattiagiuffrida-st]: https://github.com/mattiagiuffrida-st
 [@baptistejub]: https://github.com/baptistejub
 [@ybiquitous]: https://github.com/ybiquitous
+[@hieuk09]: https://github.com/hieuk09
+[@petergoldstein]: https://github.com/petergoldstein
+[@dbackeus]: https://github.com/dbackeus
+[@holstvoogd]: https://github.com/holstvoogd
+[@CHTJonas]: https://github.com/CHTJonas
