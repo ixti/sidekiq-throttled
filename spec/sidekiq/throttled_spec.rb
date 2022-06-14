@@ -55,7 +55,7 @@ RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
       described_class.throttled? message
     end
 
-    it "unwraps ActiveJob-jobs" do
+    it "unwraps ActiveJob-jobs default sidekiq adapter" do
       strategy = Sidekiq::Throttled::Registry.add("wrapped-foo",
         :threshold   => { :limit => 1, :period => 1 },
         :concurrency => { :limit => 1 })
@@ -64,6 +64,23 @@ RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
       message     = JSON.dump({
         "class"   => "ActiveJob::QueueAdapters::SidekiqAdapter::JobWrapper",
         "wrapped" => "wrapped-foo",
+        "jid"     => payload_jid
+      })
+
+      expect(strategy).to receive(:throttled?).with payload_jid
+
+      described_class.throttled? message
+    end
+
+    it "unwraps ActiveJob-jobs custom sidekiq adapter" do
+      strategy = Sidekiq::Throttled::Registry.add("JobClassName",
+        :threshold   => { :limit => 1, :period => 1 },
+        :concurrency => { :limit => 1 })
+
+      payload_jid = jid
+      message     = JSON.dump({
+        "class"   => "ActiveJob::QueueAdapters::SidekiqCustomAdapter::JobWrapper",
+        "wrapped" => "JobClassName",
         "jid"     => payload_jid
       })
 
