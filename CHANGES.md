@@ -1,3 +1,13 @@
+## 0.16.1 (2022-06-14)
+
+* [#2](https://github.com/ixti/sidekiq-throttled/pull/2)
+  Support custom ActiveJob adapters.
+  ([@longkt90])
+
+* [#107](https://github.com/sensortower/sidekiq-throttled/pull/107)
+  Log error when key sufix extraction fails.
+  ([@pjungwir])
+
 ## 0.16.0 (2022-06-13)
 
 * Drop Ruby 2.6 support.
@@ -286,3 +296,5 @@
 [@dbackeus]: https://github.com/dbackeus
 [@holstvoogd]: https://github.com/holstvoogd
 [@CHTJonas]: https://github.com/CHTJonas
+[@pjungwir]: https://github.com/pjungwir
+[@longkt90]: https://github.com/longkt90
