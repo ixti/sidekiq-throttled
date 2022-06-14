@@ -21,14 +21,14 @@ module Sidekiq
       # Instructs throttler to lookup strategies in parent classes, if there's
       # no own strategy:
       #
-      #     class Foo
-      #       include Sidekiq::Worker
-      #       include Sidekiq::Worker::Throttled
+      #     class FooJob
+      #       include Sidekiq::Job
+      #       include Sidekiq::Throttled::Job
       #
       #       sidekiq_throttle :concurrency => { :limit => 42 }
       #     end
       #
-      #     class Bar < Foo
+      #     class BarJob < FooJob
       #     end
       #
       # By default in the example above, `Bar` won't have throttling options.

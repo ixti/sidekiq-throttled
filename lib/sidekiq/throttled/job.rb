@@ -9,9 +9,9 @@ module Sidekiq
     #
     # @example Usage
     #
-    #     class MyWorker
-    #       include Sidekiq::Worker
-    #       include Sidekiq::Throttled::Worker
+    #     class MyJob
+    #       include Sidekiq::Job
+    #       include Sidekiq::Throttled::Job
     #
     #       sidkiq_options :queue => :my_queue
     #       sidekiq_throttle :threshold => { :limit => 123, :period => 1.hour }
@@ -26,7 +26,7 @@ module Sidekiq
       # Extends worker class with {ClassMethods}.
       #
       # @note Using `included` hook with extending worker with {ClassMethods}
-      #   in order to make API inline with `include Sidekiq::Worker`.
+      #   in order to make API inline with `include Sidekiq::Job`.
       #
       # @private
       def self.included(worker)
@@ -37,33 +37,33 @@ module Sidekiq
       module ClassMethods
         # Registers some strategy for the worker.
         #
-        # @example Allow max 123 MyWorker jobs per hour
+        # @example Allow max 123 MyJob jobs per hour
         #
-        #     class MyWorker
-        #       include Sidekiq::Worker
-        #       include Sidekiq::Throttled::Worker
+        #     class MyJob
+        #       include Sidekiq::Job
+        #       include Sidekiq::Throttled::Job
         #
         #       sidekiq_throttle({
         #         :threshold => { :limit => 123, :period => 1.hour }
         #       })
         #     end
         #
-        # @example Allow max 10 concurrently running MyWorker jobs
+        # @example Allow max 10 concurrently running MyJob jobs
         #
-        #     class MyWorker
-        #       include Sidekiq::Worker
-        #       include Sidekiq::Throttled::Worker
+        #     class MyJob
+        #       include Sidekiq::Job
+        #       include Sidekiq::Throttled::Job
         #
         #       sidekiq_throttle({
         #         :concurrency => { :limit => 10 }
         #       })
         #     end
         #
-        # @example Allow max 10 concurrent MyWorker jobs and max 123 per hour
+        # @example Allow max 10 concurrent MyJob jobs and max 123 per hour
         #
-        #     class MyWorker
-        #       include Sidekiq::Worker
-        #       include Sidekiq::Throttled::Worker
+        #     class MyJob
+        #       include Sidekiq::Job
+        #       include Sidekiq::Throttled::Job
         #
         #       sidekiq_throttle({
         #         :threshold => { :limit => 123, :period => 1.hour },
@@ -91,15 +91,15 @@ module Sidekiq
         # Now we can assign it to our workers:
         #
         #     class FetchProfileJob
-        #       include Sidekiq::Worker
-        #       include Sidekiq::Throttled::Worker
+        #       include Sidekiq::Job
+        #       include Sidekiq::Throttled::Job
         #
         #       sidekiq_throttle_as :google_api
         #     end
         #
         #     class FetchCommentsJob
-        #       include Sidekiq::Worker
-        #       include Sidekiq::Throttled::Worker
+        #       include Sidekiq::Job
+        #       include Sidekiq::Throttled::Job
         #
         #       sidekiq_throttle_as :google_api
         #     end

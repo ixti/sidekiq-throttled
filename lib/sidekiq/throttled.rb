@@ -22,12 +22,12 @@ module Sidekiq
   #     require "sidekiq/throttled"
   #     Sidekiq::Throttled.setup!
   #
-  # Once you've done that you can include {Sidekiq::Throttled::Worker} to your
+  # Once you've done that you can include {Sidekiq::Throttled::Job} to your
   # job classes and configure throttling:
   #
-  #     class MyWorker
-  #       include Sidekiq::Worker
-  #       include Sidekiq::Throttled::Worker
+  #     class MyJob
+  #       include Sidekiq::Job
+  #       include Sidekiq::Throttled::Job
   #
   #       sidekiq_options :queue => :my_queue
   #

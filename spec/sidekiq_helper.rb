@@ -28,7 +28,11 @@ RSpec.configure do |config|
   config.extend  JidGenerator
 
   config.around do |example|
-    Sidekiq::Worker.clear_all
+    if Sidekiq::VERSION >= "6.3.0"
+      Sidekiq::Job.clear_all
+    else
+      Sidekiq::Worker.clear_all
+    end
 
     case example.metadata[:sidekiq]
     when :inline    then Sidekiq::Testing.inline!(&example)

@@ -1,8 +1,13 @@
 # frozen_string_literal: true
 
 class WorkingClassHero
-  include Sidekiq::Worker
-  include Sidekiq::Throttled::Worker
+  if Sidekiq::VERSION >= "6.3.0"
+    include Sidekiq::Job
+    include Sidekiq::Throttled::Job
+  else
+    include Sidekiq::Worker
+    include Sidekiq::Throttled::Worker
+  end
 
   sidekiq_options :queue => :heroes
 

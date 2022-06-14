@@ -36,13 +36,13 @@ Sidekiq::Throttled.setup!
 Load order can be an issue if you are using other Sidekiq plugins and/or middleware.
 To prevent any problems, add the `.setup!` call to the bottom of your init file.
 
-Once you've done that you can include `Sidekiq::Throttled::Worker` to your
+Once you've done that you can include `Sidekiq::Throttled::Job` to your
 job classes and configure throttling:
 
 ``` ruby
-class MyWorker
-  include Sidekiq::Worker
-  include Sidekiq::Throttled::Worker
+class MyJob
+  include Sidekiq::Job
+  include Sidekiq::Throttled::Job
 
   sidekiq_options :queue => :my_queue
 
@@ -59,15 +59,31 @@ class MyWorker
 end
 ```
 
+### Sidekiq < 6.3.0
+
+`Sidekiq::Throttled::Job` is aliased as `Sidekiq::Throttled::Worker`,
+thus if you're using Sidekiq prior 6.3.0 version, you can use that alias for
+consistency:
+
+``` ruby
+class MyWorker
+  include Sidekiq::Worker
+  include Sidekiq::Throttled::Worker
+
+  # ...
+end
+```
+
+
 ### Observer
 
 You can specify an observer that will be called on throttling. To do so pass an
 `:observer` option with callable object:
 
 ``` ruby
-class MyWorker
-  include Sidekiq::Worker
-  include Sidekiq::Throttled::Worker
+class MyJob
+  include Sidekiq::Job
+  include Sidekiq::Throttled::Job
 
   MY_OBSERVER = lambda do |strategy, *args|
     # do something
@@ -97,9 +113,9 @@ to the job.
 You can throttle jobs dynamically with `:key_suffix` option:
 
 ``` ruby
-class MyWorker
-  include Sidekiq::Worker
-  include Sidekiq::Throttled::Worker
+class MyJob
+  include Sidekiq::Job
+  include Sidekiq::Throttled::Job
 
   sidekiq_options :queue => :my_queue
 
@@ -119,9 +135,9 @@ for these values. The proc will be evaluated at the time the job is fetched
 and will receive the same arguments that are passed to the job.
 
 ``` ruby
-class MyWorker
-  include Sidekiq::Worker
-  include Sidekiq::Throttled::Worker
+class MyJob
+  include Sidekiq::Job
+  include Sidekiq::Throttled::Job
 
   sidekiq_options :queue => :my_queue
 
@@ -147,9 +163,9 @@ end
 You also can use several different keys to throttle one worker.
 
 ``` ruby
-class MyWorker
-  include Sidekiq::Worker
-  include Sidekiq::Throttled::Worker
+class MyJob
+  include Sidekiq::Job
+  include Sidekiq::Throttled::Job
 
   sidekiq_options :queue => :my_queue
 
