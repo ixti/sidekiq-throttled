@@ -59,11 +59,9 @@ class MyJob
 end
 ```
 
-### Sidekiq < 6.3.0
-
-`Sidekiq::Throttled::Job` is aliased as `Sidekiq::Throttled::Worker`,
-thus if you're using Sidekiq prior 6.3.0 version, you can use that alias for
-consistency:
+**NOTE:** `Sidekiq::Throttled::Job` is aliased as `Sidekiq::Throttled::Worker`,
+thus if you're using Sidekiq prior 6.3.0 version, or you using `Sidekiq::Worker`
+naming convention, you can use the alias for consistency:
 
 ``` ruby
 class MyWorker
