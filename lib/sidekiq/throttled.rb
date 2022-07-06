@@ -62,7 +62,7 @@ module Sidekiq
         QueuesPauser.instance.setup!
 
         Sidekiq.configure_server do |config|
-          setup_strategy!
+          setup_strategy!(config)
 
           require "sidekiq/throttled/middleware"
           config.server_middleware do |chain|
@@ -94,15 +94,20 @@ module Sidekiq
       private
 
       # @return [void]
-      def setup_strategy!
+      def setup_strategy!(sidekiq_config)
         require "sidekiq/throttled/fetch"
 
+        sidekiq_version = Gem::Version.new(Sidekiq::VERSION)
+
+        # https://github.com/mperham/sidekiq/commit/67daa7a408b214d593100f782271ed108686c147
+        sidekiq_config = sidekiq_config.options if sidekiq_version < Gem::Version.new("6.5.0")
+
         # https://github.com/mperham/sidekiq/commit/fce05c9d4b4c0411c982078a4cf3a63f20f739bc
-        Sidekiq.options[:fetch] =
+        sidekiq_config[:fetch] =
           if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("6.1.0")
             Sidekiq::Throttled::Fetch
           else
-            Sidekiq::Throttled::Fetch.new(Sidekiq.options)
+            Sidekiq::Throttled::Fetch.new(sidekiq_config)
           end
       end
 
