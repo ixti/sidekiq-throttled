@@ -97,18 +97,10 @@ module Sidekiq
       def setup_strategy!(sidekiq_config)
         require "sidekiq/throttled/fetch"
 
-        sidekiq_version = Gem::Version.new(Sidekiq::VERSION)
-
         # https://github.com/mperham/sidekiq/commit/67daa7a408b214d593100f782271ed108686c147
-        sidekiq_config = sidekiq_config.options if sidekiq_version < Gem::Version.new("6.5.0")
+        sidekiq_config = sidekiq_config.options if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("6.5.0")
 
-        # https://github.com/mperham/sidekiq/commit/fce05c9d4b4c0411c982078a4cf3a63f20f739bc
-        sidekiq_config[:fetch] =
-          if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("6.1.0")
-            Sidekiq::Throttled::Fetch
-          else
-            Sidekiq::Throttled::Fetch.new(sidekiq_config)
-          end
+        sidekiq_config[:fetch] = Sidekiq::Throttled::Fetch.new(sidekiq_config)
       end
 
       # Tries to preload constant by it's name once.

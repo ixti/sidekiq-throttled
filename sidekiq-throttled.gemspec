@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
 
   spec.add_runtime_dependency "concurrent-ruby"
   spec.add_runtime_dependency "redis-prescription"
-  spec.add_runtime_dependency "sidekiq"
+  spec.add_runtime_dependency "sidekiq", ">= 6.4"
 
   spec.add_development_dependency "bundler", ">= 2.0"
 end

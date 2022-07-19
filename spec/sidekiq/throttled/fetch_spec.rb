@@ -49,7 +49,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
     end
   end
 
-  shared_examples "provides bulk requeue API" do |scope|
+  describe "#bulk_requeue" do
     before do
       Sidekiq::Client.push_bulk({
         "class" => WorkingClassHero,
@@ -63,22 +63,8 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
       works = Array.new(3) { fetcher.retrieve_work }
       expect(queue.size).to eq(0)
 
-      scope.bulk_requeue(works, options)
+      fetcher.bulk_requeue(works, options)
       expect(queue.size).to eq(3)
-    end
-  end
-
-  if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("6.1.0")
-    context "when sidekiq version < 6.1.0" do
-      describe ".bulk_requeue" do
-        include_examples "provides bulk requeue API", described_class
-      end
-    end
-  else
-    context "when sidekiq version >= 6.1.0" do
-      describe "#bulk_requeue" do
-        include_examples "provides bulk requeue API", described_class.new({ :queues => %w[heroes] })
-      end
     end
   end
 
