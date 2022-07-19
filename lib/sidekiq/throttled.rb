@@ -5,9 +5,7 @@ require "sidekiq"
 
 # internal
 require "sidekiq/throttled/version"
-require "sidekiq/throttled/communicator"
 require "sidekiq/throttled/configuration"
-require "sidekiq/throttled/queues_pauser"
 require "sidekiq/throttled/registry"
 require "sidekiq/throttled/job"
 require "sidekiq/throttled/worker"
@@ -58,9 +56,6 @@ module Sidekiq
       #
       # @return [void]
       def setup!
-        Communicator.instance.setup!
-        QueuesPauser.instance.setup!
-
         Sidekiq.configure_server do |config|
           setup_strategy!(config)
 

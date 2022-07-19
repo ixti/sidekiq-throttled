@@ -3,7 +3,6 @@
 require "sidekiq"
 require "sidekiq/throttled/expirable_list"
 require "sidekiq/throttled/fetch/unit_of_work"
-require "sidekiq/throttled/queues_pauser"
 require "sidekiq/throttled/queue_name"
 
 module Sidekiq
@@ -87,7 +86,7 @@ module Sidekiq
       # @param [Array<String>] queues
       # @return [Array<String>]
       def filter_queues(queues)
-        QueuesPauser.instance.filter(queues) - @paused.to_a
+        queues - @paused.to_a
       end
     end
   end

@@ -10,10 +10,6 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
   let(:options)       { { :queues => queues } }
   let(:queues)        { %w[heroes dreamers] }
-  let(:pauser)        { Sidekiq::Throttled::QueuesPauser.instance }
-  let(:paused_queues) { pauser.instance_variable_get :@paused_queues }
-
-  before { paused_queues.clear }
 
   describe ".new" do
     it "fails if :queues are missing" do
@@ -122,34 +118,12 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
             fetcher.retrieve_work
           end
         end
-
-        it "filters queues with QueuesPauser" do
-          options[:queues] << "xxx"
-          paused_queues.replace %w[queue:xxx]
-
-          Sidekiq.redis do |conn|
-            expect(conn).to receive(:brpop)
-              .with("queue:heroes", "queue:dreamers", 2)
-            fetcher.retrieve_work
-          end
-        end
       end
 
       context "with weight-ordered queues" do
         before { options[:strict] = false }
 
         it "builds correct redis brpop command" do
-          Sidekiq.redis do |conn|
-            queue_regexp = %r{^queue:(heroes|dreamers)$}
-            expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, 2)
-            fetcher.retrieve_work
-          end
-        end
-
-        it "filters queues with QueuesPauser" do
-          options[:queues] << "xxx"
-          paused_queues.replace %w[queue:xxx]
-
           Sidekiq.redis do |conn|
             queue_regexp = %r{^queue:(heroes|dreamers)$}
             expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, 2)

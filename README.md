@@ -205,40 +205,6 @@ lock TTL to fit your needs:
 sidekiq_throttle(:concurrency => { :limit => 20, :ttl => 1.hour.to_i })
 ```
 
-
-## Enhanced Queues list
-
-This gem provides ability to pause/resume queues from processing by workers.
-So you may simply pause particular queue without need to stop and reconfigure
-workers by simply pushing a button on sidekiq web UI.
-
-By default we add *Enhanced Queues* tab with this functionality. But if you
-want you can override default *Queues* tab completely (notice that page will
-still be available using it's URL, but tab will be pointing enhanced version).
-To do so, just call `Sidekiq::Throttled::Web.enhance_queues_tab!` somewhere
-in your initializer/bootstrap code. If you are using rails, you might want to
-add it right into your `config/routes.rb` file:
-
-``` ruby
-# file config/routes.rb
-
-require "sidekiq/web"
-require "sidekiq/throttled/web"
-
-Rails.application.routes.draw do
-  # ...
-
-  # Replace Sidekiq Queues with enhanced version!
-  Sidekiq::Throttled::Web.enhance_queues_tab!
-
-  # Mount Sidekiq Web UI to `/sidekiq` endpoint
-  mount Sidekiq::Web => "/sidekiq"
-
-  # ...
-end
-```
-
-
 ## Supported Ruby Versions
 
 This library aims to support and is [tested against][ci] the following Ruby
