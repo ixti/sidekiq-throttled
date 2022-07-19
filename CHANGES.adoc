@@ -1,0 +1,10 @@
+= Changelog
+
+:commit: https://github.com/ixti/sidekiq-throttled/commit
+
+== 1.0.0 (unreleased)
+
+=== Breaking Changes
+
+* Drop support of Sidekiq < 6.4.0 ({commit}/f82d980[f82d980])
+* Remove queue pauser, and communicator ({commit}/4294acd[4294acd])

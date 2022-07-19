@@ -1,37 +1,51 @@
-# Sidekiq::Throttled
+= Sidekiq::Throttled
+:ci-link: https://github.com/ixti/sidekiq-throttled/actions/workflows/ci.yml
+:ci-badge: https://img.shields.io/github/workflow/status/ixti/sidekiq-throttled/CI/main?style=for-the-badge
+:gem-link: http://rubygems.org/gems/sidekiq-throttled
+:gem-badge: https://img.shields.io/gem/v/sidekiq-throttled?style=for-the-badge
+:doc-link: http://www.rubydoc.info/gems/sidekiq-throttled
+:doc-badge: https://img.shields.io/badge/Documentation-API-blue?style=for-the-badge
 
-[![CI Status](https://github.com/ixti/sidekiq-throttled/actions/workflows/ci.yml/badge.svg)](https://github.com/ixti/sidekiq-throttled/actions/workflows/ci.yml)
-[![Latest Version](https://badge.fury.io/rb/sidekiq-throttled.svg)](http://rubygems.org/gems/sidekiq-throttled)
-[![API Docs](https://img.shields.io/badge/yard-docs-blue.svg)](http://www.rubydoc.info/gems/sidekiq-throttled)
+****
+{ci-link}[image:{ci-badge}[CI Status]]
+{gem-link}[image:{gem-badge}[Latest Version]]
+{doc-link}[image:{doc-badge}[API Documentation]]
+****
 
-Concurrency and threshold throttling for [Sidekiq][sidekiq].
+NOTE: This is the 1.x *development* branch. For the 0.x *stable* branch, please
+  see: https://github.com/ixti/sidekiq-throttled/tree/0-x-stable[0-x-stable]
 
-## Installation
+Concurrency and threshold throttling for https://github.com/mperham/sidekiq[Sidekiq].
+
+
+== Installation
 
 Add this line to your application's Gemfile:
 
-``` ruby
+[source,ruby]
+----
 gem "sidekiq-throttled"
-```
+----
 
 And then execute:
 
-    $ bundle
+  $ bundle
 
 Or install it yourself as:
 
-    $ gem install sidekiq-throttled
+  $ gem install sidekiq-throttled
 
 
-## Usage
+== Usage
 
 Add somewhere in your app's bootstrap (e.g. `config/initializers/sidekiq.rb` if
 you are using Rails):
 
-``` ruby
+[source,ruby]
+----
 require "sidekiq/throttled"
 Sidekiq::Throttled.setup!
-```
+----
 
 Load order can be an issue if you are using other Sidekiq plugins and/or middleware.
 To prevent any problems, add the `.setup!` call to the bottom of your init file.
@@ -39,7 +53,8 @@ To prevent any problems, add the `.setup!` call to the bottom of your init file.
 Once you've done that you can include `Sidekiq::Throttled::Job` to your
 job classes and configure throttling:
 
-``` ruby
+[source,ruby]
+----
 class MyJob
   include Sidekiq::Job
   include Sidekiq::Throttled::Job
@@ -57,28 +72,30 @@ class MyJob
     # ...
   end
 end
-```
+----
 
-**NOTE:** `Sidekiq::Throttled::Job` is aliased as `Sidekiq::Throttled::Worker`,
-thus if you're using Sidekiq prior 6.3.0 version, or you using `Sidekiq::Worker`
-naming convention, you can use the alias for consistency:
+TIP: `Sidekiq::Throttled::Job` is aliased as `Sidekiq::Throttled::Worker`,
+  thus if you're using `Sidekiq::Worker` naming convention, you can use the
+  alias for consistency:
 
-``` ruby
+[source,ruby]
+----
 class MyWorker
   include Sidekiq::Worker
   include Sidekiq::Throttled::Worker
 
   # ...
 end
-```
+----
 
 
-### Observer
+=== Observer
 
 You can specify an observer that will be called on throttling. To do so pass an
 `:observer` option with callable object:
 
-``` ruby
+[source,ruby]
+----
 class MyJob
   include Sidekiq::Job
   include Sidekiq::Throttled::Job
@@ -91,7 +108,7 @@ class MyJob
 
   sidekiq_throttle(
     :concurrency => { :limit => 10 },
-    :threshold   => { :limit => 100, :period => 1.hour }
+    :threshold   => { :limit => 100, :period => 1.hour },
     :observer    => MY_OBSERVER
   )
 
@@ -99,18 +116,19 @@ class MyJob
     # ...
   end
 end
-```
+----
 
 Observer will receive `strategy, *args` arguments, where `strategy` is a Symbol
 `:concurrency` or `:threshold`, and `*args` are the arguments that were passed
 to the job.
 
 
-### Dynamic throttling
+=== Dynamic throttling
 
 You can throttle jobs dynamically with `:key_suffix` option:
 
-``` ruby
+[source,ruby]
+----
 class MyJob
   include Sidekiq::Job
   include Sidekiq::Throttled::Job
@@ -126,13 +144,14 @@ class MyJob
     # ...
   end
 end
-```
+----
 
 You can also supply dynamic values for limits and periods by supplying a proc
 for these values. The proc will be evaluated at the time the job is fetched
 and will receive the same arguments that are passed to the job.
 
-``` ruby
+[source,ruby]
+----
 class MyJob
   include Sidekiq::Job
   include Sidekiq::Throttled::Job
@@ -150,17 +169,19 @@ class MyJob
       :limit      => ->(user_id) { User.vip?(user_id) ? 1_000 : 10 },
       :period     => ->(user_id) { User.vip?(user_id) ? 1.hour : 1.day },
       :key_suffix => ->(user_id) { User.vip?(user_id) ? "vip" : "std" }
+    }
   )
 
   def perform(user_id)
     # ...
   end
 end
-```
+----
 
 You also can use several different keys to throttle one worker.
 
-``` ruby
+[source,ruby]
+----
 class MyJob
   include Sidekiq::Job
   include Sidekiq::Throttled::Job
@@ -180,14 +201,14 @@ class MyJob
     # ...
   end
 end
-```
+----
 
-**NB** Don't forget to specify `:key_suffix` and make it return different values
-if you are using dynamic limit/period options. Otherwise you risk getting into
-some trouble.
+IMPORTANT: Don't forget to specify `:key_suffix` and make it return different
+  values if you are using dynamic limit/period options. Otherwise, you risk
+  getting into some trouble.
 
 
-### Concurrency throttling fine-tuning
+=== Concurrency throttling fine-tuning
 
 Concurrency throttling is based on distributed locks. Those locks have default
 time to live (TTL) set to 15 minutes. If your job takes more than 15 minutes
@@ -200,15 +221,16 @@ OOM-killed) cleanup middleware wasn't executed and locks were not released.
 If your job takes more than 15 minutes to complete, you can tune concurrency
 lock TTL to fit your needs:
 
-``` ruby
+[source,ruby]
+----
 # Set concurrency strategy lock TTL to 1 hour.
 sidekiq_throttle(:concurrency => { :limit => 20, :ttl => 1.hour.to_i })
-```
+----
 
-## Supported Ruby Versions
 
-This library aims to support and is [tested against][ci] the following Ruby
-versions:
+== Supported Ruby Versions
+
+This library aims to support and is tested against the following Ruby versions:
 
 * Ruby 2.7.x
 * Ruby 3.0.x
@@ -228,15 +250,15 @@ exist at the time of a major release, support for that Ruby version may be
 dropped.
 
 
-## Supported Sidekiq Versions
+== Supported Sidekiq Versions
 
-This library aims to support work with following [Sidekiq][sidekiq] versions:
+This library aims to support and work with following Sidekiq versions:
 
 * Sidekiq 6.4.x
 * Sidekiq 6.5.x
 
 
-## Contributing
+== Contributing
 
 * Fork sidekiq-throttled on GitHub
 * Make your changes
@@ -246,18 +268,12 @@ This library aims to support work with following [Sidekiq][sidekiq] versions:
 * If we've accepted a patch, feel free to ask for commit access!
 
 
-## Development
+== Development
 
-```
-bundle update
-bundle exec appraisal install   # install dependencies for all gemfiles
-bundle exec appraisal update    # update dependencies for all gemfiles
-bundle exec appraisal rspec     # run rspec against each gemfile
-bundle exec rubocop             # run static code analysis
-```
+  bundle update
+  bundle exec appraisal install   # install dependencies for all gemfiles
+  bundle exec appraisal update    # update dependencies for all gemfiles
+  bundle exec appraisal rspec     # run rspec against each gemfile
+  bundle exec rubocop             # run static code analysis
 
 Don't forget to run `appraisal update` after any changes to `Gemfile`.
-
-
-[ci]: https://github.com/ixti/sidekiq-throttled/actions/workflows/ci.yml
-[sidekiq]: https://github.com/mperham/sidekiq
