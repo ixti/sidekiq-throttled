@@ -87,7 +87,7 @@ module Sidekiq
           return
         end
 
-        Sidekiq.redis { |conn| conn.brpop(*queues, TIMEOUT) }
+        Sidekiq.redis { |conn| conn.brpop(*queues, timeout: TIMEOUT) }
       end
 
       # Returns list of queues to try to fetch jobs from.
