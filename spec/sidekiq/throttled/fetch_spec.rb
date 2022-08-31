@@ -107,7 +107,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
           expect(fetcher.retrieve_work).to be_nil
 
           expect(redis).to receive(:brpop)
-            .with("queue:dreamers", 2)
+            .with("queue:dreamers", { :timeout => 2 })
 
           expect(fetcher.retrieve_work).to be_nil
         end
@@ -132,7 +132,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
         it "builds correct redis brpop command" do
           Sidekiq.redis do |conn|
             expect(conn).to receive(:brpop)
-              .with("queue:heroes", "queue:dreamers", 2)
+              .with("queue:heroes", "queue:dreamers", { :timeout => 2 })
             fetcher.retrieve_work
           end
         end
@@ -155,7 +155,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
         it "builds correct redis brpop command" do
           Sidekiq.redis do |conn|
             queue_regexp = %r{^queue:(heroes|dreamers)$}
-            expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, 2)
+            expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, { :timeout => 2 })
             fetcher.retrieve_work
           end
         end
