@@ -1,3 +1,17 @@
+## 0.17.0 (2022-09-14)
+
+* [#13](https://github.com/ixti/sidekiq-throttled/pull/13)
+  Fix redis-4.8+ deprecation warnings
+
+* [#8](https://github.com/ixti/sidekiq-throttled/pull/8)
+  Drop Sidekiq < 6.4 support
+
+## 0.16.2 (2022-07-19)
+
+* [#5](https://github.com/ixti/sidekiq-throttled/issues/5)
+  [#6](https://github.com/ixti/sidekiq-throttled/pull/6)
+  Add Sidekiq 6.5+ support
+
 ## 0.16.1 (2022-06-14)
 
 * [#2](https://github.com/ixti/sidekiq-throttled/pull/2)
