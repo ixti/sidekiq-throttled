@@ -143,7 +143,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
           Sidekiq.redis do |conn|
             expect(conn).to receive(:brpop)
-              .with("queue:heroes", "queue:dreamers", 2)
+              .with("queue:heroes", "queue:dreamers", { :timeout => 2 })
             fetcher.retrieve_work
           end
         end
@@ -166,7 +166,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
           Sidekiq.redis do |conn|
             queue_regexp = %r{^queue:(heroes|dreamers)$}
-            expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, 2)
+            expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, { :timeout => 2 })
             fetcher.retrieve_work
           end
         end
