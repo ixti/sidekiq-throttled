@@ -80,7 +80,7 @@ class MyWorker
 
   sidekiq_throttle(
     :concurrency => { :limit => 10 },
-    :threshold   => { :limit => 100, :period => 1.hour }
+    :threshold   => { :limit => 100, :period => 1.hour },
     :observer    => MY_OBSERVER
   )
 
