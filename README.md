@@ -1,3 +1,7 @@
+# !!! NOTE
+# **Project were moved to a [new place](https://github.com/ixti/sidekiq-throttled/). This repo is no longer maintained.**
+# !!! NOTE
+
 # Sidekiq::Throttled
 
 [![Latest Version](https://badge.fury.io/rb/sidekiq-throttled.svg)](http://rubygems.org/gems/sidekiq-throttled)
