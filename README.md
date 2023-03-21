@@ -1,6 +1,4 @@
-# !!! NOTE
-# **Project were moved to a [new place](https://github.com/ixti/sidekiq-throttled/). This repo is no longer maintained.**
-# !!! NOTE
+# ⚠️ NOTE: This project is now officially maintained [here](https://github.com/ixti/sidekiq-throttled/) ⚠️
 
 # Sidekiq::Throttled
 
