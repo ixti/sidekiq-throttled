@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "redis/prescription"
+require "redis-prescription"
 
 require "sidekiq/throttled/strategy/base"
 
@@ -30,7 +30,7 @@ module Sidekiq
         #
         #     increase!
         #     return 0
-        SCRIPT = Redis::Prescription.read "#{__dir__}/threshold.lua"
+        SCRIPT = RedisPrescription.new(File.read("#{__dir__}/threshold.lua"))
         private_constant :SCRIPT
 
         # @param [#to_s] strategy_key

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "redis/prescription"
+require "redis-prescription"
 
 require "sidekiq/throttled/strategy/base"
 
@@ -20,7 +20,7 @@ module Sidekiq
         #       PUSH(@key, @jid)
         #       return 0
         #     end
-        SCRIPT = Redis::Prescription.read "#{__dir__}/concurrency.lua"
+        SCRIPT = RedisPrescription.new(File.read("#{__dir__}/concurrency.lua"))
         private_constant :SCRIPT
 
         # @param [#to_s] strategy_key
