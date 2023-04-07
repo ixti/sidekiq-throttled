@@ -1,5 +1,19 @@
 # frozen_string_literal: true
 
+begin
+  require "redis_prescription"
+rescue LoadError
+  # Handle legacy redis-prescription 1.0
+  require "redis/prescription"
+  RedisPrescription = Redis::Prescription
+
+  class RedisPrescription
+    def call(redis, keys: [], argv: [])
+      eval(redis, keys: keys, argv: argv)
+    end
+  end
+end
+
 module Sidekiq
   module Throttled
     class Strategy

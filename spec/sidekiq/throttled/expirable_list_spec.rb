@@ -12,7 +12,7 @@ RSpec.describe Sidekiq::Throttled::ExpirableList, :sidekiq => :disabled do
   describe "#each", :time => :frozen do
     before do
       5.times do |i|
-        allow(::Process)
+        allow(Process)
           .to receive(:clock_gettime)
           .and_return(i.to_f)
 
@@ -26,7 +26,7 @@ RSpec.describe Sidekiq::Throttled::ExpirableList, :sidekiq => :disabled do
       it { is_expected.to be_an Enumerator }
 
       it "enumerates over non-expired keys only" do
-        expect(::Process)
+        expect(Process)
           .to receive(:clock_gettime)
           .and_return(5.0)
 
@@ -36,7 +36,7 @@ RSpec.describe Sidekiq::Throttled::ExpirableList, :sidekiq => :disabled do
     end
 
     it "enumerates over non-expired keys only" do
-      expect(::Process)
+      expect(Process)
         .to receive(:clock_gettime)
         .and_return(5.0)
 
