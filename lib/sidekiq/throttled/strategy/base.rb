@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# rubocop:disable Security/Eval
 begin
   require "redis_prescription"
 rescue LoadError
@@ -9,10 +10,11 @@ rescue LoadError
 
   class RedisPrescription
     def call(redis, keys: [], argv: [])
-      eval(redis, keys: keys, argv: argv)
+      eval(redis, :keys => keys, :argv => argv)
     end
   end
 end
+# rubocop:enable Security/Eval
 
 module Sidekiq
   module Throttled
