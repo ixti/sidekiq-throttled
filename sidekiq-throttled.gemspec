@@ -11,8 +11,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Alexey Zapparov"]
   spec.email         = ["alexey@zapparov.com"]
 
-  spec.summary       = "Concurrency and threshold throttling for Sidekiq."
-  spec.description   = "Concurrency and threshold throttling for Sidekiq."
+  spec.summary       = "Concurrency and rate-limit throttling for Sidekiq."
   spec.homepage      = "https://github.com/ixti/sidekiq-throttled"
   spec.license       = "MIT"
 
@@ -28,8 +27,7 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = ">= 2.7"
 
-  spec.add_runtime_dependency "concurrent-ruby"
-  spec.add_runtime_dependency "redis-prescription"
+  spec.add_runtime_dependency "redis-prescription", "~> 2.2"
   spec.add_runtime_dependency "sidekiq", ">= 6.4"
 
   spec.add_development_dependency "bundler", ">= 2.0"
