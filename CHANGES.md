@@ -1,3 +1,7 @@
+## 0.15.1 (2023-04-10)
+
+* Lock `redis-prescription` to `~> 2.5` and update the code
+
 ## 0.15.0 (2021-12-16)
 
 * [#102](https://github.com/sensortower/sidekiq-throttled/pull/102)
