@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
-  subject(:strategy) { described_class.new :test, :limit => 5 }
+  subject(:strategy) { described_class.new :test, limit: 5 }
 
   describe "#throttled?" do
     subject { strategy.throttled? jid }
@@ -19,7 +19,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
     end
 
     context "when dynamic limit returns nil" do
-      let(:strategy) { described_class.new :test, :limit => proc { |*| } }
+      let(:strategy) { described_class.new :test, limit: proc { |*| } }
 
       it { is_expected.to be false }
 
@@ -80,7 +80,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
 
   describe "with a dynamic key suffix" do
     subject(:strategy) do
-      described_class.new :test, :limit => 5, :key_suffix => ->(i) { i }
+      described_class.new :test, limit: 5, key_suffix: ->(i) { i }
     end
 
     let(:initial_key_input) { 123 }
@@ -104,14 +104,14 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
 
       describe "when limit is 0" do
         let(:key_input) { initial_key_input }
-        let(:strategy) { described_class.new :test, :limit => 0 }
+        let(:strategy) { described_class.new :test, limit: 0 }
 
         it { is_expected.to be true }
       end
 
       describe "when limit is negative" do
         let(:key_input) { initial_key_input }
-        let(:strategy) { described_class.new :test, :limit => -5 }
+        let(:strategy) { described_class.new :test, limit: -5 }
 
         it { is_expected.to be true }
       end
@@ -197,7 +197,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
 
   describe "with a dynamic limit" do
     subject(:strategy) do
-      described_class.new :test, :limit => -> { 5 }
+      described_class.new :test, limit: -> { 5 }
     end
 
     describe "#throttled?" do
@@ -259,19 +259,19 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
     subject { described_class.new(:test, **kwargs).dynamic? }
 
     describe "with a dynamic key suffix" do
-      let(:kwargs) { { :limit => 5, :key_suffix => -> { "xxx" } } }
+      let(:kwargs) { { limit: 5, key_suffix: -> { "xxx" } } }
 
       it { is_expected.to be_truthy }
     end
 
     describe "with a dynamic limit" do
-      let(:kwargs) { { :limit => -> { 5 } } }
+      let(:kwargs) { { limit: -> { 5 } } }
 
       it { is_expected.to be_truthy }
     end
 
     describe "without a dynamic key suffix and static configration" do
-      let(:kwargs) { { :limit => 5 } }
+      let(:kwargs) { { limit: 5 } }
 
       it { is_expected.to be_falsy }
     end

@@ -6,5 +6,5 @@ require "capybara/apparition"
 Capybara.javascript_driver = :apparition
 
 RSpec.configure do |config|
-  config.before(:type => :feature) { Capybara.app = Sidekiq::Web }
+  config.before(type: :feature) { Capybara.app = Sidekiq::Web }
 end

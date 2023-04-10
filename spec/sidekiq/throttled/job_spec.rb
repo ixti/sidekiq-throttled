@@ -10,9 +10,9 @@ RSpec.describe Sidekiq::Throttled::Job do
   describe ".sidekiq_throttle" do
     it "delegates call to Registry.register" do
       expect(Sidekiq::Throttled::Registry)
-        .to receive(:add).with(working_class, :foo => :bar)
+        .to receive(:add).with(working_class, foo: :bar)
 
-      working_class.sidekiq_throttle(:foo => :bar)
+      working_class.sidekiq_throttle(foo: :bar)
     end
   end
 

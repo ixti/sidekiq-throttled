@@ -4,15 +4,7 @@ source "https://rubygems.org"
 
 gem "appraisal"
 gem "rake"
-gem "rspec"
 gem "sidekiq"
-
-group :development do
-  gem "byebug"
-  gem "guard",         :require => false
-  gem "guard-rspec",   :require => false
-  gem "guard-rubocop", :require => false
-end
 
 group :test do
   gem "apparition"
@@ -20,15 +12,25 @@ group :test do
   gem "puma"
   gem "rack-test"
   gem "sinatra"
+
+  gem "rspec"
   gem "timecop"
+
+  gem "rubocop",              require: false
+  gem "rubocop-performance",  require: false
+  gem "rubocop-rake",         require: false
+  gem "rubocop-rspec",        require: false
 end
 
-group :lint do
-  gem "rubocop",              :require => false
-  gem "rubocop-performance",  :require => false
-  gem "rubocop-rake",         :require => false
-  gem "rubocop-rspec",        :require => false
+group :development, optional: true do
+  gem "debug"
+  gem "guard"
+  gem "guard-rspec"
 end
 
-# Specify your gem's dependencies in sidekiq-throttled.gemspec
+group :doc, optional: true do
+  gem "asciidoctor"
+  gem "yard"
+end
+
 gemspec

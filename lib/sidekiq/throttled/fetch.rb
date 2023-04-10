@@ -24,8 +24,7 @@ module Sidekiq
       # @option options [Array<#to_s>] :queue
       def initialize(options)
         @paused = ExpirableList.new(options.fetch(:throttled_queue_cooldown, TIMEOUT))
-
-        @strict = options.fetch(:strict, false)
+        @strict = options[:strict] ? true : false
         @queues = options.fetch(:queues).map { |q| QueueName.expand q }
 
         raise ArgumentError, "empty :queues" if @queues.empty?
@@ -49,7 +48,7 @@ module Sidekiq
         nil
       end
 
-      def bulk_requeue(units, _options)
+      def bulk_requeue(units, *)
         return if units.empty?
 
         Sidekiq.logger.debug { "Re-queueing terminated jobs" }
@@ -77,7 +76,7 @@ module Sidekiq
           return
         end
 
-        Sidekiq.redis { |conn| conn.brpop(*queues, :timeout => TIMEOUT) }
+        Sidekiq.redis { |conn| conn.brpop(*queues, timeout: TIMEOUT) }
       end
 
       # Returns list of queues to try to fetch jobs from.

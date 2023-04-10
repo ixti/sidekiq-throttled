@@ -235,6 +235,7 @@ This library aims to support and is tested against the following Ruby versions:
 * Ruby 2.7.x
 * Ruby 3.0.x
 * Ruby 3.1.x
+* Ruby 3.2.x
 
 If something doesn't work on one of these versions, it's a bug.
 
@@ -256,6 +257,7 @@ This library aims to support and work with following Sidekiq versions:
 
 * Sidekiq 6.4.x
 * Sidekiq 6.5.x
+* Sidekiq 7.0.x
 
 
 == Contributing

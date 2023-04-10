@@ -3,8 +3,8 @@
 require "support/helpers/stub_class"
 
 RSpec.describe Sidekiq::Throttled::Registry do
-  let(:threshold)   { { :threshold => { :limit => 1, :period => 1 } } }
-  let(:concurrency) { { :concurrency => { :limit => 1 } } }
+  let(:threshold)   { { threshold: { limit: 1, period: 1 } } }
+  let(:concurrency) { { concurrency: { limit: 1 } } }
 
   def capture_output
     old_stdout = $stdout
@@ -117,7 +117,7 @@ RSpec.describe Sidekiq::Throttled::Registry do
   describe ".each_with_static_keys" do
     before do
       described_class.add("foo", **threshold)
-      described_class.add("bar", **threshold.merge(:key_suffix => ->(i) { i }))
+      described_class.add("bar", **threshold.merge(key_suffix: ->(i) { i }))
     end
 
     it "yields once for each strategy without dynamic key suffixes" do

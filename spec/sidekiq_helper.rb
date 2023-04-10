@@ -1,8 +1,13 @@
 # frozen_string_literal: true
 
+require "logger"
 require "securerandom"
+require "singleton"
+require "stringio"
 
 require "sidekiq/testing"
+
+REDIS_URL = ENV.fetch("REDIS_URL", "redis://localhost:6379")
 
 module JidGenerator
   def jid
@@ -10,22 +15,50 @@ module JidGenerator
   end
 end
 
-configure_redis = proc do |config|
-  config.redis = { :url => "redis://localhost/15" }
+class PseudoLogger < Logger
+  include Singleton
+
+  def initialize
+    @io = StringIO.new
+    super(@io)
+  end
+
+  def reset!
+    @io.reopen
+  end
+
+  def output
+    @io.string
+  end
 end
 
-Sidekiq.configure_server(&configure_redis)
-Sidekiq.configure_client(&configure_redis)
+Sidekiq.configure_server do |config|
+  config.redis  = { url: REDIS_URL }
+  config.logger = PseudoLogger.instance
+  config.queues = %i[default]
+end
+
+Sidekiq.configure_client do |config|
+  config.redis  = { url: REDIS_URL }
+  config.logger = PseudoLogger.instance
+end
 
 require "sidekiq/web"
-Sidekiq::Web.use Rack::Session::Cookie, :secret => SecureRandom.hex(32), :same_site => true, :max_age => 86_400
+Sidekiq::Web.use Rack::Session::Cookie, secret: SecureRandom.hex(32), same_site: true, max_age: 86_400
 
 RSpec.configure do |config|
   config.include JidGenerator
   config.extend  JidGenerator
 
   config.around do |example|
-    if Sidekiq::VERSION >= "6.3.0"
+    PseudoLogger.instance.reset!
+
+    Sidekiq.redis do |conn|
+      conn.flushdb
+      conn.script("flush")
+    end
+
+    if Sidekiq::VERSION >= "6.4.0"
       Sidekiq::Job.clear_all
     else
       Sidekiq::Worker.clear_all
@@ -36,13 +69,6 @@ RSpec.configure do |config|
     when :disabled  then Sidekiq::Testing.disable!(&example)
     when :enabled   then Sidekiq::Testing.__set_test_mode(nil, &example)
     else                 Sidekiq::Testing.fake!(&example)
-    end
-  end
-
-  config.before do
-    Sidekiq.redis do |conn|
-      conn.flushdb
-      conn.script("flush")
     end
   end
 end

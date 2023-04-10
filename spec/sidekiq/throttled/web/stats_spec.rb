@@ -20,7 +20,7 @@ RSpec.describe Sidekiq::Throttled::Web::Stats do
 
     context "with Concurrency strategy" do
       let :strategy do
-        Sidekiq::Throttled::Strategy::Concurrency.new(:foo, :limit => 10)
+        Sidekiq::Throttled::Strategy::Concurrency.new(:foo, limit: 10)
       end
 
       it { is_expected.to start_with "10 jobs<br />" }
@@ -51,7 +51,7 @@ RSpec.describe Sidekiq::Throttled::Web::Stats do
     context "with Concurrency strategy with a dynamic key suffix" do
       let :strategy do
         Sidekiq::Throttled::Strategy::Concurrency.new(
-          :foo, :limit => 10, :key_suffix => ->(i) { i }
+          :foo, limit: 10, key_suffix: ->(i) { i }
         )
       end
 
@@ -62,8 +62,8 @@ RSpec.describe Sidekiq::Throttled::Web::Stats do
 
     context "with Threshold strategy" do
       let :strategy do
-        Sidekiq::Throttled::Strategy::Threshold.new(:foo, :limit  => 10,
-          :period => 75)
+        Sidekiq::Throttled::Strategy::Threshold.new(:foo, limit:  10,
+          period: 75)
       end
 
       it { is_expected.to start_with "10 jobs per 1 minute 15 seconds<br />" }
@@ -94,7 +94,7 @@ RSpec.describe Sidekiq::Throttled::Web::Stats do
     context "with Threshold strategy with a key suffix" do
       let :strategy do
         Sidekiq::Throttled::Strategy::Threshold.new(
-          :foo, :limit => 10, :period => 75, :key_suffix => ->(i) { i }
+          :foo, limit: 10, period: 75, key_suffix: ->(i) { i }
         )
       end
 
@@ -106,7 +106,7 @@ RSpec.describe Sidekiq::Throttled::Web::Stats do
     context "with Threshold strategy with a dynamic limit" do
       let :strategy do
         Sidekiq::Throttled::Strategy::Threshold.new(
-          :foo, :limit => ->(_) { 10 }, :period => 75
+          :foo, limit: ->(_) { 10 }, period: 75
         )
       end
 
@@ -118,7 +118,7 @@ RSpec.describe Sidekiq::Throttled::Web::Stats do
     context "with Threshold strategy with a dynamic period" do
       let :strategy do
         Sidekiq::Throttled::Strategy::Threshold.new(
-          :foo, :limit => 10, :period => ->(_) { 75 }
+          :foo, limit: 10, period: ->(_) { 75 }
         )
       end
 

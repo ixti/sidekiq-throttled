@@ -35,14 +35,14 @@ module Sidekiq
         @observer = observer
 
         @concurrency = StrategyCollection.new(concurrency,
-          :strategy   => Concurrency,
-          :name       => name,
-          :key_suffix => key_suffix)
+          strategy:   Concurrency,
+          name:       name,
+          key_suffix: key_suffix)
 
         @threshold = StrategyCollection.new(threshold,
-          :strategy   => Threshold,
-          :name       => name,
-          :key_suffix => key_suffix)
+          strategy:   Threshold,
+          name:       name,
+          key_suffix: key_suffix)
 
         return if @concurrency.any? || @threshold.any?
 

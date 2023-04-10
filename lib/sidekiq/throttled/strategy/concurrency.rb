@@ -49,9 +49,7 @@ module Sidekiq
           keys = [key(job_args)]
           argv = [jid.to_s, job_limit, @ttl, Time.now.to_f]
 
-          Sidekiq.redis do |redis|
-            1 == SCRIPT.call(redis, :keys => keys, :argv => argv)
-          end
+          Sidekiq.redis { |redis| 1 == SCRIPT.call(redis, keys: keys, argv: argv) }
         end
 
         # @return [Integer] Current count of jobs

@@ -5,10 +5,10 @@ require "sidekiq/throttled/fetch"
 
 require "support/working_class_hero"
 
-RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
+RSpec.describe Sidekiq::Throttled::Fetch, sidekiq: :disabled do
   subject(:fetcher) { described_class.new options }
 
-  let(:options)       { { :queues => queues } }
+  let(:options)       { { queues: queues } }
   let(:queues)        { %w[heroes dreamers] }
 
   describe ".new" do
@@ -17,12 +17,12 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
     end
 
     it "fails if :queues are empty" do
-      expect { described_class.new(:queues => []) }
+      expect { described_class.new(queues: []) }
         .to raise_error(ArgumentError, %r{:queues})
     end
 
     it "is non-strict by default" do
-      fetcher = described_class.new(:queues => queues)
+      fetcher = described_class.new(queues: queues)
       expect(fetcher.instance_variable_get(:@strict)).to be_falsy
     end
 
@@ -32,7 +32,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
         .with(described_class::TIMEOUT)
         .and_call_original
 
-      described_class.new(:queues => queues)
+      described_class.new(queues: queues)
     end
 
     it "allows override throttled queues cooldown period" do
@@ -41,7 +41,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
         .with(1312)
         .and_call_original
 
-      described_class.new(:queues => queues, :throttled_queue_cooldown => 1312)
+      described_class.new(queues: queues, throttled_queue_cooldown: 1312)
     end
   end
 
@@ -75,7 +75,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
       end
     end
 
-    context "when received job is throttled", :time => :frozen do
+    context "when received job is throttled", time: :frozen do
       before do
         Sidekiq::Client.push_bulk({
           "class" => WorkingClassHero,
@@ -89,7 +89,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
           expect(fetcher.retrieve_work).to be_nil
 
           expect(redis).to receive(:brpop)
-            .with("queue:dreamers", { :timeout => 2 })
+            .with("queue:dreamers", { timeout: 2 })
 
           expect(fetcher.retrieve_work).to be_nil
         end
@@ -114,7 +114,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
         it "builds correct redis brpop command" do
           Sidekiq.redis do |conn|
             expect(conn).to receive(:brpop)
-              .with("queue:heroes", "queue:dreamers", { :timeout => 2 })
+              .with("queue:heroes", "queue:dreamers", { timeout: 2 })
             fetcher.retrieve_work
           end
         end
@@ -126,7 +126,7 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
         it "builds correct redis brpop command" do
           Sidekiq.redis do |conn|
             queue_regexp = %r{^queue:(heroes|dreamers)$}
-            expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, { :timeout => 2 })
+            expect(conn).to receive(:brpop).with(queue_regexp, queue_regexp, { timeout: 2 })
             fetcher.retrieve_work
           end
         end
@@ -154,9 +154,9 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
     context "with static configuration" do
       before do
-        WorkingClassHero.sidekiq_throttle(:threshold => {
-          :limit  => 5,
-          :period => 10
+        WorkingClassHero.sidekiq_throttle(threshold: {
+          limit:  5,
+          period: 10
         })
       end
 
@@ -165,9 +165,9 @@ RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
 
     context "with dynamic configuration" do
       before do
-        WorkingClassHero.sidekiq_throttle(:threshold => {
-          :limit  => ->(a, b, _) { a + b },
-          :period => ->(a, b, c) { a + b + c }
+        WorkingClassHero.sidekiq_throttle(threshold: {
+          limit:  ->(a, b, _) { a + b },
+          period: ->(a, b, c) { a + b + c }
         })
       end
 

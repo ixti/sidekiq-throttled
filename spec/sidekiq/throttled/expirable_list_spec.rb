@@ -2,14 +2,14 @@
 
 require "sidekiq/throttled/expirable_list"
 
-RSpec.describe Sidekiq::Throttled::ExpirableList, :sidekiq => :disabled do
+RSpec.describe Sidekiq::Throttled::ExpirableList, sidekiq: :disabled do
   subject(:list) { described_class.new ttl }
 
   let(:ttl) { 3 }
 
   it { is_expected.to be_an Enumerable }
 
-  describe "#each", :time => :frozen do
+  describe "#each", time: :frozen do
     before do
       5.times do |i|
         allow(::Process)

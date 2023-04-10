@@ -11,7 +11,7 @@ RSpec.describe Sidekiq::Throttled::Middleware do
     context "when job class has strategy with concurrency constraint" do
       let! :strategy do
         Sidekiq::Throttled::Registry.add payload["class"],
-          :concurrency => { :limit => 1 }
+          concurrency: { limit: 1 }
       end
 
       it "calls #finalize! of queue with jid of job being processed" do
@@ -33,7 +33,7 @@ RSpec.describe Sidekiq::Throttled::Middleware do
     context "when job class has strategy without concurrency constraint" do
       let! :strategy do
         Sidekiq::Throttled::Registry.add payload["class"],
-          :threshold => { :limit => 1, :period => 1 }
+          threshold: { limit: 1, period: 1 }
       end
 
       it "calls #finalize! of queue with jid of job being processed" do

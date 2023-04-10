@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
-  subject(:strategy) { described_class.new :test, :limit => 5, :period => 10 }
+  subject(:strategy) { described_class.new :test, limit: 5, period: 10 }
 
   describe "#throttled?" do
     subject { strategy.throttled? }
@@ -25,8 +25,8 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
     context "when dynamic limit returns nil" do
       let(:strategy) do
         described_class.new :test,
-          :limit  => proc { |*| },
-          :period => 10
+          limit:  proc { |*| },
+          period: 10
       end
 
       it { is_expected.to be false }
@@ -60,7 +60,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
   describe "with a dynamic key suffix" do
     subject(:strategy) do
       described_class.new(
-        :test, :limit => 5, :period => 10, :key_suffix => ->(i) { i }
+        :test, limit: 5, period: 10, key_suffix: ->(i) { i }
       )
     end
 
@@ -85,7 +85,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
 
       describe "when limit is 0" do
         let(:key_input) { initial_key_input }
-        let(:strategy) { described_class.new :test, :limit => 0, :period => 10 }
+        let(:strategy) { described_class.new :test, limit: 0, period: 10 }
 
         it { is_expected.to be true }
       end
@@ -93,7 +93,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
       describe "when limit is negative" do
         let(:key_input) { initial_key_input }
         let(:strategy) do
-          described_class.new :test, :limit => -5, :period => 10
+          described_class.new :test, limit: -5, period: 10
         end
 
         it { is_expected.to be true }
@@ -143,7 +143,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
 
   describe "with a dynamic limit and period" do
     subject(:strategy) do
-      described_class.new(:test, :limit => -> { 5 }, :period => -> { 10 })
+      described_class.new(:test, limit: -> { 5 }, period: -> { 10 })
     end
 
     describe "#throttled?" do
@@ -190,9 +190,9 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
     describe "with a dynamic key suffix" do
       let(:kwargs) do
         {
-          :limit      => 5,
-          :period     => 10,
-          :key_suffix => -> { "xxx" }
+          limit:      5,
+          period:     10,
+          key_suffix: -> { "xxx" }
         }
       end
 
@@ -202,8 +202,8 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
     describe "with a dynamic limit" do
       let(:kwargs) do
         {
-          :limit  => -> { 5 },
-          :period => 10
+          limit:  -> { 5 },
+          period: 10
         }
       end
 
@@ -213,8 +213,8 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
     describe "with a dynamic period" do
       let(:kwargs) do
         {
-          :limit  => 5,
-          :period => -> { 10 }
+          limit:  5,
+          period: -> { 10 }
         }
       end
 
@@ -224,8 +224,8 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
     describe "without a dynamic key suffix and static configration" do
       let(:kwargs) do
         {
-          :limit  => 5,
-          :period => 10
+          limit:  5,
+          period: 10
         }
       end
 

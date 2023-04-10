@@ -3,8 +3,8 @@
 RSpec.describe Sidekiq::Throttled::Strategy do
   subject(:strategy) { described_class.new(:foo, **options) }
 
-  let(:threshold)       { { :threshold => { :limit => 5, :period => 10 } } }
-  let(:concurrency)     { { :concurrency => { :limit => 7 } } }
+  let(:threshold)       { { threshold: { limit: 5, period: 10 } } }
+  let(:concurrency)     { { concurrency: { limit: 7 } } }
   let(:ten_seconds_ago) { Time.now - 10 }
 
   describe ".new" do
@@ -16,12 +16,12 @@ RSpec.describe Sidekiq::Throttled::Strategy do
       key_suffix = ->(_) {}
 
       expect(Sidekiq::Throttled::Strategy::Concurrency).to receive(:new)
-        .with("throttled:foo", include(:key_suffix => key_suffix))
+        .with("throttled:foo", include(key_suffix: key_suffix))
         .and_call_original
 
-      described_class.new(:foo, :concurrency => {
-        :limit      => 123,
-        :key_suffix => key_suffix
+      described_class.new(:foo, concurrency: {
+        limit:      123,
+        key_suffix: key_suffix
       })
     end
 
@@ -29,13 +29,13 @@ RSpec.describe Sidekiq::Throttled::Strategy do
       key_suffix = ->(_) {}
 
       expect(Sidekiq::Throttled::Strategy::Threshold).to receive(:new)
-        .with("throttled:foo", include(:key_suffix => key_suffix))
+        .with("throttled:foo", include(key_suffix: key_suffix))
         .and_call_original
 
-      described_class.new(:foo, :threshold => {
-        :limit      => 123,
-        :period     => 657,
-        :key_suffix => key_suffix
+      described_class.new(:foo, threshold: {
+        limit:      123,
+        period:     657,
+        key_suffix: key_suffix
       })
     end
   end
@@ -61,7 +61,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
         context "with observer" do
           let(:observer) { spy }
-          let(:options)  { threshold.merge(:observer => observer) }
+          let(:options)  { threshold.merge(observer: observer) }
 
           it "notifies observer" do
             expect(observer).to receive(:call).with(:threshold, 1, 2, 3)
@@ -87,7 +87,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
         context "with observe" do
           let(:observer) { spy }
-          let(:options)  { concurrency.merge(:observer => observer) }
+          let(:options)  { concurrency.merge(observer: observer) }
 
           it "notifies observer" do
             expect(observer).to receive(:call).with(:concurrency, 1, 2, 3)
@@ -102,9 +102,9 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
       let(:concurrency) do
         {
-          :concurrency => [
-            { :limit => 3, :key_suffix => ->(job_arg, *) { job_arg } },
-            { :limit => 7, :key_suffix => ->(_, *) { 1 } }
+          concurrency: [
+            { limit: 3, key_suffix: ->(job_arg, *) { job_arg } },
+            { limit: 7, key_suffix: ->(_, *) { 1 } }
           ]
         }
       end
@@ -120,7 +120,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
         context "when limit exceeded with observe" do
           let(:observer) { spy }
-          let(:options)  { concurrency.merge(:observer => observer) }
+          let(:options)  { concurrency.merge(observer: observer) }
 
           before { 3.times { strategy.throttled? jid, *job_args } }
 
@@ -144,7 +144,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
         context "when limit exceeded with observe" do
           let(:observer) { spy }
-          let(:options)  { concurrency.merge(:observer => observer) }
+          let(:options)  { concurrency.merge(observer: observer) }
 
           before { 7.times { strategy.throttled? jid, *job_args } }
 

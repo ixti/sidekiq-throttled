@@ -13,10 +13,10 @@ RSpec.describe Sidekiq::Throttled::Web do
 
   before do
     Sidekiq::Throttled::Registry.add "foo",
-      :concurrency => { :limit => 5 }
+      concurrency: { limit: 5 }
 
     Sidekiq::Throttled::Registry.add "bar",
-      :threshold => { :limit => 5, :period => 10 }
+      threshold: { limit: 5, period: 10 }
 
     3.times { Sidekiq::Throttled::Registry.get("foo").throttled? jid }
     3.times { Sidekiq::Throttled::Registry.get("bar").throttled? jid }
@@ -45,19 +45,19 @@ RSpec.describe Sidekiq::Throttled::Web do
     let(:csrf_token) { SecureRandom.base64(32) }
 
     before do
-      env "rack.session", :csrf => csrf_token
+      env "rack.session", csrf: csrf_token
     end
 
     context "when id is unknown" do
       it "does not fail" do
-        post "/throttled/abc/reset", :authenticity_token => csrf_token
+        post "/throttled/abc/reset", authenticity_token: csrf_token
         expect(last_response.status).to eq 302
       end
     end
 
     context "when id is known" do
       it "does not fail" do
-        post "/throttled/foo/reset", :authenticity_token => csrf_token
+        post "/throttled/foo/reset", authenticity_token: csrf_token
         expect(last_response.status).to eq 302
       end
 
@@ -65,7 +65,7 @@ RSpec.describe Sidekiq::Throttled::Web do
         strategy = Sidekiq::Throttled::Registry.get "foo"
         expect(strategy).to receive(:reset!)
 
-        post "/throttled/foo/reset", :authenticity_token => csrf_token
+        post "/throttled/foo/reset", authenticity_token: csrf_token
       end
     end
   end

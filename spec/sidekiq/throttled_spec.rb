@@ -2,13 +2,9 @@
 
 require "json"
 
-RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
+RSpec.describe Sidekiq::Throttled, sidekiq: :disabled do
   describe ".setup!" do
     before do
-      # #setup! initializes the fetch strategy
-      # and raises when queues is empty
-      Sidekiq.options[:queues] = ["default"]
-
       require "sidekiq/processor"
       allow(Sidekiq).to receive(:server?).and_return true
       described_class.setup!
@@ -40,8 +36,8 @@ RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
 
     it "passes JID to registered strategy" do
       strategy = Sidekiq::Throttled::Registry.add("foo",
-        :threshold   => { :limit => 1, :period => 1 },
-        :concurrency => { :limit => 1 })
+        threshold:   { limit: 1, period: 1 },
+        concurrency: { limit: 1 })
 
       payload_jid = jid
       message     = %({"class":"foo","jid":#{payload_jid.inspect}})
@@ -53,8 +49,8 @@ RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
 
     it "unwraps ActiveJob-jobs default sidekiq adapter" do
       strategy = Sidekiq::Throttled::Registry.add("wrapped-foo",
-        :threshold   => { :limit => 1, :period => 1 },
-        :concurrency => { :limit => 1 })
+        threshold:   { limit: 1, period: 1 },
+        concurrency: { limit: 1 })
 
       payload_jid = jid
       message     = JSON.dump({
@@ -70,8 +66,8 @@ RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
 
     it "unwraps ActiveJob-jobs custom sidekiq adapter" do
       strategy = Sidekiq::Throttled::Registry.add("JobClassName",
-        :threshold   => { :limit => 1, :period => 1 },
-        :concurrency => { :limit => 1 })
+        threshold:   { limit: 1, period: 1 },
+        concurrency: { limit: 1 })
 
       payload_jid = jid
       message     = JSON.dump({

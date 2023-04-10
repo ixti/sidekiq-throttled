@@ -61,7 +61,7 @@ module Sidekiq
         return unless options
 
         strategy.new("throttled:#{name}",
-          :key_suffix => key_suffix,
+          key_suffix: key_suffix,
           **options)
       end
     end

@@ -9,7 +9,7 @@ class WorkingClassHero
     include Sidekiq::Throttled::Worker
   end
 
-  sidekiq_options :queue => :heroes
+  sidekiq_options queue: :heroes
 
   def perform
     puts <<-TEXT

@@ -5,9 +5,9 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
 
   let(:options) do
     {
-      :strategy   => Sidekiq::Throttled::Strategy::Concurrency,
-      :name       => "test",
-      :key_suffix => nil
+      strategy:   Sidekiq::Throttled::Strategy::Concurrency,
+      name:       "test",
+      key_suffix: nil
     }
   end
 
@@ -20,7 +20,7 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
 
     context "with one strategy as a Hash" do
       let(:strategies) do
-        { :limit => 1, :key_suffix => ->(proj_id) { proj_id } }
+        { limit: 1, key_suffix: ->(proj_id) { proj_id } }
       end
 
       it { expect(collection.count).to eq 1 }
@@ -29,8 +29,8 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
     context "with couple of strategies as an array" do
       let(:strategies) do
         [
-          { :limit => 1, :key_suffix => ->(_proj_id, user_id) { user_id } },
-          { :limit => 10, :key_suffix => ->(proj_id, _user_id) { proj_id } }
+          { limit: 1, key_suffix: ->(_proj_id, user_id) { user_id } },
+          { limit: 10, key_suffix: ->(proj_id, _user_id) { proj_id } }
         ]
       end
 
@@ -42,7 +42,7 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
     subject { collection.dynamic? }
 
     context "with no dynamic strategy" do
-      let(:strategies) { { :limit => 5 } }
+      let(:strategies) { { limit: 5 } }
 
       it { is_expected.to be false }
     end
@@ -50,8 +50,8 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
     context "with one dynamic strategy" do
       let(:strategies) do
         [
-          { :limit => 1, :key_suffix => ->(_project_id, user_id) { user_id } },
-          { :limit => 10 }
+          { limit: 1, key_suffix: ->(_project_id, user_id) { user_id } },
+          { limit: 10 }
         ]
       end
 
@@ -66,8 +66,8 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
 
     let(:strategies) do
       [
-        { :limit => 1, :key_suffix => ->(_project_id, user_id) { user_id } },
-        { :limit => 10 }
+        { limit: 1, key_suffix: ->(_project_id, user_id) { user_id } },
+        { limit: 10 }
       ]
     end
 
@@ -101,8 +101,8 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
 
     let(:strategies) do
       [
-        { :limit => 1, :key_suffix => ->(_project_id, user_id) { user_id } },
-        { :limit => 10 }
+        { limit: 1, key_suffix: ->(_project_id, user_id) { user_id } },
+        { limit: 10 }
       ]
     end
 
@@ -120,8 +120,8 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
 
     let(:strategies) do
       [
-        { :limit => 1, :key_suffix => ->(_project_id, user_id) { user_id } },
-        { :limit => 10 }
+        { limit: 1, key_suffix: ->(_project_id, user_id) { user_id } },
+        { limit: 10 }
       ]
     end
 
