@@ -1,3 +1,7 @@
+## 0.18.0 (2023-04-10)
+
+* Fix redis-prescription dependency usage
+
 ## 0.17.0 (2022-09-14)
 
 * [#13](https://github.com/ixti/sidekiq-throttled/pull/13)
