@@ -30,7 +30,7 @@ module Sidekiq
         #
         #     increase!
         #     return 0
-        SCRIPT = Redis::Prescription.read "#{__dir__}/threshold.lua"
+        SCRIPT = RedisPrescription.new(File.read("#{__dir__}/threshold.lua"))
         private_constant :SCRIPT
 
         # @param [#to_s] strategy_key
@@ -67,7 +67,7 @@ module Sidekiq
           argv = [job_limit, period(job_args), Time.now.to_f]
 
           Sidekiq.redis do |redis|
-            1 == SCRIPT.eval(redis, :keys => keys, :argv => argv)
+            1 == SCRIPT.call(redis, :keys => keys, :argv => argv)
           end
         end
 
