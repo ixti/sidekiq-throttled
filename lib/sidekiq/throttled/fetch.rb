@@ -88,5 +88,19 @@ module Sidekiq
         queues - @paused.to_a
       end
     end
+
+    class Fetch7 < Fetch
+      def initialize(capsule)
+        raise ArgumentError, "missing queue list" unless capsule.queues
+
+        @strict = capsule.mode == :strict
+        @queues = capsule.queues.map { |q| QueueName.expand q }
+        @queues.uniq! if @strict
+      end
+
+      def setup(options)
+        @paused = ExpirableList.new(options.fetch(:throttled_queue_cooldown, TIMEOUT))
+      end
+    end
   end
 end
