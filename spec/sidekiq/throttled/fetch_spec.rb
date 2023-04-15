@@ -5,7 +5,7 @@ require "sidekiq/throttled/fetch"
 
 require "support/working_class_hero"
 
-RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled do
+RSpec.describe Sidekiq::Throttled::Fetch, :sidekiq => :disabled, :verify_stubs => false do
   subject(:fetcher) { described_class.new options }
 
   let(:options)       { { :queues => queues } }

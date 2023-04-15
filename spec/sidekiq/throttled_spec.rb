@@ -7,7 +7,12 @@ RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
     before do
       # #setup! initializes the fetch strategy
       # and raises when queues is empty
-      Sidekiq.options[:queues] = ["default"]
+      if Sidekiq::VERSION >= "7.0"
+        require "sidekiq/capsule"
+        Sidekiq.default_configuration.queues = ["default"]
+      else
+        Sidekiq.options[:queues] = ["default"]
+      end
 
       require "sidekiq/processor"
       allow(Sidekiq).to receive(:server?).and_return true
@@ -15,12 +20,21 @@ RSpec.describe Sidekiq::Throttled, :sidekiq => :disabled do
     end
 
     it "presets Sidekiq fetch strategy to Sidekiq::Throttled::Fetch" do
-      expect(Sidekiq.options[:fetch]).to be_a Sidekiq::Throttled::Fetch
+      if Sidekiq::VERSION >= "7.0"
+        expect(Sidekiq.default_configuration[:fetch_class]).to eq Sidekiq::Throttled::Fetch7
+      else
+        expect(Sidekiq.options[:fetch]).to be_a Sidekiq::Throttled::Fetch
+      end
     end
 
     it "injects Sidekiq::Throttled::Middleware server middleware" do
-      expect(Sidekiq.server_middleware.exists?(Sidekiq::Throttled::Middleware))
-        .to be true
+      if Sidekiq::VERSION >= "7.0"
+        expect(Sidekiq.default_configuration.server_middleware.exists?(Sidekiq::Throttled::Middleware))
+          .to be true
+      else
+        expect(Sidekiq.server_middleware.exists?(Sidekiq::Throttled::Middleware))
+          .to be true
+      end
     end
   end
 

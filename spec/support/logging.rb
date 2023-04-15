@@ -23,8 +23,10 @@ end
 
 if Sidekiq::VERSION < "6.0.0"
   Sidekiq::Logging.logger = PseudoLogger.instance
-else
+elsif Sidekiq::VERSION < "7.0.0"
   Sidekiq.logger = PseudoLogger.instance
+else
+  Sidekiq.default_configuration.logger = PseudoLogger.instance
 end
 
 RSpec.configure do |config|

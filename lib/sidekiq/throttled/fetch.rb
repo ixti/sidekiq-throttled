@@ -49,7 +49,7 @@ module Sidekiq
         nil
       end
 
-      def bulk_requeue(units, _options)
+      def bulk_requeue(units, _options = {})
         return if units.empty?
 
         Sidekiq.logger.debug { "Re-queueing terminated jobs" }
@@ -87,6 +87,20 @@ module Sidekiq
       # @return [Array<String>]
       def filter_queues(queues)
         queues - @paused.to_a
+      end
+    end
+
+    class Fetch7 < Fetch
+      def initialize(capsule)
+        raise ArgumentError, "missing queue list" unless capsule.queues
+
+        @strict = capsule.mode == :strict
+        @queues = capsule.queues.map { |q| QueueName.expand q }
+        @queues.uniq! if @strict
+      end
+
+      def setup(options)
+        @paused = ExpirableList.new(options.fetch(:throttled_queue_cooldown, TIMEOUT))
       end
     end
   end
