@@ -32,10 +32,19 @@ class PseudoLogger < Logger
   end
 end
 
+if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("6.5.0")
+  Sidekiq.options[:queues] = %i[default]
+elsif Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
+  Sidekiq[:queues] = %i[default]
+else
+  Sidekiq.configure_server do |config|
+    config.queues = %i[default]
+  end
+end
+
 Sidekiq.configure_server do |config|
   config.redis  = { url: REDIS_URL }
   config.logger = PseudoLogger.instance
-  config.queues = %i[default]
 end
 
 Sidekiq.configure_client do |config|
