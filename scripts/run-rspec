@@ -3,7 +3,7 @@
 set -Eeuxo pipefail
 
 for BUNDLE_GEMFILE in gemfiles/*.gemfile; do
-  export BUNDLE_GEMFILE
+  export BUNDLE_GEMFILE="${BUNDLE_GEMFILE}"
   bundle check || bundle install
   bundle exec rspec "$@"
 done
