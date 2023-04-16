@@ -21,11 +21,13 @@ jobs:
     services:
       redis:
         image: redis
-        ports: ["6379:6379"]
-        options: "--entrypoint redis-server"
-
-    env:
-      BUNDLE_GEMFILE: gemfiles/sidekiq_${{ matrix.sidekiq }}.gemfile
+        ports:
+          - "6379:6379"
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v3
@@ -35,8 +37,11 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
 
-      - name: bundle exec rspec
-        run: bundle exec rspec --format progress --force-colour
+      - name: Install dependencies
+        run: scripts/update-gemfiles
+
+      - name: RSpec
+        run: scripts/run-rspec --format progress --force-colour
 
   rubocop:
     runs-on: ubuntu-latest
