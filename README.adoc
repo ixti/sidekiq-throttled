@@ -1,6 +1,6 @@
 = Sidekiq::Throttled
 :ci-link: https://github.com/ixti/sidekiq-throttled/actions/workflows/ci.yml
-:ci-badge: https://img.shields.io/github/workflow/status/ixti/sidekiq-throttled/CI/main?style=for-the-badge
+:ci-badge: https://img.shields.io/github/actions/workflow/status/ixti/sidekiq-throttled/ci.yml?branch=main&style=for-the-badge
 :gem-link: http://rubygems.org/gems/sidekiq-throttled
 :gem-badge: https://img.shields.io/gem/v/sidekiq-throttled?style=for-the-badge
 :doc-link: http://www.rubydoc.info/gems/sidekiq-throttled
