@@ -93,7 +93,7 @@ module Sidekiq
         require "sidekiq/throttled/fetch"
 
         if Gem::Version.new("7.0.0") <= Gem::Version.new(Sidekiq::VERSION)
-          sidekiq_config[:fetch_class] = Sidekiq::Throttled::Fetch
+          sidekiq_config[:fetch_class] = Sidekiq::Throttled::Fetch7
           sidekiq_config[:fetch_setup] = sidekiq_config
         else
           sidekiq_config[:fetch] = Sidekiq::Throttled::Fetch.new(sidekiq_config)
