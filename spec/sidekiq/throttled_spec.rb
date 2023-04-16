@@ -10,7 +10,7 @@ RSpec.describe Sidekiq::Throttled, sidekiq: :disabled do
       described_class.setup!
     end
 
-    it "presets Sidekiq fetch strategy to Sidekiq::Throttled::Fetch" do
+    it "presets Sidekiq fetch strategy to Sidekiq::Throttled::Fetch" do # rubocop:disable RSpec/MultipleExpectations
       if Sidekiq::VERSION >= "7.0"
         expect(Sidekiq.default_configuration[:fetch_class]).to eq Sidekiq::Throttled::Fetch7
       else
@@ -18,7 +18,7 @@ RSpec.describe Sidekiq::Throttled, sidekiq: :disabled do
       end
     end
 
-    it "injects Sidekiq::Throttled::Middleware server middleware" do
+    it "injects Sidekiq::Throttled::Middleware server middleware" do # rubocop:disable RSpec/MultipleExpectations
       if Sidekiq::VERSION >= "7.0"
         expect(Sidekiq.default_configuration.server_middleware.exists?(Sidekiq::Throttled::Middleware))
           .to be true

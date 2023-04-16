@@ -17,6 +17,7 @@ group :test do
   gem "timecop"
 
   gem "rubocop",              require: false
+  gem "rubocop-capybara",     require: false
   gem "rubocop-performance",  require: false
   gem "rubocop-rake",         require: false
   gem "rubocop-rspec",        require: false

@@ -153,7 +153,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
 
         it "allows to run exactly one more job afterwards" do
           strategy.finalize!(known_jid, key_input)
-          strategy.throttled?(known_jid, key_input)
+          expect(strategy.throttled?(jid, 456)).to be false
         end
       end
 

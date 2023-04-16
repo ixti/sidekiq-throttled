@@ -90,7 +90,7 @@ module Sidekiq
     end
 
     class Fetch7 < Fetch
-      def initialize(capsule)
+      def initialize(capsule) # rubocop:disable Lint/MissingSuper
         raise ArgumentError, "missing queue list" unless capsule.queues
 
         @strict = capsule.mode == :strict
