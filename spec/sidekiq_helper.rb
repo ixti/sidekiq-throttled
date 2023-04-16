@@ -67,11 +67,7 @@ RSpec.configure do |config|
       conn.script("flush")
     end
 
-    if Sidekiq::VERSION >= "6.4.0"
-      Sidekiq::Job.clear_all
-    else
-      Sidekiq::Worker.clear_all
-    end
+    Sidekiq::Job.clear_all
 
     case example.metadata[:sidekiq]
     when :inline    then Sidekiq::Testing.inline!(&example)

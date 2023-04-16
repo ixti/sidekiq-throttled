@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add sidekiq 7 support
+- Add sidekiq 7.0 support
 - Add Ruby 3.2 support
 
 
