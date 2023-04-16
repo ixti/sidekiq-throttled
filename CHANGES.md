@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Drop support of Sidekiq < 6.4.0
+- Drop support of Sidekiq < 6.5.0
 - Remove queue pauser, and communicator
 
 

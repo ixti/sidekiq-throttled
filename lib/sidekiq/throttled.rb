@@ -92,13 +92,8 @@ module Sidekiq
       def setup_strategy!(sidekiq_config)
         require "sidekiq/throttled/fetch"
 
-        sidekiq_version = Gem::Version.new(Sidekiq::VERSION)
-
-        # https://github.com/mperham/sidekiq/commit/67daa7a408b214d593100f782271ed108686c147
-        sidekiq_config = sidekiq_config.options if sidekiq_version < Gem::Version.new("6.5.0")
-
-        if sidekiq_version >= Gem::Version.new("7.0.0")
-          sidekiq_config[:fetch_class] = Sidekiq::Throttled::Fetch7
+        if Gem::Version.new("7.0.0") <= Gem::Version.new(Sidekiq::VERSION)
+          sidekiq_config[:fetch_class] = Sidekiq::Throttled::Fetch
           sidekiq_config[:fetch_setup] = sidekiq_config
         else
           sidekiq_config[:fetch] = Sidekiq::Throttled::Fetch.new(sidekiq_config)

@@ -32,9 +32,7 @@ class PseudoLogger < Logger
   end
 end
 
-if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("6.5.0")
-  Sidekiq.options[:queues] = %i[default]
-elsif Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
+if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
   Sidekiq[:queues] = %i[default]
 else
   Sidekiq.configure_server do |config|
