@@ -17,19 +17,24 @@ module Sidekiq
 
       # Initializes fetcher instance.
       # @param options [Hash]
-      # @option options [Integer] :throttled_queue_cooldown (TIMEOUT)
-      #   Min delay in seconds before queue will be polled again after
-      #   throttled job.
       # @option options [Boolean] :strict (false)
       # @option options [Array<#to_s>] :queue
       def initialize(options)
-        @paused = ExpirableList.new(options.fetch(:throttled_queue_cooldown, TIMEOUT))
         @strict = options[:strict] ? true : false
         @queues = options.fetch(:queues).map { |q| QueueName.expand q }
 
         raise ArgumentError, "empty :queues" if @queues.empty?
 
         @queues.uniq! if @strict
+
+        setup(options)
+      end
+
+      # @option options [Integer] :throttled_queue_cooldown (TIMEOUT)
+      #   Min delay in seconds before queue will be polled again after
+      #   throttled job.
+      def setup(options)
+        @paused = ExpirableList.new(options.fetch(:throttled_queue_cooldown, TIMEOUT))
       end
 
       # Retrieves job from redis.
@@ -96,10 +101,6 @@ module Sidekiq
         @strict = capsule.mode == :strict
         @queues = capsule.queues.map { |q| QueueName.expand q }
         @queues.uniq! if @strict
-      end
-
-      def setup(options)
-        @paused = ExpirableList.new(options.fetch(:throttled_queue_cooldown, TIMEOUT))
       end
     end
   end
