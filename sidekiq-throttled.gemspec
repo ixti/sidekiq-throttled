@@ -1,9 +1,6 @@
 # frozen_string_literal: true
 
-lib = File.expand_path("lib", __dir__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-
-require "sidekiq/throttled/version"
+require_relative "lib/sidekiq/throttled/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "sidekiq-throttled"
@@ -11,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Alexey Zapparov"]
   spec.email         = ["alexey@zapparov.com"]
 
-  spec.summary       = "Concurrency and rate-limit throttling for Sidekiq."
+  spec.summary       = "Concurrency and rate-limit throttling for Sidekiq"
   spec.homepage      = "https://github.com/ixti/sidekiq-throttled"
   spec.license       = "MIT"
 
@@ -19,7 +16,19 @@ Gem::Specification.new do |spec|
     f.match %r{^(test|spec|features)/}
   end
 
+  spec.metadata["homepage_uri"]          = spec.homepage
+  spec.metadata["source_code_uri"]       = "#{spec.homepage}/tree/v#{spec.version}"
+  spec.metadata["bug_tracker_uri"]       = "#{spec.homepage}/issues"
+  spec.metadata["changelog_uri"]         = "#{spec.homepage}/blob/v#{spec.version}/CHANGES.md"
   spec.metadata["rubygems_mfa_required"] = "true"
+
+  spec.files = Dir.chdir(__dir__) do
+    docs = %w[LICENSE README.adoc].freeze
+
+    `git ls-files -z`.split("\x0").select do |f|
+      f.start_with?("lib/") || docs.include?(f)
+    end
+  end
 
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
@@ -28,7 +37,5 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = ">= 2.7"
 
   spec.add_runtime_dependency "redis-prescription", "~> 2.2"
-  spec.add_runtime_dependency "sidekiq", ">= 6.4"
-
-  spec.add_development_dependency "bundler", ">= 2.0"
+  spec.add_runtime_dependency "sidekiq", ">= 6.5"
 end
