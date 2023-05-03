@@ -76,11 +76,12 @@ module Sidekiq
       def brpop
         queues = filter_queues(@strict ? @queues : @queues.shuffle.uniq)
 
-        if queues.empty?
+        if queues.size <= 0
           sleep TIMEOUT
           return
         end
 
+        # TODO: Refactor for better redis-client support
         Sidekiq.redis { |conn| conn.brpop(*queues, timeout: TIMEOUT) }
       end
 
@@ -90,7 +91,12 @@ module Sidekiq
       # @param [Array<String>] queues
       # @return [Array<String>]
       def filter_queues(queues)
-        queues - @paused.to_a
+        queues -= @paused.to_a
+
+        # TODO: Refactor to handle this during the setup phase
+        queues -= Sidekiq::Pauzer.paused_queues if defined?(Sidekiq::Pauzer)
+
+        queues
       end
     end
 
