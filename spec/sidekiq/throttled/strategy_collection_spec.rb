@@ -71,13 +71,10 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
       ]
     end
 
-    let(:strategy1) { collection.strategies[0] }
-    let(:strategy2) { collection.strategies[1] }
-
     context "with no throttled strategies" do
       it do
-        allow(strategy1).to receive(:throttled?).with(*args).and_return(false)
-        allow(strategy2).to receive(:throttled?).with(*args).and_return(false)
+        allow(collection.strategies[0]).to receive(:throttled?).with(*args).and_return(false)
+        allow(collection.strategies[1]).to receive(:throttled?).with(*args).and_return(false)
 
         expect(throttled?).to be false
       end
@@ -85,8 +82,8 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
 
     context "with one strategy throttled" do
       it do
-        allow(strategy1).to receive(:throttled?).with(*args).and_return(false)
-        allow(strategy2).to receive(:throttled?).with(*args).and_return(true)
+        allow(collection.strategies[0]).to receive(:throttled?).with(*args).and_return(false)
+        allow(collection.strategies[1]).to receive(:throttled?).with(*args).and_return(true)
 
         expect(throttled?).to be true
       end
