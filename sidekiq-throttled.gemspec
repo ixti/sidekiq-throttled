@@ -12,10 +12,6 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/ixti/sidekiq-throttled"
   spec.license       = "MIT"
 
-  spec.files         = `git ls-files -z`.split("\x0").reject do |f|
-    f.match %r{^(test|spec|features)/}
-  end
-
   spec.metadata["homepage_uri"]          = spec.homepage
   spec.metadata["source_code_uri"]       = "#{spec.homepage}/tree/v#{spec.version}"
   spec.metadata["bug_tracker_uri"]       = "#{spec.homepage}/issues"
