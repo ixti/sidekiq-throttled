@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "sidekiq/throttled/job"
+require_relative "./job"
 
 module Sidekiq
   module Throttled

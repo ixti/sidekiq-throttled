@@ -8,8 +8,10 @@ bundle install
 rm -f ./gemfiles/*.gemfile ./gemfiles/*.gemfile.lock
 bundle exec appraisal generate
 
-# XXX: `bundle exec appraisal install` fails on ruby-3.2
+# XXX: `bundle exec appraisal install` fails on CI with ruby-3.2
 for BUNDLE_GEMFILE in gemfiles/*.gemfile; do
   export BUNDLE_GEMFILE
   bundle check || bundle install
 done
+
+bundle exec appraisal rspec

@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 # internal
-require "sidekiq/throttled/strategy"
-require "sidekiq/throttled/utils"
+require_relative "./strategy"
 
 module Sidekiq
   module Throttled
@@ -14,8 +13,6 @@ module Sidekiq
       @aliases    = {}
 
       class << self
-        include Utils
-
         # Adds strategy to the registry.
         #
         # @param (see Strategy#initialize)
@@ -107,7 +104,7 @@ module Sidekiq
         def find_by_class(name)
           return unless Throttled.configuration.inherit_strategies?
 
-          const = name.is_a?(Class) ? name : constantize(name)
+          const = name.is_a?(Class) ? name : Object.const_get(name)
           return unless const.is_a?(Class)
 
           const.ancestors.each do |m|

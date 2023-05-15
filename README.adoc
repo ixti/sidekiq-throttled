@@ -63,9 +63,9 @@ class MyJob
 
   sidekiq_throttle(
     # Allow maximum 10 concurrent jobs of this class at a time.
-    :concurrency => { :limit => 10 },
+    concurrency: { limit: 10 },
     # Allow maximum 1K jobs being processed within one hour window.
-    :threshold => { :limit => 1_000, :period => 1.hour }
+    threshold: { limit: 1_000, period: 1.hour }
   )
 
   def perform
@@ -104,12 +104,12 @@ class MyJob
     # do something
   end
 
-  sidekiq_options :queue => :my_queue
+  sidekiq_options queue: :my_queue
 
   sidekiq_throttle(
-    :concurrency => { :limit => 10 },
-    :threshold   => { :limit => 100, :period => 1.hour },
-    :observer    => MY_OBSERVER
+    concurrency: { limit: 10 },
+    threshold:   { limit: 100, period: 1.hour },
+    observer:    MY_OBSERVER
   )
 
   def perform(*args)
@@ -133,11 +133,11 @@ class MyJob
   include Sidekiq::Job
   include Sidekiq::Throttled::Job
 
-  sidekiq_options :queue => :my_queue
+  sidekiq_options queue: :my_queue
 
   sidekiq_throttle(
     # Allow maximum 10 concurrent jobs per user at a time.
-    :concurrency => { :limit => 10, :key_suffix => -> (user_id) { user_id } }
+    concurrency: { limit: 10, key_suffix: -> (user_id) { user_id } }
   )
 
   def perform(user_id)
@@ -156,19 +156,19 @@ class MyJob
   include Sidekiq::Job
   include Sidekiq::Throttled::Job
 
-  sidekiq_options :queue => :my_queue
+  sidekiq_options queue: :my_queue
 
   sidekiq_throttle(
     # Allow maximum 1000 concurrent jobs of this class at a time for VIPs and 10 for all other users.
-    :concurrency => {
-      :limit      => ->(user_id) { User.vip?(user_id) ? 1_000 : 10 },
-      :key_suffix => ->(user_id) { User.vip?(user_id) ? "vip" : "std" }
+    concurrency: {
+      limit:      ->(user_id) { User.vip?(user_id) ? 1_000 : 10 },
+      key_suffix: ->(user_id) { User.vip?(user_id) ? "vip" : "std" }
     },
     # Allow 1000 jobs/hour to be processed for VIPs and 10/day for all others
-    :threshold   => {
-      :limit      => ->(user_id) { User.vip?(user_id) ? 1_000 : 10 },
-      :period     => ->(user_id) { User.vip?(user_id) ? 1.hour : 1.day },
-      :key_suffix => ->(user_id) { User.vip?(user_id) ? "vip" : "std" }
+    threshold: {
+      limit:      ->(user_id) { User.vip?(user_id) ? 1_000 : 10 },
+      period:     ->(user_id) { User.vip?(user_id) ? 1.hour : 1.day },
+      key_suffix: ->(user_id) { User.vip?(user_id) ? "vip" : "std" }
     }
   )
 
@@ -186,13 +186,13 @@ class MyJob
   include Sidekiq::Job
   include Sidekiq::Throttled::Job
 
-  sidekiq_options :queue => :my_queue
+  sidekiq_options queue: :my_queue
 
   sidekiq_throttle(
     # Allow maximum 10 concurrent jobs per project at a time and maximum 2 jobs per user
-    :concurrency => [
-      { :limit => 10, :key_suffix => -> (project_id, user_id) { project_id } },
-      { :limit => 2, :key_suffix => -> (project_id, user_id) { user_id } }
+    concurrency: [
+      { limit: 10, key_suffix: -> (project_id, user_id) { project_id } },
+      { limit: 2, key_suffix: -> (project_id, user_id) { user_id } }
     ]
     # For :threshold it works the same
   )
@@ -224,7 +224,7 @@ lock TTL to fit your needs:
 [source,ruby]
 ----
 # Set concurrency strategy lock TTL to 1 hour.
-sidekiq_throttle(:concurrency => { :limit => 20, :ttl => 1.hour.to_i })
+sidekiq_throttle(concurrency: { limit: 20, ttl: 1.hour.to_i })
 ----
 
 
@@ -257,6 +257,15 @@ This library aims to support and work with following Sidekiq versions:
 
 * Sidekiq 6.5.x
 * Sidekiq 7.0.x
+* Sidekiq 7.1.x
+
+
+== Development
+
+  bundle install
+  bundle exec appraisal generate
+  bundle exec appraisal install
+  bundle exec rake
 
 
 == Contributing
@@ -267,14 +276,3 @@ This library aims to support and work with following Sidekiq versions:
 * Send a pull request
 * If we like them we'll merge them
 * If we've accepted a patch, feel free to ask for commit access!
-
-
-== Development
-
-  bundle update
-  bundle exec appraisal install   # install dependencies for all gemfiles
-  bundle exec appraisal update    # update dependencies for all gemfiles
-  bundle exec appraisal rspec     # run rspec against each gemfile
-  bundle exec rubocop             # run static code analysis
-
-Don't forget to run `appraisal update` after any changes to `Gemfile`.

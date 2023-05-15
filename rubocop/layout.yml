@@ -1,11 +1,9 @@
 Layout/ArgumentAlignment:
+  Enabled: true
   EnforcedStyle: with_fixed_indentation
 
 Layout/EmptyLinesAroundAttributeAccessor:
   Enabled: true
-
-Layout/FirstArrayElementIndentation:
-  EnforcedStyle: consistent
 
 Layout/FirstHashElementIndentation:
   Enabled: true

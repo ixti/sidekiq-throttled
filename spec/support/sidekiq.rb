@@ -5,7 +5,10 @@ require "securerandom"
 require "singleton"
 require "stringio"
 
-require "sidekiq/testing"
+require "sidekiq"
+require "sidekiq/cli"
+
+$TESTING = false # rubocop:disable Style/GlobalVars
 
 REDIS_URL = ENV.fetch("REDIS_URL", "redis://localhost:6379")
 
@@ -50,28 +53,16 @@ Sidekiq.configure_client do |config|
   config.logger = PseudoLogger.instance
 end
 
-require "sidekiq/web"
-Sidekiq::Web.use Rack::Session::Cookie, secret: SecureRandom.hex(32), same_site: true, max_age: 86_400
-
 RSpec.configure do |config|
   config.include JidGenerator
   config.extend  JidGenerator
 
-  config.around do |example|
+  config.before do
     PseudoLogger.instance.reset!
 
     Sidekiq.redis do |conn|
       conn.flushdb
       conn.script("flush")
-    end
-
-    Sidekiq::Job.clear_all
-
-    case example.metadata[:sidekiq]
-    when :inline    then Sidekiq::Testing.inline!(&example)
-    when :disabled  then Sidekiq::Testing.disable!(&example)
-    when :enabled   then Sidekiq::Testing.__set_test_mode(nil, &example)
-    else                 Sidekiq::Testing.fake!(&example)
     end
   end
 end

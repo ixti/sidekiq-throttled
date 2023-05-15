@@ -1,16 +1,22 @@
 # frozen_string_literal: true
 
-ENV["RACK_ENV"] ||= "test"
+require_relative "support/simplecov" if ENV["CI"] || ENV["COVERAGE"]
+require_relative "support/sidekiq"
+require_relative "support/timecop"
 
 require "sidekiq/throttled"
-require "sidekiq/throttled/testing"
 
-require "sidekiq_helper"
+RSpec::Matchers.define_negated_matcher :keep_unchanged, :change
 
-require "support/timecop"
-
-# See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
+# See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 RSpec.configure do |config|
+  config.before do
+    Sidekiq::Throttled::Registry.instance_eval do
+      @strategies.clear
+      @aliases.clear
+    end
+  end
+
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest
   # assertions if you prefer.
@@ -34,12 +40,19 @@ RSpec.configure do |config|
     mocks.verify_partial_doubles = true
   end
 
-  # These two settings work together to allow you to limit a spec run
-  # to individual examples or groups you care about by tagging them with
-  # `:focus` metadata. When nothing is tagged with `:focus`, all examples
-  # get run.
-  config.filter_run :focus
-  config.run_all_when_everything_filtered = true
+  # This option will default to `:apply_to_host_groups` in RSpec 4 (and will
+  # have no way to turn it off -- the option exists only for backwards
+  # compatibility in RSpec 3). It causes shared context metadata to be
+  # inherited by the metadata hash of host groups and examples, rather than
+  # triggering implicit auto-inclusion in groups with matching metadata.
+  config.shared_context_metadata_behavior = :apply_to_host_groups
+
+  # This allows you to limit a spec run to individual examples or groups
+  # you care about by tagging them with `:focus` metadata. When nothing
+  # is tagged with `:focus`, all examples get run. RSpec also provides
+  # aliases for `it`, `describe`, and `context` that include `:focus`
+  # metadata: `fit`, `fdescribe` and `fcontext`, respectively.
+  config.filter_run_when_matching :focus
 
   # Allows RSpec to persist some state between runs in order to support
   # the `--only-failures` and `--next-failure` CLI options. We recommend
@@ -48,9 +61,7 @@ RSpec.configure do |config|
 
   # Limits the available syntax to the non-monkey patched syntax that is
   # recommended. For more details, see:
-  #   - http://myronmars.to/n/dev-blog/2012/06/rspecs-new-expectation-syntax
-  #   - http://www.teaisaweso.me/blog/2013/05/27/rspecs-new-message-expectation-syntax/
-  #   - http://myronmars.to/n/dev-blog/2014/05/notable-changes-in-rspec-3#new__config_option_to_disable_rspeccore_monkey_patching
+  # https://rspec.info/features/3-12/rspec-core/configuration/zero-monkey-patching-mode/
   config.disable_monkey_patching!
 
   # This setting enables warnings. It's recommended, but in some cases may
@@ -60,7 +71,12 @@ RSpec.configure do |config|
   # Many RSpec users commonly either run the entire suite or an individual
   # file, and it's useful to allow more verbose output when running an
   # individual spec file.
-  config.default_formatter = "doc" if config.files_to_run.one?
+  if config.files_to_run.one?
+    # Use the documentation formatter for detailed output,
+    # unless a formatter has already been configured
+    # (e.g. via a command-line flag).
+    config.default_formatter = "doc"
+  end
 
   # Print the 10 slowest examples and example groups at the
   # end of the spec run, to help surface which specs are running
@@ -78,13 +94,4 @@ RSpec.configure do |config|
   # test failures related to randomization by passing the same `--seed` value
   # as the one that triggered the failure.
   Kernel.srand config.seed
-
-  config.around(:each, verify_stubs: false) do |ex|
-    config.mock_with :rspec do |mocks|
-      mocks.verify_partial_doubles = false
-      ex.run
-    ensure
-      mocks.verify_partial_doubles = true
-    end
-  end
 end

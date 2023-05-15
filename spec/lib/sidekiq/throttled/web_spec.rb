@@ -1,14 +1,35 @@
 # frozen_string_literal: true
 
-require "rack/test"
+require "capybara/rspec"
+require "rack"
 
+begin
+  require "rack/session"
+rescue LoadError
+  # HACK: Sidekiq < 7.0.9 depends on rack ~> 2.0, and rack-session gem was
+  #   part of rack gem at that era.
+end
+
+require "rack/test"
+require "securerandom"
+
+require "sidekiq/web"
 require "sidekiq/throttled/web"
 
 RSpec.describe Sidekiq::Throttled::Web do
   include Rack::Test::Methods
 
   def app
-    Sidekiq::Web
+    @app ||= Rack::Builder.app do
+      use Rack::Session::Cookie, secret: SecureRandom.hex(32), same_site: true
+      run Sidekiq::Web
+    end
+  end
+
+  def csrf_token
+    SecureRandom.base64(Sidekiq::Web::CsrfProtection::TOKEN_LENGTH).tap do |csrf|
+      env("rack.session", { csrf: csrf })
+    end
   end
 
   before do
@@ -42,8 +63,6 @@ RSpec.describe Sidekiq::Throttled::Web do
   end
 
   describe "POST /throttled/:id/reset" do
-    let(:csrf_token) { SecureRandom.base64(32) }
-
     before do
       env "rack.session", csrf: csrf_token
     end

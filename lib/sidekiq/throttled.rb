@@ -4,12 +4,13 @@
 require "sidekiq"
 
 # internal
-require "sidekiq/throttled/version"
-require "sidekiq/throttled/configuration"
-require "sidekiq/throttled/registry"
-require "sidekiq/throttled/job"
-require "sidekiq/throttled/worker"
-require "sidekiq/throttled/utils"
+require_relative "./throttled/version"
+require_relative "./throttled/configuration"
+require_relative "./throttled/fetch"
+require_relative "./throttled/registry"
+require_relative "./throttled/job"
+require_relative "./throttled/middleware"
+require_relative "./throttled/worker"
 
 # @see https://github.com/mperham/sidekiq/
 module Sidekiq
@@ -41,12 +42,7 @@ module Sidekiq
   #       end
   #     end
   module Throttled
-    MUTEX = Mutex.new
-    private_constant :MUTEX
-
     class << self
-      include Utils
-
       # @return [Configuration]
       def configuration
         @configuration ||= Configuration.new
@@ -57,11 +53,10 @@ module Sidekiq
       # @return [void]
       def setup!
         Sidekiq.configure_server do |config|
-          setup_strategy!(config)
-
-          require "sidekiq/throttled/middleware"
-          config.server_middleware do |chain|
-            chain.add Sidekiq::Throttled::Middleware
+          if Gem::Version.new("7.0.0") <= Gem::Version.new(Sidekiq::VERSION)
+            config[:fetch_class] = Sidekiq::Throttled::Fetch
+          else
+            config[:fetch] = Sidekiq::Throttled::Fetch.new(config)
           end
         end
       end
@@ -75,8 +70,6 @@ module Sidekiq
         job = message.fetch("wrapped") { message.fetch("class") { return false } }
         jid = message.fetch("jid") { return false }
 
-        preload_constant! job
-
         Registry.get job do |strategy|
           return strategy.throttled?(jid, *message["args"])
         end
@@ -85,36 +78,12 @@ module Sidekiq
       rescue
         false
       end
+    end
+  end
 
-      private
-
-      # @return [void]
-      def setup_strategy!(sidekiq_config)
-        require "sidekiq/throttled/fetch"
-
-        if Gem::Version.new("7.0.0") <= Gem::Version.new(Sidekiq::VERSION)
-          sidekiq_config[:fetch_class] = Sidekiq::Throttled::Fetch7
-          sidekiq_config[:fetch_setup] = sidekiq_config
-        else
-          sidekiq_config[:fetch] = Sidekiq::Throttled::Fetch.new(sidekiq_config)
-        end
-      end
-
-      # Tries to preload constant by it's name once.
-      #
-      # Somehow, sometimes, some classes are not eager loaded upon Rails init,
-      # leading to throttling config not being registered prior job perform.
-      # And that leaves us with concurrency limit + 1 situation upon Sidekiq
-      # server restart (becomes normal after all Sidekiq processes handled
-      # at leas onr job of that class).
-      #
-      # @return [void]
-      def preload_constant!(job)
-        MUTEX.synchronize do
-          @preloaded      ||= {}
-          @preloaded[job] ||= constantize(job) || true
-        end
-      end
+  configure_server do |config|
+    config.server_middleware do |chain|
+      chain.add Sidekiq::Throttled::Middleware
     end
   end
 end

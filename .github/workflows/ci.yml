@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, 0-x-stable ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, 0-x-stable ]
+    branches: [ main ]
 
 jobs:
   test:
@@ -40,7 +40,7 @@ jobs:
         run: scripts/update-gemfiles
 
       - name: RSpec
-        run: scripts/run-rspec --format progress --force-colour
+        run: scripts/ci-rspec
 
   rubocop:
     runs-on: ubuntu-latest

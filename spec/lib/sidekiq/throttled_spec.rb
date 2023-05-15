@@ -2,7 +2,7 @@
 
 require "json"
 
-RSpec.describe Sidekiq::Throttled, sidekiq: :disabled do
+RSpec.describe Sidekiq::Throttled do
   describe ".setup!" do
     before do
       require "sidekiq/processor"
@@ -10,15 +10,15 @@ RSpec.describe Sidekiq::Throttled, sidekiq: :disabled do
       described_class.setup!
     end
 
-    it "presets Sidekiq fetch strategy to Sidekiq::Throttled::Fetch" do # rubocop:disable RSpec/MultipleExpectations
+    it "presets Sidekiq fetch strategy to Sidekiq::Throttled::Fetch" do
       if Sidekiq::VERSION >= "7.0"
-        expect(Sidekiq.default_configuration[:fetch_class]).to eq Sidekiq::Throttled::Fetch7
+        expect(Sidekiq.default_configuration[:fetch_class]).to eq Sidekiq::Throttled::Fetch
       else
         expect(Sidekiq.options[:fetch]).to be_a Sidekiq::Throttled::Fetch
       end
     end
 
-    it "injects Sidekiq::Throttled::Middleware server middleware" do # rubocop:disable RSpec/MultipleExpectations
+    it "injects Sidekiq::Throttled::Middleware server middleware" do
       if Sidekiq::VERSION >= "7.0"
         expect(Sidekiq.default_configuration.server_middleware.exists?(Sidekiq::Throttled::Middleware))
           .to be true

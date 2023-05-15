@@ -4,14 +4,15 @@ source "https://rubygems.org"
 
 gem "appraisal"
 gem "rake"
-gem "sidekiq"
 
 group :test do
-  gem "apparition"
+  gem "sidekiq"
+
   gem "capybara"
-  gem "puma"
+
+  gem "rack"
+  gem "rack-session"
   gem "rack-test"
-  gem "sinatra"
 
   gem "rspec"
   gem "timecop"

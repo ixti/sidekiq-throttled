@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # internal
-require "sidekiq/throttled/registry"
+require_relative "./registry"
 
 module Sidekiq
   module Throttled

@@ -8,8 +8,8 @@ require "sidekiq"
 require "sidekiq/web"
 
 # internal
-require "sidekiq/throttled/registry"
-require "sidekiq/throttled/web/stats"
+require_relative "./registry"
+require_relative "./web/stats"
 
 module Sidekiq
   module Throttled
