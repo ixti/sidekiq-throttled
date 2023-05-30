@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.0.0.alpha] - 2023-05-30
+
 ### Added
 
 - Add sidekiq 7.0 and 7.1 support
@@ -30,4 +33,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove queue exclusion from fetcher pon throttled job
 
 
-[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v0.16.1...main
+[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v1.0.0.alpha...main
+[1.0.0.alpha]: https://github.com/ixti/sidekiq-throttled/compare/v0.16.1...v1.0.0.alpha
