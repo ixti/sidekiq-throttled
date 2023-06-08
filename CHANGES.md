@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.0.0.alpha.1] - 2023-06-08
+
+### Changes
+
+- Upstream `Sidekiq::BasicFetch` is now infused with throttling directly,
+  thus default fetch configuration should work on both Sidekiq and Sidekiq-Pro
+
+
+### Removed
+
+- Remove `Sidekiq::Throttled::BasicFetch` and `Sidekiq::Throttled::Fetch`
+
+
 ## [1.0.0.alpha] - 2023-05-30
 
 ### Added
@@ -33,5 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove queue exclusion from fetcher pon throttled job
 
 
-[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v1.0.0.alpha...main
+[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v1.0.0.alpha.1...main
+[1.0.0.alpha.1]: https://github.com/ixti/sidekiq-throttled/compare/v1.0.0.alpha...v1.0.0.alpha.1
 [1.0.0.alpha]: https://github.com/ixti/sidekiq-throttled/compare/v0.16.1...v1.0.0.alpha
