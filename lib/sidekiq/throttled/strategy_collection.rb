@@ -19,8 +19,7 @@ module Sidekiq
       # @param [#to_s] name
       # @param [#call] key_suffix Dynamic key suffix generator.
       def initialize(strategies, strategy:, name:, key_suffix:)
-        strategies = (strategies.is_a?(Hash) ? [strategies] : Array(strategies))
-        @strategies = strategies.map do |options|
+        @strategies = (strategies.is_a?(Hash) ? [strategies] : Array(strategies)).map do |options|
           make_strategy(strategy, name, key_suffix, options)
         end
       end

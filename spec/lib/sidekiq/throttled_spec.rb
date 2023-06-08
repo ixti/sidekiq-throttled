@@ -10,12 +10,8 @@ RSpec.describe Sidekiq::Throttled do
       described_class.setup!
     end
 
-    it "presets Sidekiq fetch strategy to Sidekiq::Throttled::Fetch" do
-      if Sidekiq::VERSION >= "7.0"
-        expect(Sidekiq.default_configuration[:fetch_class]).to eq Sidekiq::Throttled::Fetch
-      else
-        expect(Sidekiq.options[:fetch]).to be_a Sidekiq::Throttled::Fetch
-      end
+    it "infuses Sidekiq::BasicFetch with our patches" do
+      expect(Sidekiq::BasicFetch).to include(Sidekiq::Throttled::Patches::BasicFetch)
     end
 
     it "injects Sidekiq::Throttled::Middleware server middleware" do
