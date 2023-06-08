@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "sidekiq/throttled/basic_fetch"
+require "sidekiq/throttled/patches/basic_fetch"
 
 class ThrottledTestJob
   include Sidekiq::Job
@@ -9,18 +9,20 @@ class ThrottledTestJob
   def perform(*); end
 end
 
-RSpec.describe Sidekiq::Throttled::BasicFetch do
+RSpec.describe Sidekiq::Throttled::Patches::BasicFetch do
   subject(:fetch) do
     if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
       Sidekiq.instance_variable_set(:@config, Sidekiq::DEFAULTS.dup)
       Sidekiq.queues = %w[default]
-      described_class.new(Sidekiq)
+      Sidekiq::BasicFetch.new(Sidekiq)
     else
       config = Sidekiq::Config.new
       config.queues = %w[default]
-      described_class.new(config.default_capsule)
+      Sidekiq::BasicFetch.new(config.default_capsule)
     end
   end
+
+  before { described_class.apply! }
 
   describe "#retrieve_work" do
     def enqueued_jobs(queue)
@@ -36,9 +38,7 @@ RSpec.describe Sidekiq::Throttled::BasicFetch do
     before do
       # Sidekiq is FIFO queue, with head on right side of the list,
       # meaning jobs below will be stored in 3, 2, 1 order.
-      ThrottledTestJob.perform_async(1)
-      ThrottledTestJob.perform_async(2)
-      ThrottledTestJob.perform_async(3)
+      ThrottledTestJob.perform_bulk([[1], [2], [3]])
     end
 
     context "when job is not throttled" do
@@ -60,7 +60,7 @@ RSpec.describe Sidekiq::Throttled::BasicFetch do
       it "pushes job back to the end queue" do
         expect { fetch.retrieve_work }
           .to change { enqueued_jobs("default") }
-          .to contain_exactly(["ThrottledTestJob", [2]], ["ThrottledTestJob", [3]])
+          .to eq([["ThrottledTestJob", [2]], ["ThrottledTestJob", [3]]])
       end
     end
 
@@ -77,7 +77,7 @@ RSpec.describe Sidekiq::Throttled::BasicFetch do
       it "pushes job back to the end queue" do
         expect { fetch.retrieve_work }
           .to change { enqueued_jobs("default") }
-          .to contain_exactly(["ThrottledTestJob", [2]], ["ThrottledTestJob", [3]])
+          .to eq([["ThrottledTestJob", [2]], ["ThrottledTestJob", [3]]])
       end
     end
   end

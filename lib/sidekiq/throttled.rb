@@ -1,12 +1,10 @@
 # frozen_string_literal: true
 
-# 3rd party
 require "sidekiq"
 
-# internal
 require_relative "./throttled/version"
 require_relative "./throttled/configuration"
-require_relative "./throttled/fetch"
+require_relative "./throttled/patches/basic_fetch"
 require_relative "./throttled/registry"
 require_relative "./throttled/job"
 require_relative "./throttled/middleware"
@@ -52,13 +50,7 @@ module Sidekiq
       #
       # @return [void]
       def setup!
-        Sidekiq.configure_server do |config|
-          if Gem::Version.new("7.0.0") <= Gem::Version.new(Sidekiq::VERSION)
-            config[:fetch_class] = Sidekiq::Throttled::Fetch
-          else
-            config[:fetch] = Sidekiq::Throttled::Fetch.new(config)
-          end
-        end
+        Sidekiq::Throttled::Patches::BasicFetch.apply!
       end
 
       # Tells whenever job is throttled or not.
