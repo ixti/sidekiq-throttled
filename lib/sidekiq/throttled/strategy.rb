@@ -24,6 +24,12 @@ module Sidekiq
       #   @return [Proc, nil]
       attr_reader :observer
 
+      # @!attribute [r] requeue_strategy
+      #   @return [String]
+      attr_reader :requeue_strategy
+
+      REQUEUE_STRATEGIES = [:enqueue].freeze
+
       # @param [#to_s] name
       # @param [Hash] concurrency Concurrency options.
       #   See keyword args of {Strategy::Concurrency#initialize} for details.
@@ -31,8 +37,10 @@ module Sidekiq
       #   See keyword args of {Strategy::Threshold#initialize} for details.
       # @param [#call] key_suffix Dynamic key suffix generator.
       # @param [#call] observer Process called after throttled.
-      def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil, observer: nil) # rubocop:disable Metrics/MethodLength
+      # @param [#to_s] requeue_strategy What to do with jobs that are throttled
+      def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil, observer: nil, requeue_strategy: :enqueue) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
         @observer = observer
+        @requeue_strategy = requeue_strategy
 
         @concurrency = StrategyCollection.new(concurrency,
           strategy:   Concurrency,
@@ -44,9 +52,13 @@ module Sidekiq
           name:       name,
           key_suffix: key_suffix)
 
-        return if @concurrency.any? || @threshold.any?
+        unless @concurrency.any? || @threshold.any?
+          raise ArgumentError, "Neither :concurrency nor :threshold given"
+        end
 
-        raise ArgumentError, "Neither :concurrency nor :threshold given"
+        unless REQUEUE_STRATEGIES.include?(@requeue_strategy)
+          raise ArgumentError, "#{requeue_strategy} is not a valid :requeue_strategy"
+        end
       end
 
       # @return [Boolean] whenever strategy has dynamic config
@@ -72,6 +84,22 @@ module Sidekiq
         end
 
         false
+      end
+
+      # Pushes job back to the head of the queue, so that job won't be tried
+      # immediately after it was requeued (in most cases).
+      #
+      # @note This is triggered when job is throttled. So it is same operation
+      #   Sidekiq performs upon `Sidekiq::Worker.perform_async` call.
+      #
+      # @return [void]
+      def requeue_throttled(work)
+        case requeue_strategy
+        when :enqueue
+          Sidekiq.redis { |conn| conn.lpush(work.queue, work.job) }
+        else
+          raise "unrecognized requeue_strategy #{requeue_strategy}"
+        end
       end
 
       # Marks job as being processed.

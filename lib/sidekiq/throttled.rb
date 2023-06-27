@@ -70,6 +70,19 @@ module Sidekiq
       rescue
         false
       end
+
+      # Return throttled job to be executed later, delegating the details of how to do that
+      # to the Strategy for that job.
+      #
+      # @return [void]
+      def requeue_throttled(work)
+        message = JSON.parse(work.job)
+        job_class = message.fetch("wrapped") { message.fetch("class") { return false } }
+
+        Registry.get job_class do |strategy|
+          strategy.requeue_throttled(work)
+        end
+      end
     end
   end
 
