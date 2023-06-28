@@ -28,7 +28,7 @@ module Sidekiq
       #   @return [String]
       attr_reader :requeue_strategy
 
-      REQUEUE_STRATEGIES = [:enqueue].freeze
+      REQUEUE_STRATEGIES = %i[enqueue schedule].freeze
 
       # @param [#to_s] name
       # @param [Hash] concurrency Concurrency options.
@@ -52,13 +52,11 @@ module Sidekiq
           name:       name,
           key_suffix: key_suffix)
 
-        unless @concurrency.any? || @threshold.any?
-          raise ArgumentError, "Neither :concurrency nor :threshold given"
-        end
+        raise ArgumentError, "Neither :concurrency nor :threshold given" unless @concurrency.any? || @threshold.any?
 
-        unless REQUEUE_STRATEGIES.include?(@requeue_strategy)
-          raise ArgumentError, "#{requeue_strategy} is not a valid :requeue_strategy"
-        end
+        return if REQUEUE_STRATEGIES.include?(@requeue_strategy)
+
+        raise ArgumentError, "#{requeue_strategy} is not a valid :requeue_strategy"
       end
 
       # @return [Boolean] whenever strategy has dynamic config
@@ -86,17 +84,18 @@ module Sidekiq
         false
       end
 
-      # Pushes job back to the head of the queue, so that job won't be tried
-      # immediately after it was requeued (in most cases).
-      #
-      # @note This is triggered when job is throttled. So it is same operation
-      #   Sidekiq performs upon `Sidekiq::Worker.perform_async` call.
+      # Return throttled job to be executed later. Implementation depends on the requeue_strategy.
       #
       # @return [void]
       def requeue_throttled(work)
         case requeue_strategy
         when :enqueue
+          # Push the job back to the head of the queue.
+          # This is the same operation Sidekiq performs upon `Sidekiq::Worker.perform_async` call.
           Sidekiq.redis { |conn| conn.lpush(work.queue, work.job) }
+        when :schedule
+          # Find out when we will next be able to execute this job, and reschedule for then.
+          reschedule_throttled(work)
         else
           raise "unrecognized requeue_strategy #{requeue_strategy}"
         end
@@ -113,6 +112,19 @@ module Sidekiq
       def reset!
         @concurrency&.reset!
         @threshold&.reset!
+      end
+
+      private
+
+      def reschedule_throttled(work)
+        message = JSON.parse(work.job)
+        jid = message.fetch("jid") { return false }
+        job_class = message.fetch("wrapped") { message.fetch("class") { return false } }
+        job_args = message["args"]
+
+        retry_in = [@concurrency&.retry_in(jid, *job_args), @threshold&.retry_in(*job_args)].compact.max
+
+        Sidekiq::Client.enqueue_to_in(work.queue, retry_in, Object.const_get(job_class), *job_args)
       end
     end
   end

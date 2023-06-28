@@ -41,6 +41,11 @@ module Sidekiq
         any? { |s| s.throttled?(*args) }
       end
 
+      # @return [Float] How long, in seconds, before we'll next be able to take on jobs
+      def retry_in(*args)
+        max { |s| s.retry_in(*args) }
+      end
+
       # Marks job as being processed.
       # @return [void]
       def finalize!(*args)
