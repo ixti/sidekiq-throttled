@@ -38,9 +38,9 @@ module Sidekiq
       # @param [#call] key_suffix Dynamic key suffix generator.
       # @param [#call] observer Process called after throttled.
       # @param [#to_s] requeue_strategy What to do with jobs that are throttled
-      def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil, observer: nil, requeue_strategy: :enqueue) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
+      def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil, observer: nil, requeue_strategy: nil) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
         @observer = observer
-        @requeue_strategy = requeue_strategy
+        @requeue_strategy = requeue_strategy || Throttled.configuration.default_requeue_strategy
 
         @concurrency = StrategyCollection.new(concurrency,
           strategy:   Concurrency,

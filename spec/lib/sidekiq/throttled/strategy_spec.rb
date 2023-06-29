@@ -45,6 +45,42 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         key_suffix: key_suffix
       })
     end
+
+    it "uses :enqueue requeue_strategy by default" do
+      key_suffix = ->(_) {}
+
+      instance = described_class.new(:foo, threshold: { limit: 123, period: 456, key_suffix: key_suffix })
+      expect(instance.requeue_strategy).to eq :enqueue
+    end
+
+    it "uses specified requeue_strategy" do
+      key_suffix = ->(_) {}
+
+      instance = described_class.new(:foo, threshold: { limit: 123, period: 456, key_suffix: key_suffix },
+        requeue_strategy: :schedule)
+      expect(instance.requeue_strategy).to eq :schedule
+    end
+
+    context "when a default_requeue_strategy is set" do
+      before { Sidekiq::Throttled.configuration.default_requeue_strategy = :schedule }
+
+      after { Sidekiq::Throttled.configuration.reset! }
+
+      it "uses the default when not overridden" do
+        key_suffix = ->(_) {}
+
+        instance = described_class.new(:foo, threshold: { limit: 123, period: 456, key_suffix: key_suffix })
+        expect(instance.requeue_strategy).to eq :schedule
+      end
+
+      it "allows overriding the default" do
+        key_suffix = ->(_) {}
+
+        instance = described_class.new(:foo, threshold: { limit: 123, period: 456, key_suffix: key_suffix },
+          requeue_strategy: :enqueue)
+        expect(instance.requeue_strategy).to eq :enqueue
+      end
+    end
   end
 
   describe "#throttled?" do
