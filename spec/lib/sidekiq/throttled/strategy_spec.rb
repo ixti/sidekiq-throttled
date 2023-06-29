@@ -297,7 +297,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           allow(subject.threshold).to receive(:retry_in).and_return(300.0)
         end
 
-        it "reschedules for when the threshold strategy says to" do
+        it "reschedules for when the threshold strategy says to, plus some jitter" do
           # Requeue the work, see that it ends up in 'schedule'
           expect { subject.requeue_throttled(work) }.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
 
@@ -311,7 +311,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
             end
           end
           expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1], "queue" => "queue:default")
-          expect(score.to_f).to be_within(5.0).of(Time.now.to_f + 300.0)
+          expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
         end
       end
 
@@ -322,7 +322,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           allow(subject.concurrency).to receive(:retry_in).and_return(300.0)
         end
 
-        it "reschedules for when the concurrency strategy says to" do
+        it "reschedules for when the concurrency strategy says to, plus some jitter" do
           # Requeue the work, see that it ends up in 'schedule'
           expect { subject.requeue_throttled(work) }.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
 
@@ -336,7 +336,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
             end
           end
           expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1], "queue" => "queue:default")
-          expect(score.to_f).to be_within(5.0).of(Time.now.to_f + 300.0)
+          expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
         end
       end
 
@@ -348,7 +348,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           allow(subject.threshold).to receive(:retry_in).and_return(500.0)
         end
 
-        it "reschedules for the later of what the two say" do
+        it "reschedules for the later of what the two say, plus some jitter" do
           # Requeue the work, see that it ends up in 'schedule'
           expect { subject.requeue_throttled(work) }.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
 
@@ -362,7 +362,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
             end
           end
           expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1], "queue" => "queue:default")
-          expect(score.to_f).to be_within(5.0).of(Time.now.to_f + 500.0)
+          expect(score.to_f).to be_within(51.0).of(Time.now.to_f + 550.0)
         end
       end
     end

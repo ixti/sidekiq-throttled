@@ -118,13 +118,26 @@ module Sidekiq
 
       def reschedule_throttled(work)
         message = JSON.parse(work.job)
-        jid = message.fetch("jid") { return false }
         job_class = message.fetch("wrapped") { message.fetch("class") { return false } }
         job_args = message["args"]
 
-        retry_in = [@concurrency&.retry_in(jid, *job_args), @threshold&.retry_in(*job_args)].compact.max
+        Sidekiq::Client.enqueue_to_in(work.queue, retry_in(work), Object.const_get(job_class), *job_args)
+      end
 
-        Sidekiq::Client.enqueue_to_in(work.queue, retry_in, Object.const_get(job_class), *job_args)
+      def retry_in(work)
+        message = JSON.parse(work.job)
+        jid = message.fetch("jid") { return false }
+        job_args = message["args"]
+
+        # Ask both concurrency and threshold, if relevant, how long minimum until we can retry.
+        # If we get two answers, take the longer one.
+        interval = [@concurrency&.retry_in(jid, *job_args), @threshold&.retry_in(*job_args)].compact.max
+
+        # Add a random amount of jitter, proportional to the length of the minimum retry time.
+        # This helps spread out jobs more evenly and avoid clumps of jobs on the queue.
+        interval += rand(interval / 5) if interval > 10
+
+        interval
       end
     end
   end
