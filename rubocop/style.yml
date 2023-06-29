@@ -46,6 +46,9 @@ Style/OptionalBooleanParameter:
 Style/RedundantAssignment:
   Enabled: true
 
+Style/RedundantCurrentDirectoryInPath:
+  Enabled: false
+
 Style/RedundantFetchBlock:
   Enabled: true
 
