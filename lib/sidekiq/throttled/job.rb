@@ -14,7 +14,8 @@ module Sidekiq
     #       include Sidekiq::Throttled::Job
     #
     #       sidkiq_options :queue => :my_queue
-    #       sidekiq_throttle :threshold => { :limit => 123, :period => 1.hour }, :requeue_with => :schedule
+    #       sidekiq_throttle :threshold => { :limit => 123, :period => 1.hour },
+    #                        :requeue => { :to => :other_queue, :with => :schedule }
     #
     #       def perform
     #         # ...
@@ -32,7 +33,7 @@ module Sidekiq
       #
       # @private
       def self.included(worker)
-        worker.sidekiq_class_attribute :sidekiq_throttled_requeue_with # :enqueue | :schedule
+        worker.sidekiq_class_attribute :sidekiq_throttled_requeue_options
         worker.send(:extend, ClassMethods)
       end
 
@@ -74,16 +75,28 @@ module Sidekiq
         #       })
         #     end
         #
-        # @param [#to_s] requeue_with What to do with jobs that are throttled
+        # @example Allow max 123 MyJob jobs per hour, and when jobs are throttled, schedule them for later in :other_queue
+        #
+        #     class MyJob
+        #       include Sidekiq::Job
+        #       include Sidekiq::Throttled::Job
+        #
+        #       sidekiq_throttle({
+        #         :threshold => { :limit => 123, :period => 1.hour },
+        #         :requeue => { :to => :other_queue, :with => :schedule }
+        #       })
+        #     end
+        #
+        # @param [Hash] requeue What to do with jobs that are throttled
         # @see Registry.add for other parameters
         # @return [void]
         def sidekiq_throttle(**kwargs)
-          requeue_with = kwargs.delete(:requeue_with) || Throttled.configuration.default_requeue_with
-          unless VALID_VALUES_FOR_REQUEUE_WITH.include?(requeue_with)
-            raise ArgumentError, "#{requeue_with} is not a valid value for :requeue_with"
+          requeue_options = Throttled.configuration.default_requeue_options.merge(kwargs.delete(:requeue) || {})
+          unless VALID_VALUES_FOR_REQUEUE_WITH.include?(requeue_options[:with])
+            raise ArgumentError, "requeue: #{requeue_options[:with]} is not a valid value for :with"
           end
 
-          self.sidekiq_throttled_requeue_with = requeue_with
+          self.sidekiq_throttled_requeue_options = requeue_options
 
           Registry.add(self, **kwargs)
         end

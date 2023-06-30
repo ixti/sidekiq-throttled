@@ -227,7 +227,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
       Sidekiq::BasicFetch::UnitOfWork.new("queue:default", job, sidekiq_config)
     end
 
-    describe "with requeue_with = :enqueue" do
+    describe "with parameter with: :enqueue" do
       let(:options) { threshold }
 
       def enqueued_jobs(queue)
@@ -242,17 +242,31 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
       it "puts the job back on the queue" do
         expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to be_empty
 
         # Requeue the work
-        subject.requeue_throttled(work, requeue_with: :enqueue)
+        subject.requeue_throttled(work, with: :enqueue)
 
         # See that it is now on the end of the queue
         expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [1]], ["ThrottledTestJob", [3]],
                                                 ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to be_empty
+      end
+
+      it "puts the job back on a different queue when specified" do
+        expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to be_empty
+
+        # Requeue the work
+        subject.requeue_throttled(work, with: :enqueue, to: :other_queue)
+
+        # See that it is now on the end of the queue
+        expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to eq([["ThrottledTestJob", [1]]])
       end
     end
 
-    describe "with requeue_with = :schedule" do
+    describe "with parameter with: :schedule" do
       def scheduled_redis_item_and_score
         Sidekiq.redis do |conn|
           # Depending on whether we have redis-client (for Sidekiq 7) or redis-rb (for older Sidekiq),
@@ -275,11 +289,23 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         it "reschedules for when the threshold strategy says to, plus some jitter" do
           # Requeue the work, see that it ends up in 'schedule'
           expect do
-            subject.requeue_throttled(work, requeue_with: :schedule)
+            subject.requeue_throttled(work, with: :schedule)
           end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
 
           item, score = scheduled_redis_item_and_score
           expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1], "queue" => "queue:default")
+          expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
+        end
+
+        it "reschedules for a different queue if specified" do
+          # Requeue the work, see that it ends up in 'schedule'
+          expect do
+            subject.requeue_throttled(work, with: :schedule, to: :other_queue)
+          end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
+
+          item, score = scheduled_redis_item_and_score
+          expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
+            "queue" => "queue:other_queue")
           expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
         end
       end
@@ -294,7 +320,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         it "reschedules for when the concurrency strategy says to, plus some jitter" do
           # Requeue the work, see that it ends up in 'schedule'
           expect do
-            subject.requeue_throttled(work, requeue_with: :schedule)
+            subject.requeue_throttled(work, with: :schedule)
           end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
 
           item, score = scheduled_redis_item_and_score
@@ -314,7 +340,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         it "reschedules for the later of what the two say, plus some jitter" do
           # Requeue the work, see that it ends up in 'schedule'
           expect do
-            subject.requeue_throttled(work, requeue_with: :schedule)
+            subject.requeue_throttled(work, with: :schedule)
           end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
 
           item, score = scheduled_redis_item_and_score

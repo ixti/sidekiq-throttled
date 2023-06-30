@@ -19,20 +19,38 @@ RSpec.describe Sidekiq::Throttled::Job do
 
       working_class.sidekiq_throttle(foo: :bar)
 
-      expect(working_class.sidekiq_throttled_requeue_with).to eq :enqueue
+      expect(working_class.sidekiq_throttled_requeue_options).to eq({ with: :enqueue })
     end
 
-    it "accepts and stores a requeue_with parameter" do
+    it "accepts and stores a requeue parameter including :with" do
       expect(Sidekiq::Throttled::Registry)
         .to receive(:add).with(working_class, foo: :bar)
 
-      working_class.sidekiq_throttle(foo: :bar, requeue_with: :schedule)
+      working_class.sidekiq_throttle(foo: :bar, requeue: { with: :schedule })
 
-      expect(working_class.sidekiq_throttled_requeue_with).to eq :schedule
+      expect(working_class.sidekiq_throttled_requeue_options).to eq({ with: :schedule })
     end
 
-    context "when a default_requeue_with is set" do
-      before { Sidekiq::Throttled.configuration.default_requeue_with = :schedule }
+    it "accepts and stores a requeue parameter including :to" do
+      expect(Sidekiq::Throttled::Registry)
+        .to receive(:add).with(working_class, foo: :bar)
+
+      working_class.sidekiq_throttle(foo: :bar, requeue: { to: :other_queue })
+
+      expect(working_class.sidekiq_throttled_requeue_options).to eq({ to: :other_queue, with: :enqueue })
+    end
+
+    it "accepts and stores a requeue parameter including both :to and :with" do
+      expect(Sidekiq::Throttled::Registry)
+        .to receive(:add).with(working_class, foo: :bar)
+
+      working_class.sidekiq_throttle(foo: :bar, requeue: { to: :other_queue, with: :schedule })
+
+      expect(working_class.sidekiq_throttled_requeue_options).to eq({ to: :other_queue, with: :schedule })
+    end
+
+    context "when default_requeue_options are set" do
+      before { Sidekiq::Throttled.configuration.default_requeue_options = { with: :schedule } }
 
       after { Sidekiq::Throttled.configuration.reset! }
 
@@ -42,16 +60,34 @@ RSpec.describe Sidekiq::Throttled::Job do
 
         working_class.sidekiq_throttle(foo: :bar)
 
-        expect(working_class.sidekiq_throttled_requeue_with).to eq :schedule
+        expect(working_class.sidekiq_throttled_requeue_options).to eq({ with: :schedule })
+      end
+
+      it "uses the default alongside a requeue parameter including :to" do
+        expect(Sidekiq::Throttled::Registry)
+          .to receive(:add).with(working_class, foo: :bar)
+
+        working_class.sidekiq_throttle(foo: :bar, requeue: { to: :other_queue })
+
+        expect(working_class.sidekiq_throttled_requeue_options).to eq({ to: :other_queue, with: :schedule })
       end
 
       it "allows overriding the default" do
         expect(Sidekiq::Throttled::Registry)
           .to receive(:add).with(working_class, foo: :bar)
 
-        working_class.sidekiq_throttle(foo: :bar, requeue_with: :enqueue)
+        working_class.sidekiq_throttle(foo: :bar, requeue: { with: :enqueue })
 
-        expect(working_class.sidekiq_throttled_requeue_with).to eq :enqueue
+        expect(working_class.sidekiq_throttled_requeue_options).to eq({ with: :enqueue })
+      end
+
+      it "allows overriding the default and including a :to parameter" do
+        expect(Sidekiq::Throttled::Registry)
+          .to receive(:add).with(working_class, foo: :bar)
+
+        working_class.sidekiq_throttle(foo: :bar, requeue: { to: :other_queue, with: :enqueue })
+
+        expect(working_class.sidekiq_throttled_requeue_options).to eq({ to: :other_queue, with: :enqueue })
       end
     end
   end
