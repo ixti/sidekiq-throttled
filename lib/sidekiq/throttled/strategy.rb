@@ -24,11 +24,11 @@ module Sidekiq
       #   @return [Proc, nil]
       attr_reader :observer
 
-      # @!attribute [r] requeue_strategy
+      # @!attribute [r] requeue_with
       #   @return [String]
-      attr_reader :requeue_strategy
+      attr_reader :requeue_with
 
-      REQUEUE_STRATEGIES = %i[enqueue schedule].freeze
+      VALID_VALUES_FOR_REQUEUE_WITH = %i[enqueue schedule].freeze
 
       # @param [#to_s] name
       # @param [Hash] concurrency Concurrency options.
@@ -37,10 +37,10 @@ module Sidekiq
       #   See keyword args of {Strategy::Threshold#initialize} for details.
       # @param [#call] key_suffix Dynamic key suffix generator.
       # @param [#call] observer Process called after throttled.
-      # @param [#to_s] requeue_strategy What to do with jobs that are throttled
-      def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil, observer: nil, requeue_strategy: nil) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
+      # @param [#to_s] requeue_with What to do with jobs that are throttled
+      def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil, observer: nil, requeue_with: nil) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
         @observer = observer
-        @requeue_strategy = requeue_strategy || Throttled.configuration.default_requeue_strategy
+        @requeue_with = requeue_with || Throttled.configuration.default_requeue_with
 
         @concurrency = StrategyCollection.new(concurrency,
           strategy:   Concurrency,
@@ -54,9 +54,9 @@ module Sidekiq
 
         raise ArgumentError, "Neither :concurrency nor :threshold given" unless @concurrency.any? || @threshold.any?
 
-        return if REQUEUE_STRATEGIES.include?(@requeue_strategy)
+        return if VALID_VALUES_FOR_REQUEUE_WITH.include?(@requeue_with)
 
-        raise ArgumentError, "#{requeue_strategy} is not a valid :requeue_strategy"
+        raise ArgumentError, "#{requeue_with} is not a valid value for :requeue_with"
       end
 
       # @return [Boolean] whenever strategy has dynamic config
@@ -84,11 +84,11 @@ module Sidekiq
         false
       end
 
-      # Return throttled job to be executed later. Implementation depends on the requeue_strategy.
+      # Return throttled job to be executed later. Implementation depends on the value of requeue_with.
       #
       # @return [void]
       def requeue_throttled(work)
-        case requeue_strategy
+        case requeue_with
         when :enqueue
           # Push the job back to the head of the queue.
           # This is the same operation Sidekiq performs upon `Sidekiq::Worker.perform_async` call.
@@ -97,7 +97,7 @@ module Sidekiq
           # Find out when we will next be able to execute this job, and reschedule for then.
           reschedule_throttled(work)
         else
-          raise "unrecognized requeue_strategy #{requeue_strategy}"
+          raise "unrecognized requeue_with option #{requeue_with}"
         end
       end
 

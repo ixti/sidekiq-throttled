@@ -4,7 +4,7 @@ module Sidekiq
   module Throttled
     # Configuration holder.
     class Configuration
-      attr_reader :default_requeue_strategy
+      attr_reader :default_requeue_with
 
       # Class constructor.
       def initialize
@@ -16,7 +16,7 @@ module Sidekiq
       # @return [self]
       def reset!
         @inherit_strategies = false
-        @default_requeue_strategy = :enqueue
+        @default_requeue_with = :enqueue
 
         self
       end
@@ -53,8 +53,8 @@ module Sidekiq
       # Options are `:enqueue` (put them on the end of the queue) and `:schedule` (schedule for later).
       # Default: `:enqueue`
       #
-      def default_requeue_strategy=(value)
-        @default_requeue_strategy = value.intern
+      def default_requeue_with=(value)
+        @default_requeue_with = value.intern
       end
     end
   end

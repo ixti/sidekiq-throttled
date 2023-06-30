@@ -46,23 +46,23 @@ RSpec.describe Sidekiq::Throttled::Strategy do
       })
     end
 
-    it "uses :enqueue requeue_strategy by default" do
+    it "uses :enqueue requeue_with by default" do
       key_suffix = ->(_) {}
 
       instance = described_class.new(:foo, threshold: { limit: 123, period: 456, key_suffix: key_suffix })
-      expect(instance.requeue_strategy).to eq :enqueue
+      expect(instance.requeue_with).to eq :enqueue
     end
 
-    it "uses specified requeue_strategy" do
+    it "uses specified requeue_with" do
       key_suffix = ->(_) {}
 
       instance = described_class.new(:foo, threshold: { limit: 123, period: 456, key_suffix: key_suffix },
-        requeue_strategy: :schedule)
-      expect(instance.requeue_strategy).to eq :schedule
+        requeue_with: :schedule)
+      expect(instance.requeue_with).to eq :schedule
     end
 
-    context "when a default_requeue_strategy is set" do
-      before { Sidekiq::Throttled.configuration.default_requeue_strategy = :schedule }
+    context "when a default_requeue_with is set" do
+      before { Sidekiq::Throttled.configuration.default_requeue_with = :schedule }
 
       after { Sidekiq::Throttled.configuration.reset! }
 
@@ -70,15 +70,15 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         key_suffix = ->(_) {}
 
         instance = described_class.new(:foo, threshold: { limit: 123, period: 456, key_suffix: key_suffix })
-        expect(instance.requeue_strategy).to eq :schedule
+        expect(instance.requeue_with).to eq :schedule
       end
 
       it "allows overriding the default" do
         key_suffix = ->(_) {}
 
         instance = described_class.new(:foo, threshold: { limit: 123, period: 456, key_suffix: key_suffix },
-          requeue_strategy: :enqueue)
-        expect(instance.requeue_strategy).to eq :enqueue
+          requeue_with: :enqueue)
+        expect(instance.requeue_with).to eq :enqueue
       end
     end
   end
@@ -263,7 +263,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
       Sidekiq::BasicFetch::UnitOfWork.new("queue:default", job, sidekiq_config)
     end
 
-    context "with requeue_strategy = :enqueue" do
+    context "with requeue_with = :enqueue" do
       def enqueued_jobs(queue)
         Sidekiq.redis do |conn|
           conn.lrange("queue:#{queue}", 0, -1).map do |job|
@@ -273,7 +273,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           end
         end
       end
-      let(:options) { threshold.merge(requeue_strategy: :enqueue) }
+      let(:options) { threshold.merge(requeue_with: :enqueue) }
 
       it "puts the job back on the queue" do
         expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
@@ -287,8 +287,8 @@ RSpec.describe Sidekiq::Throttled::Strategy do
       end
     end
 
-    context "with requeue_strategy = :schedule" do
-      let(:options) { basic_options.merge(requeue_strategy: :schedule) }
+    context "with requeue_with = :schedule" do
+      let(:options) { basic_options.merge(requeue_with: :schedule) }
 
       context "when threshold constraints given" do
         let(:basic_options) { threshold }
