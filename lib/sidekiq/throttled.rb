@@ -77,10 +77,10 @@ module Sidekiq
       # @return [void]
       def requeue_throttled(work)
         message = JSON.parse(work.job)
-        job_class = message.fetch("wrapped") { message.fetch("class") { return false } }
+        job_class = Object.const_get(message.fetch("wrapped") { message.fetch("class") { return false } })
 
         Registry.get job_class do |strategy|
-          strategy.requeue_throttled(work)
+          strategy.requeue_throttled(work, requeue_with: job_class.sidekiq_throttled_requeue_with)
         end
       end
     end

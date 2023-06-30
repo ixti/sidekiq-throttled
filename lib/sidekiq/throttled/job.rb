@@ -14,7 +14,7 @@ module Sidekiq
     #       include Sidekiq::Throttled::Job
     #
     #       sidkiq_options :queue => :my_queue
-    #       sidekiq_throttle :threshold => { :limit => 123, :period => 1.hour }
+    #       sidekiq_throttle :threshold => { :limit => 123, :period => 1.hour }, :requeue_with => :schedule
     #
     #       def perform
     #         # ...
@@ -23,6 +23,8 @@ module Sidekiq
     #
     # @see ClassMethods
     module Job
+      VALID_VALUES_FOR_REQUEUE_WITH = %i[enqueue schedule].freeze
+
       # Extends worker class with {ClassMethods}.
       #
       # @note Using `included` hook with extending worker with {ClassMethods}
@@ -30,6 +32,7 @@ module Sidekiq
       #
       # @private
       def self.included(worker)
+        worker.sidekiq_class_attribute :sidekiq_throttled_requeue_with # :enqueue | :schedule
         worker.send(:extend, ClassMethods)
       end
 
@@ -71,9 +74,17 @@ module Sidekiq
         #       })
         #     end
         #
-        # @see Registry.add
+        # @param [#to_s] requeue_with What to do with jobs that are throttled
+        # @see Registry.add for other parameters
         # @return [void]
         def sidekiq_throttle(**kwargs)
+          requeue_with = kwargs.delete(:requeue_with) || Throttled.configuration.default_requeue_with
+          unless VALID_VALUES_FOR_REQUEUE_WITH.include?(requeue_with)
+            raise ArgumentError, "#{requeue_with} is not a valid value for :requeue_with"
+          end
+
+          self.sidekiq_throttled_requeue_with = requeue_with
+
           Registry.add(self, **kwargs)
         end
 

@@ -24,12 +24,6 @@ module Sidekiq
       #   @return [Proc, nil]
       attr_reader :observer
 
-      # @!attribute [r] requeue_with
-      #   @return [String]
-      attr_reader :requeue_with
-
-      VALID_VALUES_FOR_REQUEUE_WITH = %i[enqueue schedule].freeze
-
       # @param [#to_s] name
       # @param [Hash] concurrency Concurrency options.
       #   See keyword args of {Strategy::Concurrency#initialize} for details.
@@ -37,10 +31,8 @@ module Sidekiq
       #   See keyword args of {Strategy::Threshold#initialize} for details.
       # @param [#call] key_suffix Dynamic key suffix generator.
       # @param [#call] observer Process called after throttled.
-      # @param [#to_s] requeue_with What to do with jobs that are throttled
-      def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil, observer: nil, requeue_with: nil) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
+      def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil, observer: nil)
         @observer = observer
-        @requeue_with = requeue_with || Throttled.configuration.default_requeue_with
 
         @concurrency = StrategyCollection.new(concurrency,
           strategy:   Concurrency,
@@ -53,10 +45,6 @@ module Sidekiq
           key_suffix: key_suffix)
 
         raise ArgumentError, "Neither :concurrency nor :threshold given" unless @concurrency.any? || @threshold.any?
-
-        return if VALID_VALUES_FOR_REQUEUE_WITH.include?(@requeue_with)
-
-        raise ArgumentError, "#{requeue_with} is not a valid value for :requeue_with"
       end
 
       # @return [Boolean] whenever strategy has dynamic config
@@ -84,10 +72,13 @@ module Sidekiq
         false
       end
 
-      # Return throttled job to be executed later. Implementation depends on the value of requeue_with.
+      # Return throttled job to be executed later. Implementation depends on the value of requeue_with:
+      # :enqueue means put the job back at the end of the queue immediately
+      # :schedule means schedule enqueueing the job for a later time when we expect to have capacity
       #
+      # @param [#to_s] requeue_with How to handle the throttled job
       # @return [void]
-      def requeue_throttled(work)
+      def requeue_throttled(work, requeue_with:)
         case requeue_with
         when :enqueue
           # Push the job back to the head of the queue.
