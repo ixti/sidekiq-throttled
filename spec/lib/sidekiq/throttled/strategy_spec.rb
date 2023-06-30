@@ -264,6 +264,31 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
         expect(enqueued_jobs("other_queue")).to eq([["ThrottledTestJob", [1]]])
       end
+
+      it "accepts a Proc for :with argument" do
+        expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to be_empty
+
+        # Requeue the work
+        subject.requeue_throttled(work, with: ->(_arg) { :enqueue })
+
+        # See that it is now on the end of the queue
+        expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [1]], ["ThrottledTestJob", [3]],
+                                                ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to be_empty
+      end
+
+      it "accepts a Proc for :to argument" do
+        expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to be_empty
+
+        # Requeue the work
+        subject.requeue_throttled(work, with: :enqueue, to: ->(_arg) { :other_queue })
+
+        # See that it is now on the end of the queue
+        expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to eq([["ThrottledTestJob", [1]]])
+      end
     end
 
     describe "with parameter with: :schedule" do
@@ -301,6 +326,29 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           # Requeue the work, see that it ends up in 'schedule'
           expect do
             subject.requeue_throttled(work, with: :schedule, to: :other_queue)
+          end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
+
+          item, score = scheduled_redis_item_and_score
+          expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
+            "queue" => "queue:other_queue")
+          expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
+        end
+
+        it "accepts a Proc for :with argument" do
+          # Requeue the work, see that it ends up in 'schedule'
+          expect do
+            subject.requeue_throttled(work, with: ->(_arg) { :schedule })
+          end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
+
+          item, score = scheduled_redis_item_and_score
+          expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1], "queue" => "queue:default")
+          expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
+        end
+
+        it "accepts a Proc for :to argument" do
+          # Requeue the work, see that it ends up in 'schedule'
+          expect do
+            subject.requeue_throttled(work, with: :schedule, to: ->(_arg) { :other_queue })
           end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
 
           item, score = scheduled_redis_item_and_score

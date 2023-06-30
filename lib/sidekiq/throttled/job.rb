@@ -75,7 +75,7 @@ module Sidekiq
         #       })
         #     end
         #
-        # @example Allow max 123 MyJob jobs per hour, and when jobs are throttled, schedule them for later in :other_queue
+        # @example Allow max 123 MyJob jobs per hour; when jobs are throttled, schedule them for later in :other_queue
         #
         #     class MyJob
         #       include Sidekiq::Job

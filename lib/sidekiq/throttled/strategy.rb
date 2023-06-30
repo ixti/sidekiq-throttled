@@ -76,20 +76,26 @@ module Sidekiq
       # :enqueue means put the job back at the end of the queue immediately
       # :schedule means schedule enqueueing the job for a later time when we expect to have capacity
       #
-      # @param [#to_s] with How to handle the throttled job
-      # @param [#to_s] to Name of the queue to re-queue the job to. If not specified, will use the job's original queue.
+      # @param [#to_s, #call] with How to handle the throttled job
+      # @param [#to_s, #call] to Name of the queue to re-queue the job to.
+      #                          If not specified, will use the job's original queue.
       # @return [void]
-      def requeue_throttled(work, with:, to: nil)
-        case with
+      def requeue_throttled(work, with:, to: nil) # rubocop:disable Metrics/MethodLength
+        # Resolve :with and :to arguments, calling them if they are Procs
+        job_args = JSON.parse(work.job)["args"]
+        requeue_with = with.respond_to?(:call) ? with.call(*job_args) : with
+        requeue_to = to.respond_to?(:call) ? to.call(*job_args) : to
+
+        case requeue_with
         when :enqueue
           # Push the job back to the head of the queue.
-          target_list = to.nil? ? work.queue : "queue:#{to}"
+          target_list = requeue_to.nil? ? work.queue : "queue:#{requeue_to}"
 
           # This is the same operation Sidekiq performs upon `Sidekiq::Worker.perform_async` call.
           Sidekiq.redis { |conn| conn.lpush(target_list, work.job) }
         when :schedule
           # Find out when we will next be able to execute this job, and reschedule for then.
-          reschedule_throttled(work, to: to)
+          reschedule_throttled(work, requeue_to: requeue_to)
         else
           raise "unrecognized :with option #{with}"
         end
@@ -110,12 +116,12 @@ module Sidekiq
 
       private
 
-      def reschedule_throttled(work, to: nil)
+      def reschedule_throttled(work, requeue_to: nil)
         message = JSON.parse(work.job)
         job_class = message.fetch("wrapped") { message.fetch("class") { return false } }
         job_args = message["args"]
 
-        target_queue = to.nil? ? work.queue : "queue:#{to}"
+        target_queue = requeue_to.nil? ? work.queue : "queue:#{requeue_to}"
         Sidekiq::Client.enqueue_to_in(target_queue, retry_in(work), Object.const_get(job_class), *job_args)
       end
 
