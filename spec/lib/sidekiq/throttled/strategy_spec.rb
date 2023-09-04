@@ -1,5 +1,12 @@
 # frozen_string_literal: true
 
+class ThrottledTestJob
+  include Sidekiq::Job
+  include Sidekiq::Throttled::Job
+
+  def perform(*); end
+end
+
 RSpec.describe Sidekiq::Throttled::Strategy do
   subject(:strategy) { described_class.new(:foo, **options) }
 
@@ -195,6 +202,199 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
       context "when neither concurrency nor threshold limits are reached" do
         it { is_expected.to be false }
+      end
+    end
+  end
+
+  describe "#requeue_throttled" do
+    let(:sidekiq_config) do
+      if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
+        Sidekiq::DEFAULTS
+      else
+        Sidekiq::Config.new(queues: %w[default]).default_capsule
+      end
+    end
+
+    let!(:work) do
+      # Sidekiq is FIFO queue, with head on right side of the list,
+      # meaning jobs below will be stored in 3, 2, 1 order.
+      ThrottledTestJob.perform_bulk([[1], [2], [3]])
+
+      # Pop the work off the queue
+      job = Sidekiq.redis do |conn|
+        conn.rpop("queue:default")
+      end
+      Sidekiq::BasicFetch::UnitOfWork.new("queue:default", job, sidekiq_config)
+    end
+
+    describe "with parameter with: :enqueue" do
+      let(:options) { threshold }
+
+      def enqueued_jobs(queue)
+        Sidekiq.redis do |conn|
+          conn.lrange("queue:#{queue}", 0, -1).map do |job|
+            JSON.parse(job).then do |payload|
+              [payload["class"], payload["args"]]
+            end
+          end
+        end
+      end
+
+      it "puts the job back on the queue" do
+        expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to be_empty
+
+        # Requeue the work
+        subject.requeue_throttled(work, with: :enqueue)
+
+        # See that it is now on the end of the queue
+        expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [1]], ["ThrottledTestJob", [3]],
+                                                ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to be_empty
+      end
+
+      it "puts the job back on a different queue when specified" do
+        expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to be_empty
+
+        # Requeue the work
+        subject.requeue_throttled(work, with: :enqueue, to: :other_queue)
+
+        # See that it is now on the end of the queue
+        expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to eq([["ThrottledTestJob", [1]]])
+      end
+
+      it "accepts a Proc for :with argument" do
+        expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to be_empty
+
+        # Requeue the work
+        subject.requeue_throttled(work, with: ->(_arg) { :enqueue })
+
+        # See that it is now on the end of the queue
+        expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [1]], ["ThrottledTestJob", [3]],
+                                                ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to be_empty
+      end
+
+      it "accepts a Proc for :to argument" do
+        expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to be_empty
+
+        # Requeue the work
+        subject.requeue_throttled(work, with: :enqueue, to: ->(_arg) { :other_queue })
+
+        # See that it is now on the end of the queue
+        expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
+        expect(enqueued_jobs("other_queue")).to eq([["ThrottledTestJob", [1]]])
+      end
+    end
+
+    describe "with parameter with: :schedule" do
+      def scheduled_redis_item_and_score
+        Sidekiq.redis do |conn|
+          # Depending on whether we have redis-client (for Sidekiq 7) or redis-rb (for older Sidekiq),
+          # zscan takes different arguments
+          if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
+            conn.zscan("schedule", 0).last.first
+          else
+            conn.zscan("schedule").first
+          end
+        end
+      end
+
+      context "when threshold constraints given" do
+        let(:options) { threshold }
+
+        before do
+          allow(subject.threshold).to receive(:retry_in).and_return(300.0)
+        end
+
+        it "reschedules for when the threshold strategy says to, plus some jitter" do
+          # Requeue the work, see that it ends up in 'schedule'
+          expect do
+            subject.requeue_throttled(work, with: :schedule)
+          end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
+
+          item, score = scheduled_redis_item_and_score
+          expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1], "queue" => "queue:default")
+          expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
+        end
+
+        it "reschedules for a different queue if specified" do
+          # Requeue the work, see that it ends up in 'schedule'
+          expect do
+            subject.requeue_throttled(work, with: :schedule, to: :other_queue)
+          end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
+
+          item, score = scheduled_redis_item_and_score
+          expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
+            "queue" => "queue:other_queue")
+          expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
+        end
+
+        it "accepts a Proc for :with argument" do
+          # Requeue the work, see that it ends up in 'schedule'
+          expect do
+            subject.requeue_throttled(work, with: ->(_arg) { :schedule })
+          end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
+
+          item, score = scheduled_redis_item_and_score
+          expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1], "queue" => "queue:default")
+          expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
+        end
+
+        it "accepts a Proc for :to argument" do
+          # Requeue the work, see that it ends up in 'schedule'
+          expect do
+            subject.requeue_throttled(work, with: :schedule, to: ->(_arg) { :other_queue })
+          end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
+
+          item, score = scheduled_redis_item_and_score
+          expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
+            "queue" => "queue:other_queue")
+          expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
+        end
+      end
+
+      context "when concurrency constraints given" do
+        let(:options) { concurrency }
+
+        before do
+          allow(subject.concurrency).to receive(:retry_in).and_return(300.0)
+        end
+
+        it "reschedules for when the concurrency strategy says to, plus some jitter" do
+          # Requeue the work, see that it ends up in 'schedule'
+          expect do
+            subject.requeue_throttled(work, with: :schedule)
+          end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
+
+          item, score = scheduled_redis_item_and_score
+          expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1], "queue" => "queue:default")
+          expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
+        end
+      end
+
+      context "when threshold and concurrency constraints given" do
+        let(:options) { threshold.merge concurrency }
+
+        before do
+          allow(subject.concurrency).to receive(:retry_in).and_return(300.0)
+          allow(subject.threshold).to receive(:retry_in).and_return(500.0)
+        end
+
+        it "reschedules for the later of what the two say, plus some jitter" do
+          # Requeue the work, see that it ends up in 'schedule'
+          expect do
+            subject.requeue_throttled(work, with: :schedule)
+          end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
+
+          item, score = scheduled_redis_item_and_score
+          expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1], "queue" => "queue:default")
+          expect(score.to_f).to be_within(51.0).of(Time.now.to_f + 550.0)
+        end
       end
     end
   end

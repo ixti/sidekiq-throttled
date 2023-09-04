@@ -40,6 +40,62 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
     end
   end
 
+  describe "#retry_in" do
+    context "when limit exceeded with all jobs happening just now" do
+      before { 5.times { strategy.throttled? } }
+
+      it "tells us to wait roughly one period" do
+        expect(subject.retry_in).to be_within(0.1).of(10)
+      end
+    end
+
+    context "when limit exceeded, with first job happening 8 seconds ago" do
+      before do
+        Timecop.travel(Time.now - 8) do
+          strategy.throttled?
+        end
+        4.times { strategy.throttled? }
+      end
+
+      it "tells us to wait 2 seconds" do
+        expect(subject.retry_in).to be_within(0.1).of(2)
+      end
+    end
+
+    context "when limit not exceeded, because the oldest job was more than a period ago" do
+      before do
+        Timecop.travel(Time.now - 12) do
+          strategy.throttled?
+        end
+        4.times { strategy.throttled? }
+      end
+
+      it "tells us we do not need to wait" do
+        expect(subject.retry_in).to eq 0
+      end
+    end
+
+    context "when limit not exceeded, because there are fewer jobs than the limit" do
+      before do
+        4.times { strategy.throttled? }
+      end
+
+      it "tells us we do not need to wait" do
+        expect(subject.retry_in).to eq 0
+      end
+    end
+
+    context "when there is no limit" do
+      subject(:strategy) { described_class.new :test, limit: -> {}, period: 10 }
+
+      before { 5.times { strategy.throttled? } }
+
+      it "tells us we do not need to wait" do
+        expect(subject.retry_in).to eq 0
+      end
+    end
+  end
+
   describe "#count" do
     subject { strategy.count }
 

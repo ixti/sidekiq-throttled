@@ -31,7 +31,7 @@ module Sidekiq
       #   See keyword args of {Strategy::Threshold#initialize} for details.
       # @param [#call] key_suffix Dynamic key suffix generator.
       # @param [#call] observer Process called after throttled.
-      def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil, observer: nil) # rubocop:disable Metrics/MethodLength
+      def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil, observer: nil)
         @observer = observer
 
         @concurrency = StrategyCollection.new(concurrency,
@@ -44,9 +44,7 @@ module Sidekiq
           name:       name,
           key_suffix: key_suffix)
 
-        return if @concurrency.any? || @threshold.any?
-
-        raise ArgumentError, "Neither :concurrency nor :threshold given"
+        raise ArgumentError, "Neither :concurrency nor :threshold given" unless @concurrency.any? || @threshold.any?
       end
 
       # @return [Boolean] whenever strategy has dynamic config
@@ -74,6 +72,35 @@ module Sidekiq
         false
       end
 
+      # Return throttled job to be executed later. Implementation depends on the value of `with`:
+      # :enqueue means put the job back at the end of the queue immediately
+      # :schedule means schedule enqueueing the job for a later time when we expect to have capacity
+      #
+      # @param [#to_s, #call] with How to handle the throttled job
+      # @param [#to_s, #call] to Name of the queue to re-queue the job to.
+      #                          If not specified, will use the job's original queue.
+      # @return [void]
+      def requeue_throttled(work, with:, to: nil) # rubocop:disable Metrics/MethodLength
+        # Resolve :with and :to arguments, calling them if they are Procs
+        job_args = JSON.parse(work.job)["args"]
+        requeue_with = with.respond_to?(:call) ? with.call(*job_args) : with
+        requeue_to = to.respond_to?(:call) ? to.call(*job_args) : to
+
+        case requeue_with
+        when :enqueue
+          # Push the job back to the head of the queue.
+          target_list = requeue_to.nil? ? work.queue : "queue:#{requeue_to}"
+
+          # This is the same operation Sidekiq performs upon `Sidekiq::Worker.perform_async` call.
+          Sidekiq.redis { |conn| conn.lpush(target_list, work.job) }
+        when :schedule
+          # Find out when we will next be able to execute this job, and reschedule for then.
+          reschedule_throttled(work, requeue_to: requeue_to)
+        else
+          raise "unrecognized :with option #{with}"
+        end
+      end
+
       # Marks job as being processed.
       # @return [void]
       def finalize!(jid, *job_args)
@@ -85,6 +112,33 @@ module Sidekiq
       def reset!
         @concurrency&.reset!
         @threshold&.reset!
+      end
+
+      private
+
+      def reschedule_throttled(work, requeue_to: nil)
+        message = JSON.parse(work.job)
+        job_class = message.fetch("wrapped") { message.fetch("class") { return false } }
+        job_args = message["args"]
+
+        target_queue = requeue_to.nil? ? work.queue : "queue:#{requeue_to}"
+        Sidekiq::Client.enqueue_to_in(target_queue, retry_in(work), Object.const_get(job_class), *job_args)
+      end
+
+      def retry_in(work)
+        message = JSON.parse(work.job)
+        jid = message.fetch("jid") { return false }
+        job_args = message["args"]
+
+        # Ask both concurrency and threshold, if relevant, how long minimum until we can retry.
+        # If we get two answers, take the longer one.
+        interval = [@concurrency&.retry_in(jid, *job_args), @threshold&.retry_in(*job_args)].compact.max
+
+        # Add a random amount of jitter, proportional to the length of the minimum retry time.
+        # This helps spread out jobs more evenly and avoid clumps of jobs on the queue.
+        interval += rand(interval / 5) if interval > 10
+
+        interval
       end
     end
   end

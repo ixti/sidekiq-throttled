@@ -4,6 +4,8 @@ module Sidekiq
   module Throttled
     # Configuration holder.
     class Configuration
+      attr_reader :default_requeue_options
+
       # Class constructor.
       def initialize
         reset!
@@ -14,6 +16,7 @@ module Sidekiq
       # @return [self]
       def reset!
         @inherit_strategies = false
+        @default_requeue_options = { with: :enqueue }
 
         self
       end
@@ -44,6 +47,19 @@ module Sidekiq
       # @return [Boolean]
       def inherit_strategies?
         @inherit_strategies
+      end
+
+      # Specifies how we should return throttled jobs to the queue so they can be executed later.
+      # Expects a hash with keys that may include :with and :to
+      # For :with, options are `:enqueue` (put them on the end of the queue) and `:schedule` (schedule for later).
+      # For :to, the name of a sidekiq queue should be specified. If none is specified, jobs will by default be
+      # requeued to the same queue they were originally enqueued in.
+      # Default: {with: `:enqueue`}
+      #
+      def default_requeue_options=(options)
+        requeue_with = options.delete(:with).intern || :enqueue
+
+        @default_requeue_options = options.merge({ with: requeue_with })
       end
     end
   end
