@@ -57,7 +57,7 @@ RSpec.describe Sidekiq::Throttled::Patches::BasicFetch do
         expect(fetch.retrieve_work).to be_nil
       end
 
-      it "pushes job back to the end queue" do
+      it "pushes job back to the head of the queue" do
         expect { fetch.retrieve_work }
           .to change { enqueued_jobs("default") }
           .to eq([["ThrottledTestJob", [2]], ["ThrottledTestJob", [3]]])
@@ -74,7 +74,7 @@ RSpec.describe Sidekiq::Throttled::Patches::BasicFetch do
         expect(fetch.retrieve_work).to be_nil
       end
 
-      it "pushes job back to the end queue" do
+      it "pushes job back to the head of the queue" do
         expect { fetch.retrieve_work }
           .to change { enqueued_jobs("default") }
           .to eq([["ThrottledTestJob", [2]], ["ThrottledTestJob", [3]]])
