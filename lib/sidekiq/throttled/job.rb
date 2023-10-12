@@ -13,7 +13,7 @@ module Sidekiq
     #       include Sidekiq::Job
     #       include Sidekiq::Throttled::Job
     #
-    #       sidkiq_options :queue => :my_queue
+    #       sidekiq_options :queue => :my_queue
     #       sidekiq_throttle :threshold => { :limit => 123, :period => 1.hour }
     #
     #       def perform
