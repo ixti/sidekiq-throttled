@@ -11,18 +11,10 @@ end
 
 RSpec.describe Sidekiq::Throttled::Patches::BasicFetch do
   subject(:fetch) do
-    if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
-      Sidekiq.instance_variable_set(:@config, Sidekiq::DEFAULTS.dup)
-      Sidekiq.queues = %w[default]
-      Sidekiq::BasicFetch.new(Sidekiq)
-    else
-      config = Sidekiq::Config.new
-      config.queues = %w[default]
-      Sidekiq::BasicFetch.new(config.default_capsule)
-    end
+    config = Sidekiq::Config.new
+    config.queues = %w[default]
+    Sidekiq::BasicFetch.new(config.default_capsule)
   end
-
-  before { described_class.apply! }
 
   describe "#retrieve_work" do
     def enqueued_jobs(queue)

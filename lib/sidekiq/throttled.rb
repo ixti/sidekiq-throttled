@@ -40,17 +40,17 @@ module Sidekiq
   #       end
   #     end
   module Throttled
-    class << self
-      # @return [Configuration]
-      def configuration
-        @configuration ||= Configuration.new
-      end
+    @configuration = Configuration.new
 
-      # Hooks throttler into sidekiq.
-      #
-      # @return [void]
+    class << self
+      attr_reader :configuration
+
       def setup!
-        Sidekiq::Throttled::Patches::BasicFetch.apply!
+        Sidekiq.configure_server do |config|
+          config.server_middleware do |chain|
+            chain.add Sidekiq::Throttled::Middleware
+          end
+        end
       end
 
       # Tells whenever job is throttled or not.
@@ -58,11 +58,13 @@ module Sidekiq
       # @param [String] message Job's JSON payload
       # @return [Boolean]
       def throttled?(message)
-        message = JSON.parse message
-        job = message.fetch("wrapped") { message.fetch("class") { return false } }
-        jid = message.fetch("jid") { return false }
+        message = Sidekiq.load_json(message)
+        job     = message.fetch("wrapped") { message["class"] }
+        jid     = message["jid"]
 
-        Registry.get job do |strategy|
+        return false unless job && jid
+
+        Registry.get(job) do |strategy|
           return strategy.throttled?(jid, *message["args"])
         end
 
@@ -70,12 +72,6 @@ module Sidekiq
       rescue
         false
       end
-    end
-  end
-
-  configure_server do |config|
-    config.server_middleware do |chain|
-      chain.add Sidekiq::Throttled::Middleware
     end
   end
 end
