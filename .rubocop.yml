@@ -18,7 +18,7 @@ AllCops:
     - gemfiles/**/*
     - vendor/**/*
   NewCops: enable
-  TargetRubyVersion: 2.7
+  TargetRubyVersion: 3.0
 
 # Broken: https://github.com/rubocop/rubocop/issues/12113
 Bundler/DuplicatedGroup:
