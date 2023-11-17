@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - (BREAKING) Drop Ruby-2.7.x support
+- (BREAKING) Drop Sidekiq-6.x.x support
 
 
 ## [1.0.0.alpha.1] - 2023-06-08

@@ -9,7 +9,7 @@ module Sidekiq
     #
     # @private
     class Middleware
-      include Sidekiq::ServerMiddleware if Sidekiq::VERSION >= "6.5.0"
+      include Sidekiq::ServerMiddleware
 
       # Called within Sidekiq job processing
       def call(_worker, msg, _queue)
