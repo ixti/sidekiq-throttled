@@ -29,8 +29,8 @@ module Sidekiq
       #   in order to make API inline with `include Sidekiq::Job`.
       #
       # @private
-      def self.included(worker)
-        worker.send(:extend, ClassMethods)
+      def self.included(base)
+        base.extend(ClassMethods)
       end
 
       # Helper methods added to the singleton class of destination

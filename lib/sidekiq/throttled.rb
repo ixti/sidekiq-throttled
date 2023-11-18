@@ -2,11 +2,13 @@
 
 require "sidekiq"
 
-require_relative "./throttled/version"
-require_relative "./throttled/patches/basic_fetch"
-require_relative "./throttled/registry"
+require_relative "./throttled/config"
+require_relative "./throttled/cooldown"
 require_relative "./throttled/job"
 require_relative "./throttled/middleware"
+require_relative "./throttled/patches/basic_fetch"
+require_relative "./throttled/registry"
+require_relative "./throttled/version"
 require_relative "./throttled/worker"
 
 # @see https://github.com/mperham/sidekiq/
@@ -39,7 +41,35 @@ module Sidekiq
   #       end
   #     end
   module Throttled
+    MUTEX = Mutex.new
+    private_constant :MUTEX
+
+    @config   = Config.new.freeze
+    @cooldown = Cooldown[@config]
+
     class << self
+      # @api internal
+      #
+      # @return [Cooldown, nil]
+      attr_reader :cooldown
+
+      # @example
+      #   Sidekiq::Throttled.configure do |config|
+      #     config.cooldown_period = nil # Disable queues cooldown manager
+      #   end
+      #
+      # @yieldparam config [Config]
+      def configure
+        MUTEX.synchronize do
+          config = @config.dup
+
+          yield config
+
+          @config   = config.freeze
+          @cooldown = Cooldown[@config]
+        end
+      end
+
       def setup!
         Sidekiq.configure_server do |config|
           config.server_middleware do |chain|

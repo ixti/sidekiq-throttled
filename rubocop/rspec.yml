@@ -2,6 +2,10 @@ RSpec/ExampleLength:
   Enabled: true
   Max: 10
 
+RSpec/ExpectChange:
+  Enabled: true
+  EnforcedStyle: block
+
 RSpec/MultipleExpectations:
   Enabled: false
 

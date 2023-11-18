@@ -14,9 +14,12 @@ module Sidekiq
           work = super
 
           if work && Throttled.throttled?(work.job)
+            Throttled.cooldown&.notify_throttled(work.queue)
             requeue_throttled(work)
             return nil
           end
+
+          Throttled.cooldown&.notify_admitted(work.queue) if work
 
           work
         end
@@ -32,6 +35,15 @@ module Sidekiq
         # @return [void]
         def requeue_throttled(work)
           redis { |conn| conn.lpush(work.queue, work.job) }
+        end
+
+        # Returns list of queues to try to fetch jobs from.
+        #
+        # @note It may return an empty array.
+        # @param [Array<String>] queues
+        # @return [Array<String>]
+        def queues_cmd
+          super - (Throttled.cooldown&.queues || [])
         end
       end
     end

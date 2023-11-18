@@ -89,6 +89,25 @@ end
 ----
 
 
+=== Configuration
+
+[source,ruby]
+----
+Sidekiq::Throttled.configure do |config|
+  # Period in seconds to exclude queue from polling in case it returned
+  # {config.cooldown_threshold} amount of throttled jobs in a row. Set
+  # this value to `nil` to disable cooldown manager completely.
+  # Default: 2.0
+  config.cooldown_period = 2.0
+
+  # Exclude queue from polling after it returned given amount of throttled
+  # jobs in a row.
+  # Default: 1 (cooldown after first throttled job)
+  config.cooldown_threshold = 1
+end
+----
+
+
 === Observer
 
 You can specify an observer that will be called on throttling. To do so pass an
