@@ -3,7 +3,6 @@
 require "sidekiq"
 
 require_relative "./throttled/version"
-require_relative "./throttled/configuration"
 require_relative "./throttled/patches/basic_fetch"
 require_relative "./throttled/registry"
 require_relative "./throttled/job"
@@ -40,11 +39,7 @@ module Sidekiq
   #       end
   #     end
   module Throttled
-    @configuration = Configuration.new
-
     class << self
-      attr_reader :configuration
-
       def setup!
         Sidekiq.configure_server do |config|
           config.server_middleware do |chain|

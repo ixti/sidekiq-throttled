@@ -76,15 +76,7 @@ RSpec.describe Sidekiq::Throttled::Registry do
 
       before { described_class.add(parent_class.name, **threshold) }
 
-      it { is_expected.to be_nil }
-
-      context "when configuration has inherit strategy turned on" do
-        before { Sidekiq::Throttled.configuration.inherit_strategies = true }
-
-        after { Sidekiq::Throttled.configuration.reset! }
-
-        it { is_expected.to be described_class.get("Parent") }
-      end
+      it { is_expected.to be described_class.get("Parent") }
     end
   end
 

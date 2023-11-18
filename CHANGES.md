@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add Sidekiq-7.2 support
+
+### Changed
+
+- (BREAKING) Jobs inherit throttling strategy from their parent class, unless
+  explicitly overriden
+
 ### Fixed
 
 - Correctly finalize throttled jobs when used with ActiveJob
@@ -17,11 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - (BREAKING) Drop Ruby-2.7.x support
 - (BREAKING) Drop Sidekiq-6.x.x support
+- (BREAKING) Removed `Sidekiq::Throttled.configuration`
 
 
 ## [1.0.0.alpha.1] - 2023-06-08
 
-### Changes
+### Changed
 
 - Upstream `Sidekiq::BasicFetch` is now infused with throttling directly,
   thus default fetch configuration should work on both Sidekiq and Sidekiq-Pro
@@ -40,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Ruby 3.2 support
 
 
-### Changes
+### Changed
 
 - Switch README to Asciidoc format
 - Switch CHANGES to keepachangelog.com format
