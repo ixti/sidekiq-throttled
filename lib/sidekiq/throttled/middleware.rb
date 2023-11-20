@@ -15,8 +15,8 @@ module Sidekiq
       def call(_worker, msg, _queue)
         yield
       ensure
-        job = msg.fetch("wrapped") { msg.fetch("class", false) }
-        jid = msg.fetch("jid", false)
+        job = msg.fetch("wrapped") { msg["class"] }
+        jid = msg["jid"]
 
         if job && jid
           Registry.get job do |strategy|
