@@ -8,9 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2023-11-20
+
 ### Added
 
 - Add Sidekiq-7.2 support
+- Revive queues cooldown logic
+  [#163](https://github.com/ixti/sidekiq-throttled/pull/163)
 
 ### Changed
 
@@ -66,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove queue exclusion from fetcher pon throttled job
 
 
-[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v1.0.0.alpha.1...main
+[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v1.0.0...main
+[1.0.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.0.0.alpha.1...v1.0.0
 [1.0.0.alpha.1]: https://github.com/ixti/sidekiq-throttled/compare/v1.0.0.alpha...v1.0.0.alpha.1
 [1.0.0.alpha]: https://github.com/ixti/sidekiq-throttled/compare/v0.16.1...v1.0.0.alpha
