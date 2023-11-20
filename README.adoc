@@ -273,6 +273,7 @@ dropped.
 
 This library aims to support and work with following Sidekiq versions:
 
+* Sidekiq 6.5.x
 * Sidekiq 7.0.x
 * Sidekiq 7.1.x
 * Sidekiq 7.2.x

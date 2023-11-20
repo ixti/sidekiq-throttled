@@ -27,9 +27,15 @@ RSpec.describe Sidekiq::Throttled::Patches::BasicFetch do
   end
 
   let(:fetch) do
-    config = Sidekiq::Config.new
-    config.queues = %w[default critical]
-    Sidekiq::BasicFetch.new(config.default_capsule)
+    if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
+      Sidekiq.instance_variable_set(:@config, Sidekiq::DEFAULTS.dup)
+      Sidekiq.queues = %w[default critical]
+      Sidekiq::BasicFetch.new(Sidekiq)
+    else
+      config = Sidekiq::Config.new
+      config.queues = %w[default critical]
+      Sidekiq::BasicFetch.new(config.default_capsule)
+    end
   end
 
   before do
