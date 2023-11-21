@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.metadata["rubygems_mfa_required"] = "true"
 
   spec.files = Dir.chdir(__dir__) do
-    docs = %w[LICENSE README.adoc].freeze
+    docs = %w[LICENSE.txt README.adoc].freeze
 
     `git ls-files -z`.split("\x0").select do |f|
       f.start_with?("lib/") || docs.include?(f)

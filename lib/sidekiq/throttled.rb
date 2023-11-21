@@ -5,7 +5,7 @@ require "sidekiq"
 require_relative "./throttled/config"
 require_relative "./throttled/cooldown"
 require_relative "./throttled/job"
-require_relative "./throttled/middleware"
+require_relative "./throttled/middlewares/server"
 require_relative "./throttled/patches/basic_fetch"
 require_relative "./throttled/registry"
 require_relative "./throttled/version"
@@ -18,7 +18,6 @@ module Sidekiq
   # Just add somewhere in your bootstrap:
   #
   #     require "sidekiq/throttled"
-  #     Sidekiq::Throttled.setup!
   #
   # Once you've done that you can include {Sidekiq::Throttled::Job} to your
   # job classes and configure throttling:
@@ -70,14 +69,6 @@ module Sidekiq
         end
       end
 
-      def setup!
-        Sidekiq.configure_server do |config|
-          config.server_middleware do |chain|
-            chain.add Sidekiq::Throttled::Middleware
-          end
-        end
-      end
-
       # Tells whenever job is throttled or not.
       #
       # @param [String] message Job's JSON payload
@@ -97,6 +88,24 @@ module Sidekiq
       rescue
         false
       end
+
+      # @deprecated Will be removed in 2.0.0
+      def setup!
+        warn "Sidekiq::Throttled.setup! was deprecated"
+
+        Sidekiq.configure_server do |config|
+          config.server_middleware do |chain|
+            chain.remove(Sidekiq::Throttled::Middlewares::Server)
+            chain.add(Sidekiq::Throttled::Middlewares::Server)
+          end
+        end
+      end
+    end
+  end
+
+  configure_server do |config|
+    config.server_middleware do |chain|
+      chain.add(Sidekiq::Throttled::Middlewares::Server)
     end
   end
 end

@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Renamed `Sidekiq::Throttled::Middleware` to `Sidekiq::Throttled::Middlewares::Server`
+
+### Deprecated
+
+- `Sidekiq::Throttled.setup!` is now deprecated. If you need to change order of
+  the middleware, please manipulate middlewares chains directly.
+
+
 ## [1.0.1] - 2023-11-20
 
 ### Added

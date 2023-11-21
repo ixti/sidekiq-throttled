@@ -44,11 +44,7 @@ you are using Rails):
 [source,ruby]
 ----
 require "sidekiq/throttled"
-Sidekiq::Throttled.setup!
 ----
-
-Load order can be an issue if you are using other Sidekiq plugins and/or middleware.
-To prevent any problems, add the `.setup!` call to the bottom of your init file.
 
 Once you've done that you can include `Sidekiq::Throttled::Job` to your
 job classes and configure throttling:
@@ -88,6 +84,27 @@ class MyWorker
 end
 ----
 
+
+=== Middleware(s)
+
+`Sidekiq::Throttled` relies on following bundled middlewares:
+
+* `Sidekiq::Throttled::Middlewares::Server`
+
+The middleware is automatically injected when you require `sidekiq/throttled`.
+In rare cases this might be an issue. You can change to order manually:
+
+[source,ruby]
+----
+Sidekiq.configure_server do |config|
+  # ...
+
+  config.server_middleware do |chain|
+    chain.remove(Sidekiq::Throttled::Middlewares::Server)
+    chain.add(Sidekiq::Throttled::Middlewares::Server)
+  end
+end
+----
 
 === Configuration
 

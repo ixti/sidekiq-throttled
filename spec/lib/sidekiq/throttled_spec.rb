@@ -3,25 +3,25 @@
 require "json"
 
 RSpec.describe Sidekiq::Throttled do
+  it "registers server middleware" do
+    require "sidekiq/processor"
+    allow(Sidekiq).to receive(:server?).and_return true
+
+    if Sidekiq::VERSION >= "7.0"
+      expect(Sidekiq.default_configuration.server_middleware.exists?(Sidekiq::Throttled::Middlewares::Server))
+        .to be true
+    else
+      expect(Sidekiq.server_middleware.exists?(Sidekiq::Throttled::Middlewares::Server)).to be true
+    end
+  end
+
+  it "infuses Sidekiq::BasicFetch with our patches" do
+    expect(Sidekiq::BasicFetch).to include(Sidekiq::Throttled::Patches::BasicFetch)
+  end
+
   describe ".setup!" do
-    before do
-      require "sidekiq/processor"
-      allow(Sidekiq).to receive(:server?).and_return true
-      described_class.setup!
-    end
-
-    it "infuses Sidekiq::BasicFetch with our patches" do
-      expect(Sidekiq::BasicFetch).to include(Sidekiq::Throttled::Patches::BasicFetch)
-    end
-
-    it "injects Sidekiq::Throttled::Middleware server middleware" do
-      if Sidekiq::VERSION >= "7.0"
-        expect(Sidekiq.default_configuration.server_middleware.exists?(Sidekiq::Throttled::Middleware))
-          .to be true
-      else
-        expect(Sidekiq.server_middleware.exists?(Sidekiq::Throttled::Middleware))
-          .to be true
-      end
+    it "shows deprecation warning" do
+      expect { described_class.setup! }.to output(%r{deprecated}).to_stderr
     end
   end
 

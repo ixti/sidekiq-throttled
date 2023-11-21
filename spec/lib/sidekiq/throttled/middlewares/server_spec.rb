@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "sidekiq/throttled/middleware"
+require "sidekiq/throttled/middlewares/server"
 
-RSpec.describe Sidekiq::Throttled::Middleware do
+RSpec.describe Sidekiq::Throttled::Middlewares::Server do
   subject(:middleware) { described_class.new }
 
   describe "#call" do
@@ -16,7 +16,7 @@ RSpec.describe Sidekiq::Throttled::Middleware do
 
       it "calls #finalize! of queue with jid of job being processed" do
         expect(strategy).to receive(:finalize!).with "bar"
-        middleware.call(double, payload, double) { |*| }
+        middleware.call(double, payload, double) { |*| :foobar }
       end
 
       it "returns yields control to the given block" do
@@ -46,7 +46,7 @@ RSpec.describe Sidekiq::Throttled::Middleware do
 
       it "calls #finalize! of queue with jid of job being processed" do
         expect(strategy).to receive(:finalize!).with "bar"
-        middleware.call(double, payload, double) { |*| }
+        middleware.call(double, payload, double) { |*| :foobar }
       end
 
       it "returns yields control to the given block" do
@@ -68,7 +68,7 @@ RSpec.describe Sidekiq::Throttled::Middleware do
 
       it "calls #finalize! of queue with jid of job being processed" do
         expect(strategy).to receive(:finalize!).with "bar"
-        middleware.call(double, payload, double) { |*| }
+        middleware.call(double, payload, double) { |*| :foobar }
       end
 
       it "returns yields control to the given block" do
