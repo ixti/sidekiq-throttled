@@ -15,7 +15,7 @@
 NOTE: This is the 1.x *development* branch. For the 0.x *stable* branch, please
   see: https://github.com/ixti/sidekiq-throttled/tree/0-x-stable[0-x-stable]
 
-Concurrency and threshold throttling for https://github.com/mperham/sidekiq[Sidekiq].
+Concurrency and threshold throttling for https://github.com/sidekiq/sidekiq[Sidekiq].
 
 
 == Installation
@@ -85,7 +85,26 @@ end
 ----
 
 
-=== Middleware(s)
+=== Configuration
+
+[source,ruby]
+----
+Sidekiq::Throttled.configure do |config|
+  # Period in seconds to exclude queue from polling in case it returned
+  # {config.cooldown_threshold} amount of throttled jobs in a row. Set
+  # this value to `nil` to disable cooldown manager completely.
+  # Default: 2.0
+  config.cooldown_period = 2.0
+
+  # Exclude queue from polling after it returned given amount of throttled
+  # jobs in a row.
+  # Default: 1 (cooldown after first throttled job)
+  config.cooldown_threshold = 1
+end
+----
+
+
+==== Middleware(s)
 
 `Sidekiq::Throttled` relies on following bundled middlewares:
 
@@ -106,23 +125,7 @@ Sidekiq.configure_server do |config|
 end
 ----
 
-=== Configuration
-
-[source,ruby]
-----
-Sidekiq::Throttled.configure do |config|
-  # Period in seconds to exclude queue from polling in case it returned
-  # {config.cooldown_threshold} amount of throttled jobs in a row. Set
-  # this value to `nil` to disable cooldown manager completely.
-  # Default: 2.0
-  config.cooldown_period = 2.0
-
-  # Exclude queue from polling after it returned given amount of throttled
-  # jobs in a row.
-  # Default: 1 (cooldown after first throttled job)
-  config.cooldown_threshold = 1
-end
-----
+See: https://github.com/sidekiq/sidekiq/blob/main/lib/sidekiq/middleware/chain.rb
 
 
 === Observer
