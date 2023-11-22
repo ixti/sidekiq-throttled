@@ -12,11 +12,7 @@
 {doc-link}[image:{doc-badge}[API Documentation]]
 ****
 
-NOTE: This is the 1.x *development* branch. For the 0.x *stable* branch, please
-  see: https://github.com/ixti/sidekiq-throttled/tree/0-x-stable[0-x-stable]
-
 Concurrency and threshold throttling for https://github.com/sidekiq/sidekiq[Sidekiq].
-
 
 == Installation
 
