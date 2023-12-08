@@ -311,3 +311,11 @@ This library aims to support and work with following Sidekiq versions:
 * Send a pull request
 * If we like them we'll merge them
 * If we've accepted a patch, feel free to ask for commit access!
+
+
+== Endorsement
+
+https://github.com/sensortower[image:sensortower.svg[SensorTower]]
+
+The initial work on the project was initiated to address the needs of
+https://github.com/sensortower[SensorTower].
