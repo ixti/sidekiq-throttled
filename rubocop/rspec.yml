@@ -1,13 +1,14 @@
 RSpec/ExampleLength:
   Enabled: true
   Max: 10
-
-RSpec/ExpectChange:
-  Enabled: true
-  EnforcedStyle: block
+  CountAsOne: [array, hash, heredoc, method_call]
 
 RSpec/MultipleExpectations:
   Enabled: false
 
 RSpec/NamedSubject:
   Enabled: false
+
+RSpec/BeNil:
+  Enabled: true
+  EnforcedStyle: be

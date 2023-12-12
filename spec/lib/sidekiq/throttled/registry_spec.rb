@@ -59,7 +59,7 @@ RSpec.describe Sidekiq::Throttled::Registry do
     let(:name) { "foo" }
 
     context "when strategy is not registered" do
-      it { is_expected.to be_nil }
+      it { is_expected.to be(nil) }
     end
 
     context "when strategy was registered" do

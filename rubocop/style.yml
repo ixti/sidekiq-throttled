@@ -67,7 +67,7 @@ Style/RegexpLiteral:
 
 Style/RescueStandardError:
   Enabled: true
-  EnforcedStyle: implicit
+  EnforcedStyle: explicit
 
 Style/SingleArgumentDig:
   Enabled: true

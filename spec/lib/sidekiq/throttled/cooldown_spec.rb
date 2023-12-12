@@ -15,7 +15,7 @@ RSpec.describe Sidekiq::Throttled::Cooldown do
     context "when `cooldown_period` is nil" do
       before { config.cooldown_period = nil }
 
-      it { is_expected.to be_nil }
+      it { is_expected.to be(nil) }
     end
   end
 

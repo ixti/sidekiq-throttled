@@ -85,7 +85,7 @@ module Sidekiq
         end
 
         false
-      rescue
+      rescue StandardError
         false
       end
 

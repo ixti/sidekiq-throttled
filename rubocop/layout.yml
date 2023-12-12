@@ -5,6 +5,10 @@ Layout/ArgumentAlignment:
 Layout/EmptyLinesAroundAttributeAccessor:
   Enabled: true
 
+Layout/FirstArrayElementIndentation:
+  Enabled: true
+  EnforcedStyle: consistent
+
 Layout/FirstHashElementIndentation:
   Enabled: true
   EnforcedStyle: consistent

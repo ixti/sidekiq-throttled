@@ -14,12 +14,12 @@ RSpec.describe Sidekiq::Throttled::Config do
   describe "#cooldown_period=" do
     it "updates #cooldown_period" do
       expect { config.cooldown_period = 42.0 }
-        .to change { config.cooldown_period }.to(42.0)
+        .to change(config, :cooldown_period).to(42.0)
     end
 
     it "allows setting value to `nil`" do
       expect { config.cooldown_period = nil }
-        .to change { config.cooldown_period }.to(nil)
+        .to change(config, :cooldown_period).to(nil)
     end
 
     it "fails if given value is neither `NilClass` nor `Float`" do
@@ -42,7 +42,7 @@ RSpec.describe Sidekiq::Throttled::Config do
   describe "#cooldown_threshold=" do
     it "updates #cooldown_threshold" do
       expect { config.cooldown_threshold = 42 }
-        .to change { config.cooldown_threshold }.to(42)
+        .to change(config, :cooldown_threshold).to(42)
     end
 
     it "fails if given value is not `Integer`" do

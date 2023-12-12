@@ -65,7 +65,7 @@ RSpec.describe Sidekiq::Throttled::Patches::BasicFetch do
       it "returns nothing" do
         fetch.retrieve_work
 
-        expect(fetch.retrieve_work).to be_nil
+        expect(fetch.retrieve_work).to be(nil)
       end
 
       it "pushes job back to the head of the queue" do
