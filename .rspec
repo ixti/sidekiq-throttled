@@ -1,5 +1,2 @@
---backtrace
---color
---format=documentation
---order random
+--require simplecov
 --require spec_helper

@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "support/simplecov" if ENV["CI"] || ENV["COVERAGE"]
 require_relative "support/sidekiq"
 require_relative "support/timecop"
 
