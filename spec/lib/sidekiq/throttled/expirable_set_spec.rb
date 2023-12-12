@@ -3,29 +3,43 @@
 require "sidekiq/throttled/expirable_set"
 
 RSpec.describe Sidekiq::Throttled::ExpirableSet do
-  subject(:expirable_set) { described_class.new(2.0) }
+  subject(:expirable_set) { described_class.new }
 
   it { is_expected.to be_an Enumerable }
 
-  describe ".new" do
+  describe "#add" do
     it "raises ArgumentError if given TTL is not Float" do
-      expect { described_class.new(42) }.to raise_error(ArgumentError)
+      expect { expirable_set.add("a", ttl: 42) }.to raise_error(ArgumentError)
     end
 
     it "raises ArgumentError if given TTL is not positive" do
-      expect { described_class.new(0.0) }.to raise_error(ArgumentError)
+      expect { expirable_set.add("a", ttl: 0.0) }.to raise_error(ArgumentError)
     end
-  end
 
-  describe "#add" do
     it "returns self" do
-      expect(expirable_set.add("a")).to be expirable_set
+      expect(expirable_set.add("a", ttl: 1.0)).to be expirable_set
     end
 
     it "adds uniq elements to the set" do
-      expirable_set.add("a").add("b").add("b").add("a")
+      expirable_set.add("a", ttl: 1.0).add("b", ttl: 1.0).add("b", ttl: 1.0).add("a", ttl: 1.0)
 
       expect(expirable_set).to contain_exactly("a", "b")
+    end
+
+    it "uses longest sunset" do
+      monotonic_time = 0.0
+      allow(Process).to receive(:clock_gettime).with(Process::CLOCK_MONOTONIC) { monotonic_time }
+
+      expirable_set.add("a", ttl: 1.0).add("b", ttl: 42.0).add("b", ttl: 1.0).add("a", ttl: 2.0)
+
+      monotonic_time += 0.5
+      expect(expirable_set).to contain_exactly("a", "b")
+
+      monotonic_time += 1.0
+      expect(expirable_set).to contain_exactly("a", "b")
+
+      monotonic_time += 0.5
+      expect(expirable_set).to contain_exactly("b")
     end
   end
 
@@ -37,16 +51,16 @@ RSpec.describe Sidekiq::Throttled::ExpirableSet do
 
       allow(Process).to receive(:clock_gettime).with(Process::CLOCK_MONOTONIC) { monotonic_time }
 
-      expirable_set.add("lorem")
-      expirable_set.add("ipsum")
+      expirable_set.add("lorem", ttl: 1.0)
+      expirable_set.add("ipsum", ttl: 1.0)
 
-      monotonic_time += 1
+      monotonic_time += 0.5
 
-      expirable_set.add("ipsum")
+      expirable_set.add("ipsum", ttl: 1.0)
 
-      monotonic_time += 1
+      monotonic_time += 0.5
 
-      expirable_set.add("dolor")
+      expirable_set.add("dolor", ttl: 1.0)
     end
 
     it { is_expected.to be_an(Enumerator) }
