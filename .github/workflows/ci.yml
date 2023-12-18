@@ -8,13 +8,13 @@ on:
 
 jobs:
   test:
-    name: "rspec (ruby:${{ matrix.ruby }})"
+    name: "test / ${{ matrix.ruby }} / ${{ matrix.redis }}"
 
     runs-on: ubuntu-latest
 
     services:
       redis:
-        image: redis
+        image: ${{ matrix.redis }}
         ports:
           - "6379:6379"
         options: >-
@@ -27,6 +27,7 @@ jobs:
       fail-fast: false
       matrix:
         ruby: [ ruby-2.7, ruby-3.0, ruby-3.1, ruby-3.2 ]
+        redis: [ "redis:6.2", "redis:7.0", "redis:7.2" ]
 
     steps:
       - uses: actions/checkout@v4
@@ -42,6 +43,18 @@ jobs:
         uses: codecov/codecov-action@v3
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  # See: https://github.com/orgs/community/discussions/26822#discussioncomment-3305794
+  test-finale:
+    name: "test"
+
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+
+    needs: [test]
+
+    steps:
+      - run: test "success" = "${{ needs.test.result }}"
 
   lint:
     runs-on: ubuntu-latest
