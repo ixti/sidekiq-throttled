@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add Sidekiq Pro 7.0, 7.1, and 7.2 support
 - Add Ruby 3.3 support
 
 ## [1.2.0] - 2023-12-18

@@ -1,0 +1,4 @@
+ignore:
+  # Requires Sidekiq-Pro
+  - lib/sidekiq/throttled/patches/super_fetch.rb
+  - spec/lib/sidekiq/throttled/patches/super_fetch_spec.rb

@@ -33,7 +33,7 @@ module Sidekiq
         # @return [Array<String>]
         def queues_cmd
           throttled_queues = Throttled.cooldown&.queues
-          return super unless throttled_queues&.size&.positive?
+          return super if throttled_queues.nil? || throttled_queues.empty?
 
           super - throttled_queues
         end

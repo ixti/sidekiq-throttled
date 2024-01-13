@@ -23,6 +23,9 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    env:
+      BUNDLE_GEMS__CONTRIBSYS__COM: ${{ secrets.BUNDLE_GEMS__CONTRIBSYS__COM }}
+
     strategy:
       fail-fast: false
       matrix:
