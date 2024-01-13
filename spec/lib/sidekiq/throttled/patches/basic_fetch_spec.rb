@@ -3,29 +3,6 @@
 require "sidekiq/throttled/patches/basic_fetch"
 
 RSpec.describe Sidekiq::Throttled::Patches::BasicFetch do
-  def stub_job_class(name, &block)
-    klass = stub_const(name, Class.new)
-
-    klass.include(Sidekiq::Job)
-    klass.include(Sidekiq::Throttled::Job)
-
-    klass.instance_exec do
-      def perform(*); end
-    end
-
-    klass.instance_exec(&block) if block
-  end
-
-  def enqueued_jobs(queue)
-    Sidekiq.redis do |conn|
-      conn.lrange("queue:#{queue}", 0, -1).map do |job|
-        JSON.parse(job).then do |payload|
-          [payload["class"], *payload["args"]]
-        end
-      end
-    end
-  end
-
   let(:fetch) do
     if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
       Sidekiq.instance_variable_set(:@config, Sidekiq::DEFAULTS.dup)
