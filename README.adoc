@@ -295,6 +295,11 @@ This library aims to support and work with following Sidekiq versions:
 * Sidekiq 7.1.x
 * Sidekiq 7.2.x
 
+And the following Sidekiq Pro versions:
+
+* Sidekiq Pro 7.0.x
+* Sidekiq Pro 7.1.x
+* Sidekiq Pro 7.2.x
 
 == Development
 
@@ -303,6 +308,8 @@ This library aims to support and work with following Sidekiq versions:
   bundle exec appraisal install
   bundle exec rake
 
+To run the Sidekiq Pro specs, you'll need to set the license in
+the global bundler config or in the BUNDLE_GEMS__CONTRIBSYS__COM env variable
 
 == Contributing
 
