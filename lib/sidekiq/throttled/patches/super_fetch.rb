@@ -58,7 +58,9 @@ module Sidekiq
   end
 end
 
-if Sidekiq.pro?
+begin
   require "sidekiq/pro/super_fetch"
   Sidekiq::Pro::SuperFetch.prepend(Sidekiq::Throttled::Patches::SuperFetch)
+rescue LoadError
+  # Sidekiq Pro is not available
 end
