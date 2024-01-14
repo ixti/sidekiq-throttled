@@ -1,10 +1,16 @@
 # frozen_string_literal: true
 
 require "sidekiq/throttled/patches/super_fetch"
-require "sidekiq/pro/super_fetch" if Sidekiq.pro?
+begin
+  require "sidekiq/pro/super_fetch"
+  SIDEKIQ_PRO_AVAILABLE = true
+rescue LoadError
+  # Sidekiq Pro is not available
+  SIDEKIQ_PRO_AVAILABLE = false
+end
 
 RSpec.describe Sidekiq::Throttled::Patches::SuperFetch do
-  if Sidekiq.pro?
+  if SIDEKIQ_PRO_AVAILABLE
     let(:base_queue) { "default" }
     let(:critical_queue) { "critical" }
     let(:config) do
