@@ -3,25 +3,14 @@
 require "sidekiq"
 require "sidekiq/fetch"
 
+require_relative "./throttled_retriever"
+
 module Sidekiq
   module Throttled
     module Patches
       module BasicFetch
-        # Retrieves job from redis.
-        #
-        # @return [Sidekiq::Throttled::UnitOfWork, nil]
-        def retrieve_work
-          work = super
-
-          if work && Throttled.throttled?(work.job)
-            Throttled.cooldown&.notify_throttled(work.queue)
-            requeue_throttled(work)
-            return nil
-          end
-
-          Throttled.cooldown&.notify_admitted(work.queue) if work
-
-          work
+        def self.prepended(base)
+          base.prepend(ThrottledRetriever)
         end
 
         private
