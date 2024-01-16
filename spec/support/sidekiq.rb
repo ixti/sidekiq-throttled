@@ -18,7 +18,7 @@ $TESTING = true # rubocop:disable Style/GlobalVars
 
 REDIS_URL = ENV.fetch("REDIS_URL", "redis://localhost:6379")
 
-module SidekiqHelper
+module SidekiqThrottledHelper
   def new_sidekiq_config
     cfg = Sidekiq::Config.new
     cfg.redis  = { url: REDIS_URL }
@@ -124,7 +124,7 @@ Sidekiq.configure_client do |config|
 end
 
 RSpec.configure do |config|
-  config.include SidekiqHelper
+  config.include SidekiqThrottledHelper
 
   config.before do
     PseudoLogger.instance.reset!
