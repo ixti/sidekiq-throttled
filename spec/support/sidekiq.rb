@@ -18,36 +18,7 @@ $TESTING = true # rubocop:disable Style/GlobalVars
 
 REDIS_URL = ENV.fetch("REDIS_URL", "redis://localhost:6379")
 
-module JobClassStub
-  def stub_job_class(name, &block)
-    klass = stub_const(name, Class.new)
-
-    klass.include(Sidekiq::Job)
-    klass.include(Sidekiq::Throttled::Job)
-
-    klass.instance_exec do
-      def perform(*); end
-    end
-
-    klass.instance_exec(&block) if block
-  end
-end
-
-module EnqueueHelper
-  def enqueued_jobs(queue)
-    Sidekiq.redis do |conn|
-      conn.lrange("queue:#{queue}", 0, -1).map do |job|
-        JSON.parse(job).then do |payload|
-          [payload["class"], *payload["args"]]
-        end
-      end
-    end
-  end
-end
-
-# Helper module to reset Sidekiq config between tests like mperham does in Sidekiq tests:
-# https://github.com/sidekiq/sidekiq/blob/7df28434f03fa1111e9e2834271c020205369f94/test/helper.rb#L30
-module ConfigHelper
+module SidekiqHelper
   def new_sidekiq_config
     cfg = Sidekiq::Config.new
     cfg.redis  = { url: REDIS_URL }
@@ -74,6 +45,8 @@ module ConfigHelper
     end
   end
 
+  # Resets Sidekiq config between tests like mperham does in Sidekiq tests:
+  # https://github.com/sidekiq/sidekiq/blob/7df28434f03fa1111e9e2834271c020205369f94/test/helper.rb#L30
   def reset_redis_v7!
     if Sidekiq.default_configuration.instance_variable_defined?(:@redis)
       existing_pool = Sidekiq.default_configuration.instance_variable_get(:@redis)
@@ -86,9 +59,30 @@ module ConfigHelper
     Sidekiq.instance_variable_set :@config, new_sidekiq_config
     new_sidekiq_config
   end
-end
 
-module JidGenerator
+  def stub_job_class(name, &block)
+    klass = stub_const(name, Class.new)
+
+    klass.include(Sidekiq::Job)
+    klass.include(Sidekiq::Throttled::Job)
+
+    klass.instance_exec do
+      def perform(*); end
+    end
+
+    klass.instance_exec(&block) if block
+  end
+
+  def enqueued_jobs(queue)
+    Sidekiq.redis do |conn|
+      conn.lrange("queue:#{queue}", 0, -1).map do |job|
+        JSON.parse(job).then do |payload|
+          [payload["class"], *payload["args"]]
+        end
+      end
+    end
+  end
+
   def jid
     SecureRandom.hex 12
   end
@@ -130,11 +124,7 @@ Sidekiq.configure_client do |config|
 end
 
 RSpec.configure do |config|
-  config.include ConfigHelper
-  config.include EnqueueHelper
-  config.include JobClassStub
-  config.include JidGenerator
-  config.extend  JidGenerator
+  config.include SidekiqHelper
 
   config.before do
     PseudoLogger.instance.reset!

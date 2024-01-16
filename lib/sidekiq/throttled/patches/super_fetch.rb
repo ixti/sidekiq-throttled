@@ -2,44 +2,29 @@
 
 require "sidekiq"
 
+require_relative "./throttled_retriever"
+
 module Sidekiq
   module Throttled
     module Patches
       module SuperFetch
-        # Retrieves job from redis.
-        #
-        # @return [Sidekiq::Throttled::UnitOfWork, nil]
-        def retrieve_work
-          work = super
-
-          if work && Throttled.throttled?(work.job)
-            Throttled.cooldown&.notify_throttled(work.queue)
-            requeue_throttled(work)
-            return nil
-          end
-
-          Throttled.cooldown&.notify_admitted(work.queue) if work
-
-          work
+        def self.prepended(base)
+          base.prepend(ThrottledRetriever)
         end
 
         private
 
-        # Pushes job back to the head of the queue, so that job won't be tried
-        # immediately after it was requeued (in most cases).
+        # Calls SuperFetch UnitOfWork's requeue to remove the job from the
+        # temporary queue and push job back to the head of the queue, so that
+        # the job won't be tried immediately after it was requeued (in most cases).
         #
-        # @note This is triggered when job is throttled. So it is same operation
-        #   Sidekiq performs upon `Sidekiq::Worker.perform_async` call.
+        # @note This is triggered when job is throttled.
         #
         # @return [void]
         def requeue_throttled(work)
-          if work.respond_to?(:local_queue)
-            # if a SuperFetch UnitOfWork, SuperFetch will requeue it using lpush
-            work.requeue
-          else
-            # Fallback to BasicFetch behavior
-            redis { |conn| conn.lpush(work.queue, work.job) }
-          end
+          # SuperFetch UnitOfWork's requeue will remove it from the temporary
+          # queue and then requeue it, so no acknowledgement call is needed.
+          work.requeue
         end
 
         # Returns list of non-paused queues to try to fetch jobs from.
@@ -47,9 +32,11 @@ module Sidekiq
         # @note It may return an empty array.
         # @return [Array<Array(String, String)>]
         def active_queues
+          # Create a hash of throttled queues for fast lookup
           throttled_queues = Throttled.cooldown&.queues&.to_a&.to_h { [_1, true] }
           return super unless throttled_queues
-          
+
+          # Reject throttled queues from the list of active queues
           super.reject { |queue, _private_queue| throttled_queues[queue] }
         end
       end
