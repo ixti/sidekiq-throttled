@@ -26,8 +26,8 @@ module Sidekiq
 
       # @param [#call] block
       # Iterates each strategy in collection
-      def each(&block)
-        @strategies.each(&block)
+      def each(...)
+        @strategies.each(...)
       end
 
       # @return [Boolean] whenever any strategy in collection has dynamic config
@@ -37,14 +37,14 @@ module Sidekiq
 
       # @return [Boolean] whenever job is throttled or not
       # by any strategy in collection.
-      def throttled?(*args)
-        any? { |s| s.throttled?(*args) }
+      def throttled?(...)
+        any? { |s| s.throttled?(...) }
       end
 
       # Marks job as being processed.
       # @return [void]
-      def finalize!(*args)
-        each { |c| c.finalize!(*args) }
+      def finalize!(...)
+        each { |c| c.finalize!(...) }
       end
 
       # Resets count of jobs of all avaliable strategies
