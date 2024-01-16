@@ -47,11 +47,10 @@ module Sidekiq
         # @note It may return an empty array.
         # @return [Array<Array(String, String)>]
         def active_queues
-          throttled_queues = Throttled.cooldown&.queues&.dup || []
-          super.reject do |queue, _private_queue|
-            # Truthy value means queue is throttled, so we should reject it.
-            throttled_queues.delete(queue)
-          end
+          throttled_queues = Throttled.cooldown&.queues&.to_a&.to_h { [_1, true] }
+          return super unless throttled_queues
+          
+          super.reject { |queue, _private_queue| throttled_queues[queue] }
         end
       end
     end
