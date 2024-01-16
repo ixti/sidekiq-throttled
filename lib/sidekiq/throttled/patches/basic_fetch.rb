@@ -32,7 +32,10 @@ module Sidekiq
         # @param [Array<String>] queues
         # @return [Array<String>]
         def queues_cmd
-          super - (Throttled.cooldown&.queues || [])
+          throttled_queues = Throttled.cooldown&.queues
+          return super unless throttled_queues&.size&.positive?
+
+          super - throttled_queues
         end
       end
     end
