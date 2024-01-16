@@ -107,7 +107,7 @@ end
 * `Sidekiq::Throttled::Middlewares::Server`
 
 The middleware is automatically injected when you require `sidekiq/throttled`.
-In rare cases this might be an issue. You can change to order manually:
+In rare cases, when this causes an issue, you can change middleware order manually:
 
 [source,ruby]
 ----
@@ -115,8 +115,7 @@ Sidekiq.configure_server do |config|
   # ...
 
   config.server_middleware do |chain|
-    chain.remove(Sidekiq::Throttled::Middlewares::Server)
-    chain.add(Sidekiq::Throttled::Middlewares::Server)
+    chain.prepend(Sidekiq::Throttled::Middlewares::Server)
   end
 end
 ----
@@ -271,6 +270,7 @@ This library aims to support and is tested against the following Ruby versions:
 * Ruby 3.0.x
 * Ruby 3.1.x
 * Ruby 3.2.x
+* Ruby 3.3.x
 
 If something doesn't work on one of these versions, it's a bug.
 
