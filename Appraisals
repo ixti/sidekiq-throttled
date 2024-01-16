@@ -12,7 +12,7 @@ appraise "sidekiq-7.0.x" do
 
     # Sidekiq Pro license must be set in global bundler config
     # or in BUNDLE_GEMS__CONTRIBSYS__COM env variable
-    install_if "-> { Bundler.settings['gems.contribsys.com']&.include?(':') }" do
+    install_if "-> { Bundler.settings['gems.contribsys.com']&.include?(':') || ENV['BUNDLE_GEMS__CONTRIBSYS__COM'] }" do
       source "https://gems.contribsys.com/" do
         gem "sidekiq-pro", "~> 7.0.0"
       end
@@ -26,7 +26,7 @@ appraise "sidekiq-7.1.x" do
 
     # Sidekiq Pro license must be set in global bundler config
     # or in BUNDLE_GEMS__CONTRIBSYS__COM env variable
-    install_if "-> { Bundler.settings['gems.contribsys.com']&.include?(':') }" do
+    install_if "-> { Bundler.settings['gems.contribsys.com']&.include?(':') || ENV['BUNDLE_GEMS__CONTRIBSYS__COM'] }" do
       source "https://gems.contribsys.com/" do
         gem "sidekiq-pro", "~> 7.1.0"
       end
@@ -40,7 +40,7 @@ appraise "sidekiq-7.2.x" do
 
     # Sidekiq Pro license must be set in global bundler config
     # or in BUNDLE_GEMS__CONTRIBSYS__COM env variable
-    install_if "-> { Bundler.settings['gems.contribsys.com']&.include?(':') }" do
+    install_if "-> { Bundler.settings['gems.contribsys.com']&.include?(':') || ENV['BUNDLE_GEMS__CONTRIBSYS__COM'] }" do
       source "https://gems.contribsys.com/" do
         gem "sidekiq-pro", "~> 7.2.0"
       end
