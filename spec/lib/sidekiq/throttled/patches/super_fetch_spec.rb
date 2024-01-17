@@ -3,14 +3,12 @@
 require "sidekiq/throttled/patches/super_fetch"
 begin
   require "sidekiq/pro/super_fetch"
-  SIDEKIQ_PRO_AVAILABLE = true
 rescue LoadError
   # Sidekiq Pro is not available
-  SIDEKIQ_PRO_AVAILABLE = false
 end
 
 RSpec.describe Sidekiq::Throttled::Patches::SuperFetch do
-  if SIDEKIQ_PRO_AVAILABLE
+  if defined? Sidekiq::Pro::SuperFetch
     let(:base_queue) { "default" }
     let(:critical_queue) { "critical" }
     let(:config) do
