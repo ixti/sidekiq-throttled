@@ -1,11 +1,6 @@
 # frozen_string_literal: true
 
 require "sidekiq/throttled/patches/super_fetch"
-begin
-  require "sidekiq/pro/super_fetch"
-rescue LoadError
-  # Sidekiq Pro is not available
-end
 
 RSpec.describe Sidekiq::Throttled::Patches::SuperFetch do
   if defined? Sidekiq::Pro::SuperFetch
