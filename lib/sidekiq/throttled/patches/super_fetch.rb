@@ -33,8 +33,8 @@ module Sidekiq
         # @return [Array<Array(String, String)>]
         def active_queues
           # Create a hash of throttled queues for fast lookup
-          throttled_queues = Throttled.cooldown&.queues.to_h { |queue| [queue, true] }
-          return super if throttled_queues.empty?
+          throttled_queues = Throttled.cooldown&.queues&.to_h { |queue| [queue, true] }
+          return super if throttled_queues.nil? || throttled_queues.empty?
 
           # Reject throttled queues from the list of active queues
           super.reject { |queue, _private_queue| throttled_queues[queue] }
