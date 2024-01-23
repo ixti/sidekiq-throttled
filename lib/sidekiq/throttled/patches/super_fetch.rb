@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "sidekiq"
+require "sidekiq/pro/super_fetch"
 
 require_relative "./throttled_retriever"
 
@@ -44,9 +45,4 @@ module Sidekiq
   end
 end
 
-begin
-  require "sidekiq/pro/super_fetch"
-  Sidekiq::Pro::SuperFetch.prepend(Sidekiq::Throttled::Patches::SuperFetch)
-rescue LoadError
-  # Sidekiq Pro is not available
-end
+Sidekiq::Pro::SuperFetch.prepend(Sidekiq::Throttled::Patches::SuperFetch)

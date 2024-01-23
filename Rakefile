@@ -7,6 +7,8 @@ task :test do
   rm_rf "coverage"
   rm_rf "gemfiles"
 
+  persisted_bundler_env = ENV.slice("BUNDLE_GEMS__CONTRIBSYS__COM")
+
   Bundler.with_unbundled_env do
     sh "bundle exec appraisal generate"
 
@@ -18,7 +20,7 @@ task :test do
       end
     end
 
-    sh "bundle exec appraisal rspec --force-colour"
+    sh(persisted_bundler_env, "bundle exec appraisal rspec --force-colour")
   end
 end
 

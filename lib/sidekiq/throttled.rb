@@ -6,8 +6,6 @@ require_relative "./throttled/config"
 require_relative "./throttled/cooldown"
 require_relative "./throttled/job"
 require_relative "./throttled/middlewares/server"
-require_relative "./throttled/patches/basic_fetch"
-require_relative "./throttled/patches/super_fetch"
 require_relative "./throttled/registry"
 require_relative "./throttled/version"
 require_relative "./throttled/worker"
@@ -19,6 +17,13 @@ module Sidekiq
   # Just add somewhere in your bootstrap:
   #
   #     require "sidekiq/throttled"
+  #     Sidekiq::Throttled.setup!
+  #
+  # Note that if you’re using Sidekiq Pro’s SuperFetch feature, the call to
+  # activate SuperFetch (e.g., {config.super_fetch!}) must come before the
+  # call to {.setup!}. If you fail to do so, existing throttles will not be
+  # cleared correctly for recovered orphaned jobs. To be on the safe side,
+  # add the {.setup!} call to the bottom of your init file.
   #
   # Once you've done that you can include {Sidekiq::Throttled::Job} to your
   # job classes and configure throttling:
@@ -75,14 +80,8 @@ module Sidekiq
       # @param [String] message Job's JSON payload
       # @return [Boolean]
       def throttled?(message)
-        message = Sidekiq.load_json(message)
-        job     = message.fetch("wrapped") { message["class"] }
-        jid     = message["jid"]
-
-        return false unless job && jid
-
-        Registry.get(job) do |strategy|
-          return strategy.throttled?(jid, *message["args"])
+        with_strategy_and_job(message) do |strategy, jid, args|
+          return strategy.throttled?(jid, *args)
         end
 
         false
@@ -90,23 +89,67 @@ module Sidekiq
         false
       end
 
-      # @deprecated Will be removed in 2.0.0
-      def setup!
-        warn "Sidekiq::Throttled.setup! was deprecated"
+      # Manually reset throttle for job that had previously been orphaned but has been recovered since.
+      #
+      # @param [String] message Job's JSON payload
+      # @return [Boolean]
+      def recover!(message)
+        with_strategy_and_job(message) do |strategy, jid, args|
+          strategy.finalize!(jid, *args)
 
-        Sidekiq.configure_server do |config|
-          config.server_middleware do |chain|
-            chain.remove(Sidekiq::Throttled::Middlewares::Server)
-            chain.add(Sidekiq::Throttled::Middlewares::Server)
-          end
+          return true
+        end
+
+        false
+      rescue StandardError
+        false
+      end
+
+      def setup!
+        require_relative "./throttled/patches/basic_fetch"
+        require_relative "./throttled/patches/super_fetch" if Sidekiq.pro?
+
+        Sidekiq.configure_server do |sidekiq_config|
+          configure_orphan_handler(sidekiq_config) if Sidekiq.pro?
+
+          configure_middleware(sidekiq_config)
         end
       end
-    end
-  end
 
-  configure_server do |config|
-    config.server_middleware do |chain|
-      chain.add(Sidekiq::Throttled::Middlewares::Server)
+      private
+
+      def configure_orphan_handler(sidekiq_config)
+        wrapped_orphan_handler = sidekiq_config[:fetch_setup]
+
+        sidekiq_config[:fetch_setup] = build_orphan_handler(wrapped_orphan_handler)
+      end
+
+      def configure_middleware(sidekiq_config)
+        sidekiq_config.server_middleware do |chain|
+          chain.add(Sidekiq::Throttled::Middlewares::Server)
+        end
+      end
+
+      def with_strategy_and_job(message)
+        message = Sidekiq.load_json(message)
+        job     = message.fetch("wrapped") { message["class"] }
+        jid     = message["jid"]
+
+        return unless job && jid
+
+        strategy = Registry.get(job)
+
+        yield(strategy, jid, message["args"])
+      end
+
+      # Ensure recovered orphaned jobs are unthrottled
+      def build_orphan_handler(wrapped_orphan_handler)
+        proc do |message, pill|
+          recover!(message)
+
+          wrapped_orphan_handler&.call(message, pill)
+        end
+      end
     end
   end
 end

@@ -24,9 +24,6 @@ module SidekiqThrottledHelper
     cfg.redis  = { url: REDIS_URL }
     cfg.logger = PseudoLogger.instance
     cfg.logger.level = Logger::WARN
-    cfg.server_middleware do |chain|
-      chain.add(Sidekiq::Throttled::Middlewares::Server)
-    end
     cfg
   end
 
