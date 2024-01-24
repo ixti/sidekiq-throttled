@@ -43,7 +43,7 @@ jobs:
       - name: Run test suites
         run: |
           if [[ -n "${BUNDLE_GEMS__CONTRIBSYS__COM}" ]]; then
-            cp .rspec.sidekiq-pro .rspec-local
+            cp .rspec.sidekiq-pro .rspec
           fi
 
           bundle exec rake test
