@@ -24,6 +24,13 @@ RSpec.configure do |config|
     end
   end
 
+  # Sidekiq-Pro related specs require license set in Bundler
+  unless Bundler.settings["gems.contribsys.com"]&.include?(":") && SIDEKIQ7
+    config.define_derived_metadata(sidekiq_pro: true) do |metadata|
+      metadata[:skip] = "Sidekiq::Pro license not found or not supported"
+    end
+  end
+
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest
   # assertions if you prefer.
