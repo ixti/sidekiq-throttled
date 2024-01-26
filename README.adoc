@@ -310,9 +310,9 @@ And the following Sidekiq Pro versions:
 
 === Sidekiq-Pro
 
-If you're working on Sidekiq-Pro support make sure to copy `.rspec-sidekiq-pro`
-to `.rspec-local` and that you have Sidekiq-Pro license in the global config,
-or in the `BUNDLE_GEMS\__CONTRIBSYS__COM` env variable.
+If you're working on Sidekiq-Pro support make sure that you have Sidekiq-Pro
+license set either in the global config, or in `BUNDLE_GEMS\__CONTRIBSYS__COM`
+environment variable.
 
 == Contributing
 

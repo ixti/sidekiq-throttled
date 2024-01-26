@@ -17,6 +17,7 @@ end
 $TESTING = true # rubocop:disable Style/GlobalVars
 
 REDIS_URL = ENV.fetch("REDIS_URL", "redis://localhost:6379")
+SIDEKIQ7  = Gem::Version.new("7.0.0") <= Gem::Version.new(Sidekiq::VERSION)
 
 module SidekiqThrottledHelper
   def new_sidekiq_config
@@ -31,10 +32,10 @@ module SidekiqThrottledHelper
   end
 
   def reset_redis!
-    if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
-      reset_redis_v6!
-    else
+    if SIDEKIQ7
       reset_redis_v7!
+    else
+      reset_redis_v6!
     end
   end
 
@@ -105,12 +106,12 @@ class PseudoLogger < Logger
   end
 end
 
-if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
-  Sidekiq[:queues] = %i[default]
-else
+if SIDEKIQ7
   Sidekiq.configure_server do |config|
     config.queues = %i[default]
   end
+else
+  Sidekiq[:queues] = %i[default]
 end
 
 Sidekiq.configure_server do |config|

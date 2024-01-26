@@ -1,3 +1,2 @@
 --require simplecov
 --require spec_helper
---tag ~sidekiq_pro

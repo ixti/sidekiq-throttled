@@ -7,7 +7,7 @@ task :test do
   rm_rf "coverage"
   rm_rf "gemfiles"
 
-  Bundler.with_unbundled_env do
+  Bundler.with_original_env do
     sh "bundle exec appraisal generate"
 
     # XXX: `bundle exec appraisal install` fails on ruby-3.2
