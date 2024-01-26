@@ -25,7 +25,7 @@ RSpec.configure do |config|
   end
 
   # Sidekiq-Pro related specs require license set in Bundler
-  unless Bundler.settings["gems.contribsys.com"]&.include?(":") && SIDEKIQ7
+  unless Bundler.settings["gems.contribsys.com"]&.include?(":")
     config.define_derived_metadata(sidekiq_pro: true) do |metadata|
       metadata[:skip] = "Sidekiq::Pro license not found or not supported"
     end
