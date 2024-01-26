@@ -17,7 +17,6 @@ end
 $TESTING = true # rubocop:disable Style/GlobalVars
 
 REDIS_URL = ENV.fetch("REDIS_URL", "redis://localhost:6379")
-SIDEKIQ7  = Gem::Version.new("7.0.0") <= Gem::Version.new(Sidekiq::VERSION)
 
 module SidekiqThrottledHelper
   def new_sidekiq_config
@@ -31,24 +30,8 @@ module SidekiqThrottledHelper
     cfg
   end
 
-  def reset_redis!
-    if SIDEKIQ7
-      reset_redis_v7!
-    else
-      reset_redis_v6!
-    end
-  end
-
-  def reset_redis_v6!
-    Sidekiq.redis do |conn|
-      conn.flushdb
-      conn.script("flush")
-    end
-  end
-
-  # Resets Sidekiq config between tests like mperham does in Sidekiq tests:
   # https://github.com/sidekiq/sidekiq/blob/7df28434f03fa1111e9e2834271c020205369f94/test/helper.rb#L30
-  def reset_redis_v7!
+  def reset_redis!
     if Sidekiq.default_configuration.instance_variable_defined?(:@redis)
       existing_pool = Sidekiq.default_configuration.instance_variable_get(:@redis)
       existing_pool&.shutdown(&:close)
@@ -106,15 +89,8 @@ class PseudoLogger < Logger
   end
 end
 
-if SIDEKIQ7
-  Sidekiq.configure_server do |config|
-    config.queues = %i[default]
-  end
-else
-  Sidekiq[:queues] = %i[default]
-end
-
 Sidekiq.configure_server do |config|
+  config.queues = %i[default]
   config.redis  = { url: REDIS_URL }
   config.logger = PseudoLogger.instance
 end
