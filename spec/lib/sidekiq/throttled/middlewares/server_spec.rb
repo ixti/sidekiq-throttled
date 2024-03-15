@@ -6,7 +6,9 @@ RSpec.describe Sidekiq::Throttled::Middlewares::Server do
   subject(:middleware) { described_class.new }
 
   describe "#call" do
+    let(:args) { ["bar", 1] }
     let(:payload) { { "class" => "foo", "jid" => "bar" } }
+    let(:payload_args) { { "class" => "foo", "jid" => "bar", "args" => args } }
 
     context "when job class has strategy with concurrency constraint" do
       let! :strategy do
@@ -17,6 +19,11 @@ RSpec.describe Sidekiq::Throttled::Middlewares::Server do
       it "calls #finalize! of queue with jid of job being processed" do
         expect(strategy).to receive(:finalize!).with "bar"
         middleware.call(double, payload, double) { |*| :foobar }
+      end
+
+      it "calls #finalize! of queue with jid and args of job being processed" do
+        expect(strategy).to receive(:finalize!).with "bar", *args
+        middleware.call(double, payload_args, double) { |*| :foobar }
       end
 
       it "returns yields control to the given block" do
@@ -38,6 +45,14 @@ RSpec.describe Sidekiq::Throttled::Middlewares::Server do
           "jid"     => "bar"
         }
       end
+      let(:payload_args) do
+        {
+          "class"   => "ActiveJob::QueueAdapters::SidekiqAdapter::JobWrapper",
+          "wrapped" => "wrapped-foo",
+          "args"    => [{ "job_class" => "foo", "arguments" => args }],
+          "jid"     => "bar"
+        }
+      end
 
       let! :strategy do
         Sidekiq::Throttled::Registry.add payload["wrapped"],
@@ -48,6 +63,12 @@ RSpec.describe Sidekiq::Throttled::Middlewares::Server do
         expect(strategy).to receive(:finalize!).with "bar"
         middleware.call(double, payload, double) { |*| :foobar }
       end
+
+      it "calls #finalize! of queue with jid and args of job being processed" do
+        expect(strategy).to receive(:finalize!).with "bar", *args
+        middleware.call(double, payload_args, double) { |*| :foobar }
+      end
+
 
       it "returns yields control to the given block" do
         expect { |b| middleware.call(double, payload, double, &b) }
