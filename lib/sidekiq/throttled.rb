@@ -77,12 +77,13 @@ module Sidekiq
       def throttled?(message)
         message = Sidekiq.load_json(message)
         job     = message.fetch("wrapped") { message["class"] }
+        args    = message.key?("wrapped") ? message.dig("args", 0, "arguments") : message["args"]
         jid     = message["jid"]
 
         return false unless job && jid
 
         Registry.get(job) do |strategy|
-          return strategy.throttled?(jid, *message["args"])
+          return strategy.throttled?(jid, *args)
         end
 
         false
