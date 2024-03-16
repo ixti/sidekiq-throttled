@@ -5,6 +5,7 @@ require "sidekiq"
 require_relative "./throttled/config"
 require_relative "./throttled/cooldown"
 require_relative "./throttled/job"
+require_relative "./throttled/message"
 require_relative "./throttled/middlewares/server"
 require_relative "./throttled/patches/basic_fetch"
 require_relative "./throttled/patches/super_fetch"
@@ -75,15 +76,11 @@ module Sidekiq
       # @param [String] message Job's JSON payload
       # @return [Boolean]
       def throttled?(message)
-        message = Sidekiq.load_json(message)
-        job     = message.fetch("wrapped") { message["class"] }
-        args    = message.key?("wrapped") ? message.dig("args", 0, "arguments") : message["args"]
-        jid     = message["jid"]
+        message = Message.new(message)
+        return false unless message.job_class && message.job_id
 
-        return false unless job && jid
-
-        Registry.get(job) do |strategy|
-          return strategy.throttled?(jid, *args)
+        Registry.get(message.job_class) do |strategy|
+          return strategy.throttled?(message.job_id, *message.job_args)
         end
 
         false

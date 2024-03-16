@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 # internal
+require_relative "../message"
 require_relative "../registry"
 
 module Sidekiq
@@ -13,13 +14,11 @@ module Sidekiq
         def call(_worker, msg, _queue)
           yield
         ensure
-          job  = msg.fetch("wrapped") { msg["class"] }
-          args = msg.key?("wrapped") ? msg.dig("args", 0, "arguments") : msg["args"]
-          jid  = msg["jid"]
+          message = Message.new(msg)
 
-          if job && jid
-            Registry.get job do |strategy|
-              strategy.finalize!(jid, *args)
+          if message.job_class && message.job_id
+            Registry.get(message.job_class) do |strategy|
+              strategy.finalize!(message.job_id, *message.job_args)
             end
           end
         end

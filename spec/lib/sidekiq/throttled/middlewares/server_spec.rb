@@ -69,7 +69,6 @@ RSpec.describe Sidekiq::Throttled::Middlewares::Server do
         middleware.call(double, payload_args, double) { |*| :foobar }
       end
 
-
       it "returns yields control to the given block" do
         expect { |b| middleware.call(double, payload, double, &b) }
           .to yield_control
@@ -112,6 +111,32 @@ RSpec.describe Sidekiq::Throttled::Middlewares::Server do
       it "returns result of given block" do
         expect(middleware.call(double, payload, double) { |*| :foobar })
           .to be :foobar
+      end
+    end
+
+    context "when message contains no job class" do
+      before do
+        allow(Sidekiq::Throttled::Registry).to receive(:get).and_call_original
+        payload.delete("class")
+      end
+
+      it "does not attempt to retrieve any strategy" do
+        expect { |b| middleware.call(double, payload, double, &b) }.to yield_control
+
+        expect(Sidekiq::Throttled::Registry).not_to receive(:get)
+      end
+    end
+
+    context "when message contains no jid" do
+      before do
+        allow(Sidekiq::Throttled::Registry).to receive(:get).and_call_original
+        payload.delete("jid")
+      end
+
+      it "does not attempt to retrieve any strategy" do
+        expect { |b| middleware.call(double, payload, double, &b) }.to yield_control
+
+        expect(Sidekiq::Throttled::Registry).not_to receive(:get)
       end
     end
   end

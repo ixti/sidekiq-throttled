@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Correctly unwrap `ActiveJob` arguments:
+  [#184](https://github.com/ixti/sidekiq-throttled/pull/184),
+  [#185](https://github.com/ixti/sidekiq-throttled/pull/185).
+
 
 ## [1.3.0] - 2024-01-18
 

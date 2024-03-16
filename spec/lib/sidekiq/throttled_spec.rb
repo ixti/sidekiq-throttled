@@ -54,8 +54,8 @@ RSpec.describe Sidekiq::Throttled do
 
     it "passes JID and arguments to registered strategy" do
       strategy = Sidekiq::Throttled::Registry.add("foo",
-                                                  threshold:   { limit: 1, period: 1 },
-                                                  concurrency: { limit: 1 })
+        threshold:   { limit: 1, period: 1 },
+        concurrency: { limit: 1 })
 
       payload_jid = jid
       args        = ["foo", 1]
@@ -102,8 +102,8 @@ RSpec.describe Sidekiq::Throttled do
 
     it "unwraps ActiveJob-jobs job parameters" do
       strategy = Sidekiq::Throttled::Registry.add("wrapped-foo",
-                                                  threshold:   { limit: 1, period: 1 },
-                                                  concurrency: { limit: 1 })
+        threshold:   { limit: 1, period: 1 },
+        concurrency: { limit: 1 })
 
       payload_jid = jid
       args        = ["foo", 1]
