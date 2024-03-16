@@ -69,7 +69,6 @@ RSpec.describe Sidekiq::Throttled::Middlewares::Server do
         middleware.call(double, payload_args, double) { |*| :foobar }
       end
 
-
       it "returns yields control to the given block" do
         expect { |b| middleware.call(double, payload, double, &b) }
           .to yield_control
