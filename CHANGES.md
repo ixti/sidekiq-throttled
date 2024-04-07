@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2024-04-07
+
 ### Fixed
 
 - Correctly unwrap `ActiveJob` arguments:
@@ -111,7 +113,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove queue exclusion from fetcher pon throttled job
 
 
-[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v1.3.0...main
+[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v1.4.0...main
+[1.4.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.0.1...v1.1.0
