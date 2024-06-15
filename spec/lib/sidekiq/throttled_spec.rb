@@ -19,12 +19,6 @@ RSpec.describe Sidekiq::Throttled do
     expect(Sidekiq::BasicFetch).to include(Sidekiq::Throttled::Patches::BasicFetch)
   end
 
-  describe ".setup!" do
-    it "shows deprecation warning" do
-      expect { described_class.setup! }.to output(%r{deprecated}).to_stderr
-    end
-  end
-
   describe ".throttled?" do
     it "tolerates invalid JSON message" do
       expect(described_class.throttled?("][")).to be false

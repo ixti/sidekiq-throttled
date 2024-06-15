@@ -87,18 +87,6 @@ module Sidekiq
       rescue StandardError
         false
       end
-
-      # @deprecated Will be removed in 2.0.0
-      def setup!
-        warn "Sidekiq::Throttled.setup! was deprecated"
-
-        Sidekiq.configure_server do |config|
-          config.server_middleware do |chain|
-            chain.remove(Sidekiq::Throttled::Middlewares::Server)
-            chain.add(Sidekiq::Throttled::Middlewares::Server)
-          end
-        end
-      end
     end
   end
 
