@@ -79,6 +79,7 @@ class MyWorker
 end
 ----
 
+
 === Web UI
 
 To add a Throttled tab to your sidekiq web dashboard, require it durring your
