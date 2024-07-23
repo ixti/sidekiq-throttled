@@ -31,7 +31,6 @@ Or install it yourself as:
 
   $ gem install sidekiq-throttled
 
-
 == Usage
 
 Add somewhere in your app's bootstrap (e.g. `config/initializers/sidekiq.rb` if
@@ -78,6 +77,17 @@ class MyWorker
 
   # ...
 end
+----
+
+
+=== Web UI
+
+To add a Throttled tab to your sidekiq web dashboard, require it durring your
+application initialization.
+
+[source,ruby]
+----
+require "sidekiq/throttled/web"
 ----
 
 
