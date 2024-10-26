@@ -20,8 +20,8 @@ module Sidekiq
       attr_reader :cooldown_threshold
 
       def initialize
-        @cooldown_period    = 2.0
-        @cooldown_threshold = 1
+        @cooldown_period    = 1.0
+        @cooldown_threshold = 100
       end
 
       # @!attribute [w] cooldown_period

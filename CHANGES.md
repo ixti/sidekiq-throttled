@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Drop Sidekiq < 7 support
 - Remove deprecated `Sidekiq::Throttled.setup!`
+- Change default cooldown parameter values
 
 ## [1.4.0] - 2024-04-07
 
