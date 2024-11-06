@@ -99,16 +99,27 @@ Sidekiq::Throttled.configure do |config|
   # Period in seconds to exclude queue from polling in case it returned
   # {config.cooldown_threshold} amount of throttled jobs in a row. Set
   # this value to `nil` to disable cooldown manager completely.
-  # Default: 2.0
-  config.cooldown_period = 2.0
+  # Default: 1.0
+  config.cooldown_period = 1.0
 
   # Exclude queue from polling after it returned given amount of throttled
   # jobs in a row.
-  # Default: 1 (cooldown after first throttled job)
-  config.cooldown_threshold = 1
+  # Default: 100 (cooldown after hundredth throttled job in a row)
+  config.cooldown_threshold = 100
 end
 ----
 
+[WARNING]
+.Cooldown Settings
+====
+If a queue contains a thousand jobs in a row that will be throttled,
+the cooldown will kick-in 10 times in a row, meaning it will take 10 seconds
+before all those jobs are put back at the end of the queue and you actually
+start processing other jobs.
+
+You may want to adjust the cooldown_threshold and cooldown_period,
+keeping in mind that this will also impact the load on your Redis server.
+====
 
 ==== Middleware(s)
 
