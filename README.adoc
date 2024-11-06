@@ -108,8 +108,18 @@ Sidekiq::Throttled.configure do |config|
   config.cooldown_threshold = 100
 end
 ----
-⚠️ If a queue contains a thousand jobs in a row that will be throttled, the cooldown will kick-in 10 times in a row, meaning it will take 10 seconds before all those jobs are put back at the end of the queue and you actually start processing other jobs. 
-You may want to adjust the cooldown_threshold and cooldown_period, keeping in mind that this will also impact the load on your Redis server.
+
+[WARNING]
+.Cooldown Settings
+====
+If a queue contains a thousand jobs in a row that will be throttled,
+the cooldown will kick-in 10 times in a row, meaning it will take 10 seconds
+before all those jobs are put back at the end of the queue and you actually
+start processing other jobs.
+
+You may want to adjust the cooldown_threshold and cooldown_period,
+keeping in mind that this will also impact the load on your Redis server.
+====
 
 ==== Middleware(s)
 
