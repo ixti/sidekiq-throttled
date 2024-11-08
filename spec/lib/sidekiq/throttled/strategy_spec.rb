@@ -397,6 +397,15 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         end
       end
     end
+
+    describe "with an invalid :with parameter" do
+      let(:options) { threshold }
+
+      it "raises an error when :with is not a valid value" do
+        expect { subject.requeue_throttled(work, with: :invalid_with_value) }
+          .to raise_error(RuntimeError, "unrecognized :with option invalid_with_value")
+      end
+    end
   end
 
   describe "#reset!" do

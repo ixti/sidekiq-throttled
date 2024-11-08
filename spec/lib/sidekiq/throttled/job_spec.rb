@@ -49,6 +49,12 @@ RSpec.describe Sidekiq::Throttled::Job do
       expect(working_class.sidekiq_throttled_requeue_options).to eq({ to: :other_queue, with: :schedule })
     end
 
+    it "raises an error when :with is not a valid value" do
+      expect do
+        working_class.sidekiq_throttle(foo: :bar, requeue: { with: :invalid_with_value })
+      end.to raise_error(ArgumentError, "requeue: invalid_with_value is not a valid value for :with")
+    end
+
     context "when default_requeue_options are set" do
       before do
         Sidekiq::Throttled.configure do |config|
