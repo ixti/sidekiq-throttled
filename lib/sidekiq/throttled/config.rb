@@ -30,8 +30,7 @@ module Sidekiq
       attr_reader :default_requeue_options
 
       def initialize
-        @cooldown_period    = 2.0
-        @cooldown_threshold = 1
+        reset!
       end
 
       # @!attribute [w] cooldown_period
@@ -55,6 +54,12 @@ module Sidekiq
         requeue_with = options.delete(:with).intern || :enqueue
 
         @default_requeue_options = options.merge({ with: requeue_with })
+      end
+
+      def reset!
+        @cooldown_period          = 2.0
+        @cooldown_threshold       = 1
+        @default_requeue_options  = { with: :enqueue }
       end
     end
   end

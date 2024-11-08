@@ -54,6 +54,11 @@ module Sidekiq
       # @return [Cooldown, nil]
       attr_reader :cooldown
 
+      # @api internal
+      #
+      # @return [Config, nil]
+      attr_reader :config
+
       # @example
       #   Sidekiq::Throttled.configure do |config|
       #     config.cooldown_period = nil # Disable queues cooldown manager

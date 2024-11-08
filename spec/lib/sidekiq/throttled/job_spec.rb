@@ -50,9 +50,15 @@ RSpec.describe Sidekiq::Throttled::Job do
     end
 
     context "when default_requeue_options are set" do
-      before { Sidekiq::Throttled.configuration.default_requeue_options = { with: :schedule } }
+      before do
+        Sidekiq::Throttled.configure do |config|
+          config.default_requeue_options = { with: :schedule }
+        end
+      end
 
-      after { Sidekiq::Throttled.configuration.reset! }
+      after do
+        Sidekiq::Throttled.configure(&:reset!)
+      end
 
       it "uses the default when not overridden" do
         expect(Sidekiq::Throttled::Registry)

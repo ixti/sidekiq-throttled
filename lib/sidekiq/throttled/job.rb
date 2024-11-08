@@ -33,7 +33,7 @@ module Sidekiq
       #
       # @private
       def self.included(base)
-        worker.sidekiq_class_attribute :sidekiq_throttled_requeue_options
+        base.sidekiq_class_attribute :sidekiq_throttled_requeue_options
         base.extend(ClassMethods)
       end
 
@@ -91,7 +91,7 @@ module Sidekiq
         # @see Registry.add
         # @return [void]
         def sidekiq_throttle(**kwargs)
-          requeue_options = Throttled.configuration.default_requeue_options.merge(kwargs.delete(:requeue) || {})
+          requeue_options = Throttled.config.default_requeue_options.merge(kwargs.delete(:requeue) || {})
           unless VALID_VALUES_FOR_REQUEUE_WITH.include?(requeue_options[:with])
             raise ArgumentError, "requeue: #{requeue_options[:with]} is not a valid value for :with"
           end
