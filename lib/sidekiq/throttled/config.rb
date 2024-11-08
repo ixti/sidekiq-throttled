@@ -57,9 +57,9 @@ module Sidekiq
       end
 
       def reset!
-        @cooldown_period          = 2.0
-        @cooldown_threshold       = 1
-        @default_requeue_options  = { with: :enqueue }
+        @cooldown_period    = 1.0
+        @cooldown_threshold = 100
+        @default_requeue_options = { with: :enqueue }
       end
     end
   end

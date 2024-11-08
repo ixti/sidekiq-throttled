@@ -8,7 +8,7 @@ RSpec.describe Sidekiq::Throttled::Config do
   describe "#cooldown_period" do
     subject { config.cooldown_period }
 
-    it { is_expected.to eq 2.0 }
+    it { is_expected.to eq 1.0 }
   end
 
   describe "#cooldown_period=" do
@@ -36,7 +36,7 @@ RSpec.describe Sidekiq::Throttled::Config do
   describe "#cooldown_threshold" do
     subject { config.cooldown_threshold }
 
-    it { is_expected.to eq 1 }
+    it { is_expected.to eq 100 }
   end
 
   describe "#cooldown_threshold=" do
