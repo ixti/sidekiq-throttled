@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "support/simplecov" if ENV["CI"] || ENV["COVERAGE"]
 require_relative "support/sidekiq"
 require_relative "support/timecop"
 
@@ -14,6 +13,21 @@ RSpec.configure do |config|
     Sidekiq::Throttled::Registry.instance_eval do
       @strategies.clear
       @aliases.clear
+    end
+
+    # Reset config
+    Sidekiq::Throttled.configure do |throttled_config|
+      defaults = Sidekiq::Throttled::Config.new
+
+      throttled_config.cooldown_period    = defaults.cooldown_period
+      throttled_config.cooldown_threshold = defaults.cooldown_threshold
+    end
+  end
+
+  # Sidekiq-Pro related specs require license set in Bundler
+  unless Bundler.settings["gems.contribsys.com"]&.include?(":")
+    config.define_derived_metadata(sidekiq_pro: true) do |metadata|
+      metadata[:skip] = "Sidekiq::Pro license not found or not supported"
     end
   end
 

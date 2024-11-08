@@ -12,11 +12,7 @@
 {doc-link}[image:{doc-badge}[API Documentation]]
 ****
 
-NOTE: This is the 1.x *development* branch. For the 0.x *stable* branch, please
-  see: https://github.com/ixti/sidekiq-throttled/tree/0-x-stable[0-x-stable]
-
-Concurrency and threshold throttling for https://github.com/mperham/sidekiq[Sidekiq].
-
+Concurrency and threshold throttling for https://github.com/sidekiq/sidekiq[Sidekiq].
 
 == Installation
 
@@ -35,7 +31,6 @@ Or install it yourself as:
 
   $ gem install sidekiq-throttled
 
-
 == Usage
 
 Add somewhere in your app's bootstrap (e.g. `config/initializers/sidekiq.rb` if
@@ -44,11 +39,7 @@ you are using Rails):
 [source,ruby]
 ----
 require "sidekiq/throttled"
-Sidekiq::Throttled.setup!
 ----
-
-Load order can be an issue if you are using other Sidekiq plugins and/or middleware.
-To prevent any problems, add the `.setup!` call to the bottom of your init file.
 
 Once you've done that you can include `Sidekiq::Throttled::Job` to your
 job classes and configure throttling:
@@ -87,6 +78,59 @@ class MyWorker
   # ...
 end
 ----
+
+
+=== Web UI
+
+To add a Throttled tab to your sidekiq web dashboard, require it durring your
+application initialization.
+
+[source,ruby]
+----
+require "sidekiq/throttled/web"
+----
+
+
+=== Configuration
+
+[source,ruby]
+----
+Sidekiq::Throttled.configure do |config|
+  # Period in seconds to exclude queue from polling in case it returned
+  # {config.cooldown_threshold} amount of throttled jobs in a row. Set
+  # this value to `nil` to disable cooldown manager completely.
+  # Default: 2.0
+  config.cooldown_period = 2.0
+
+  # Exclude queue from polling after it returned given amount of throttled
+  # jobs in a row.
+  # Default: 1 (cooldown after first throttled job)
+  config.cooldown_threshold = 1
+end
+----
+
+
+==== Middleware(s)
+
+`Sidekiq::Throttled` relies on following bundled middlewares:
+
+* `Sidekiq::Throttled::Middlewares::Server`
+
+The middleware is automatically injected when you require `sidekiq/throttled`.
+In rare cases, when this causes an issue, you can change middleware order manually:
+
+[source,ruby]
+----
+Sidekiq.configure_server do |config|
+  # ...
+
+  config.server_middleware do |chain|
+    chain.prepend(Sidekiq::Throttled::Middlewares::Server)
+  end
+end
+----
+
+See: https://github.com/sidekiq/sidekiq/blob/main/lib/sidekiq/middleware/chain.rb
 
 
 === Observer
@@ -236,6 +280,7 @@ This library aims to support and is tested against the following Ruby versions:
 * Ruby 3.0.x
 * Ruby 3.1.x
 * Ruby 3.2.x
+* Ruby 3.3.x
 
 If something doesn't work on one of these versions, it's a bug.
 
@@ -255,10 +300,15 @@ dropped.
 
 This library aims to support and work with following Sidekiq versions:
 
-* Sidekiq 6.5.x
 * Sidekiq 7.0.x
 * Sidekiq 7.1.x
+* Sidekiq 7.2.x
 
+And the following Sidekiq Pro versions:
+
+* Sidekiq Pro 7.0.x
+* Sidekiq Pro 7.1.x
+* Sidekiq Pro 7.2.x
 
 == Development
 
@@ -267,6 +317,11 @@ This library aims to support and work with following Sidekiq versions:
   bundle exec appraisal install
   bundle exec rake
 
+=== Sidekiq-Pro
+
+If you're working on Sidekiq-Pro support make sure that you have Sidekiq-Pro
+license set either in the global config, or in `BUNDLE_GEMS\__CONTRIBSYS__COM`
+environment variable.
 
 == Contributing
 
@@ -276,3 +331,11 @@ This library aims to support and work with following Sidekiq versions:
 * Send a pull request
 * If we like them we'll merge them
 * If we've accepted a patch, feel free to ask for commit access!
+
+
+== Endorsement
+
+https://github.com/sensortower[image:sensortower.svg[SensorTower]]
+
+The initial work on the project was initiated to address the needs of
+https://github.com/sensortower[SensorTower].

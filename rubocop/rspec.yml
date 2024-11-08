@@ -1,6 +1,11 @@
+RSpec/BeNil:
+  Enabled: true
+  EnforcedStyle: be
+
 RSpec/ExampleLength:
   Enabled: true
   Max: 10
+  CountAsOne: [array, hash, heredoc, method_call]
 
 RSpec/MultipleExpectations:
   Enabled: false

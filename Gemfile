@@ -15,7 +15,10 @@ group :test do
   gem "rack-test"
 
   gem "rspec"
+
   gem "simplecov"
+  gem "simplecov-cobertura"
+
   gem "timecop"
 
   gem "rubocop",              require: false

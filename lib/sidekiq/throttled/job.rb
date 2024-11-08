@@ -32,9 +32,9 @@ module Sidekiq
       #   in order to make API inline with `include Sidekiq::Job`.
       #
       # @private
-      def self.included(worker)
+      def self.included(base)
         worker.sidekiq_class_attribute :sidekiq_throttled_requeue_options
-        worker.send(:extend, ClassMethods)
+        base.extend(ClassMethods)
       end
 
       # Helper methods added to the singleton class of destination
@@ -88,7 +88,7 @@ module Sidekiq
         #     end
         #
         # @param [Hash] requeue What to do with jobs that are throttled
-        # @see Registry.add for other parameters
+        # @see Registry.add
         # @return [void]
         def sidekiq_throttle(**kwargs)
           requeue_options = Throttled.configuration.default_requeue_options.merge(kwargs.delete(:requeue) || {})

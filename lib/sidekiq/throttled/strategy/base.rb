@@ -15,7 +15,7 @@ module Sidekiq
           return key unless @key_suffix
 
           key << ":#{@key_suffix.call(*job_args)}"
-        rescue => e
+        rescue StandardError => e
           Sidekiq.logger.error "Failed to get key suffix: #{e}"
           raise e
         end

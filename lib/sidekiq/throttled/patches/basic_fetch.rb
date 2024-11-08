@@ -3,28 +3,14 @@
 require "sidekiq"
 require "sidekiq/fetch"
 
+require_relative "./throttled_retriever"
+
 module Sidekiq
   module Throttled
     module Patches
       module BasicFetch
-        class << self
-          def apply!
-            Sidekiq::BasicFetch.prepend(self) unless Sidekiq::BasicFetch.include?(self)
-          end
-        end
-
-        # Retrieves job from redis.
-        #
-        # @return [Sidekiq::Throttled::UnitOfWork, nil]
-        def retrieve_work
-          work = super
-
-          if work && Throttled.throttled?(work.job)
-            Throttled.requeue_throttled(work)
-            return nil
-          end
-
-          work
+        def self.prepended(base)
+          base.prepend(ThrottledRetriever)
         end
 
         private
@@ -35,15 +21,14 @@ module Sidekiq
         # @param [Array<String>] queues
         # @return [Array<String>]
         def queues_cmd
-          queues = super
+          throttled_queues = Throttled.cooldown&.queues
+          return super if throttled_queues.nil? || throttled_queues.empty?
 
-          # TODO: Refactor to be prepended as an integration mixin during configuration stage
-          #   Or via configurable queues reducer
-          queues -= Sidekiq::Pauzer.paused_queues.map { |name| "queue:#{name}" } if defined?(Sidekiq::Pauzer)
-
-          queues
+          super - throttled_queues
         end
       end
     end
   end
 end
+
+Sidekiq::BasicFetch.prepend(Sidekiq::Throttled::Patches::BasicFetch)

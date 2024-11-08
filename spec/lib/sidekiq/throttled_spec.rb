@@ -10,26 +10,20 @@ class ThrottledTestJob
 end
 
 RSpec.describe Sidekiq::Throttled do
-  describe ".setup!" do
-    before do
-      require "sidekiq/processor"
-      allow(Sidekiq).to receive(:server?).and_return true
-      described_class.setup!
-    end
+  it "registers server middleware" do
+    require "sidekiq/processor"
+    allow(Sidekiq).to receive(:server?).and_return true
 
-    it "infuses Sidekiq::BasicFetch with our patches" do
-      expect(Sidekiq::BasicFetch).to include(Sidekiq::Throttled::Patches::BasicFetch)
+    if Sidekiq::VERSION >= "7.0"
+      expect(Sidekiq.default_configuration.server_middleware.exists?(Sidekiq::Throttled::Middlewares::Server))
+        .to be true
+    else
+      expect(Sidekiq.server_middleware.exists?(Sidekiq::Throttled::Middlewares::Server)).to be true
     end
+  end
 
-    it "injects Sidekiq::Throttled::Middleware server middleware" do
-      if Sidekiq::VERSION >= "7.0"
-        expect(Sidekiq.default_configuration.server_middleware.exists?(Sidekiq::Throttled::Middleware))
-          .to be true
-      else
-        expect(Sidekiq.server_middleware.exists?(Sidekiq::Throttled::Middleware))
-          .to be true
-      end
-    end
+  it "infuses Sidekiq::BasicFetch with our patches" do
+    expect(Sidekiq::BasicFetch).to include(Sidekiq::Throttled::Patches::BasicFetch)
   end
 
   describe ".throttled?" do
@@ -55,6 +49,20 @@ RSpec.describe Sidekiq::Throttled do
       message     = %({"class":"foo","jid":#{payload_jid.inspect}})
 
       expect(strategy).to receive(:throttled?).with payload_jid
+
+      described_class.throttled? message
+    end
+
+    it "passes JID and arguments to registered strategy" do
+      strategy = Sidekiq::Throttled::Registry.add("foo",
+        threshold:   { limit: 1, period: 1 },
+        concurrency: { limit: 1 })
+
+      payload_jid = jid
+      args        = ["foo", 1]
+      message     = %({"class":"foo","jid":#{payload_jid.inspect},"args":#{args.inspect}})
+
+      expect(strategy).to receive(:throttled?).with payload_jid, *args
 
       described_class.throttled? message
     end
@@ -89,6 +97,25 @@ RSpec.describe Sidekiq::Throttled do
       })
 
       expect(strategy).to receive(:throttled?).with payload_jid
+
+      described_class.throttled? message
+    end
+
+    it "unwraps ActiveJob-jobs job parameters" do
+      strategy = Sidekiq::Throttled::Registry.add("wrapped-foo",
+        threshold:   { limit: 1, period: 1 },
+        concurrency: { limit: 1 })
+
+      payload_jid = jid
+      args        = ["foo", 1]
+      message     = JSON.dump({
+        "class"   => "ActiveJob::QueueAdapters::SidekiqAdapter::JobWrapper",
+        "wrapped" => "wrapped-foo",
+        "args"    => [{ "job_class" => "TestJob", "arguments" => args }],
+        "jid"     => payload_jid
+      })
+
+      expect(strategy).to receive(:throttled?).with payload_jid, *args
 
       described_class.throttled? message
     end
