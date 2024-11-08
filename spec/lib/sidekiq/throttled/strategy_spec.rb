@@ -208,11 +208,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
   describe "#requeue_throttled" do
     let(:sidekiq_config) do
-      if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
-        Sidekiq::DEFAULTS
-      else
-        Sidekiq::Config.new(queues: %w[default]).default_capsule
-      end
+      Sidekiq::Config.new(queues: %w[default]).default_capsule
     end
 
     let!(:work) do
