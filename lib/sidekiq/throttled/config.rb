@@ -19,9 +19,18 @@ module Sidekiq
       # @return [Integer]
       attr_reader :cooldown_threshold
 
+      # Specifies how we should return throttled jobs to the queue so they can be executed later.
+      # Expects a hash with keys that may include :with and :to
+      # For :with, options are `:enqueue` (put them on the end of the queue) and `:schedule` (schedule for later).
+      # For :to, the name of a sidekiq queue should be specified. If none is specified, jobs will by default be
+      # requeued to the same queue they were originally enqueued in.
+      # Default: {with: `:enqueue`}
+      #
+      # @return [Hash]
+      attr_reader :default_requeue_options
+
       def initialize
-        @cooldown_period    = 1.0
-        @cooldown_threshold = 100
+        reset!
       end
 
       # @!attribute [w] cooldown_period
@@ -38,6 +47,19 @@ module Sidekiq
         raise ArgumentError, "threshold must be positive" unless value.positive?
 
         @cooldown_threshold = value
+      end
+
+      # @!attribute [w] default_requeue_options
+      def default_requeue_options=(options)
+        requeue_with = options.delete(:with).intern || :enqueue
+
+        @default_requeue_options = options.merge({ with: requeue_with })
+      end
+
+      def reset!
+        @cooldown_period    = 1.0
+        @cooldown_threshold = 100
+        @default_requeue_options = { with: :enqueue }
       end
     end
   end

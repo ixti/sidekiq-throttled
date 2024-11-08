@@ -12,7 +12,7 @@ module Sidekiq
 
           if work && Throttled.throttled?(work.job)
             Throttled.cooldown&.notify_throttled(work.queue)
-            requeue_throttled(work)
+            Throttled.requeue_throttled(work)
             return nil
           end
 

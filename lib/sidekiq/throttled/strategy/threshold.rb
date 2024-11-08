@@ -69,6 +69,25 @@ module Sidekiq
           Sidekiq.redis { |redis| 1 == SCRIPT.call(redis, keys: keys, argv: argv) }
         end
 
+        # @return [Float] How long, in seconds, before we'll next be able to take on jobs
+        def retry_in(*job_args)
+          job_limit = limit(job_args)
+          return 0.0 if !job_limit || count(*job_args) < job_limit
+
+          job_period = period(job_args)
+          job_key = key(job_args)
+          time_since_oldest = Time.now.to_f - Sidekiq.redis { |redis| redis.lindex(job_key, -1) }.to_f
+          if time_since_oldest > job_period
+            # The oldest job on our list is from more than the throttling period ago,
+            # which means we have not hit the limit this period.
+            0.0
+          else
+            # If we can only have X jobs every Y minutes, then wait until Y minutes have elapsed
+            # since the oldest job on our list.
+            job_period - time_since_oldest
+          end
+        end
+
         # @return [Integer] Current count of jobs
         def count(*job_args)
           Sidekiq.redis { |conn| conn.llen(key(job_args)) }.to_i

@@ -54,6 +54,11 @@ module Sidekiq
       # @return [Cooldown, nil]
       attr_reader :cooldown
 
+      # @api internal
+      #
+      # @return [Config, nil]
+      attr_reader :config
+
       # @example
       #   Sidekiq::Throttled.configure do |config|
       #     config.cooldown_period = nil # Disable queues cooldown manager
@@ -86,6 +91,19 @@ module Sidekiq
         false
       rescue StandardError
         false
+      end
+
+      # Return throttled job to be executed later, delegating the details of how to do that
+      # to the Strategy for that job.
+      #
+      # @return [void]
+      def requeue_throttled(work)
+        message = JSON.parse(work.job)
+        job_class = Object.const_get(message.fetch("wrapped") { message.fetch("class") { return false } })
+
+        Registry.get job_class do |strategy|
+          strategy.requeue_throttled(work, **job_class.sidekiq_throttled_requeue_options)
+        end
       end
     end
   end
