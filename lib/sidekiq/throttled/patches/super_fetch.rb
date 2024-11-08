@@ -14,19 +14,6 @@ module Sidekiq
 
         private
 
-        # Calls SuperFetch UnitOfWork's requeue to remove the job from the
-        # temporary queue and push job back to the head of the queue, so that
-        # the job won't be tried immediately after it was requeued (in most cases).
-        #
-        # @note This is triggered when job is throttled.
-        #
-        # @return [void]
-        def requeue_throttled(work)
-          # SuperFetch UnitOfWork's requeue will remove it from the temporary
-          # queue and then requeue it, so no acknowledgement call is needed.
-          work.requeue
-        end
-
         # Returns list of non-paused queues to try to fetch jobs from.
         #
         # @note It may return an empty array.
