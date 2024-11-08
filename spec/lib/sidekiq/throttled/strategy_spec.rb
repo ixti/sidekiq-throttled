@@ -1,18 +1,15 @@
 # frozen_string_literal: true
 
-class ThrottledTestJob
-  include Sidekiq::Job
-  include Sidekiq::Throttled::Job
-
-  def perform(*); end
-end
-
 RSpec.describe Sidekiq::Throttled::Strategy do
   subject(:strategy) { described_class.new(:foo, **options) }
 
   let(:threshold)       { { threshold: { limit: 5, period: 10 } } }
   let(:concurrency)     { { concurrency: { limit: 7 } } }
   let(:ten_seconds_ago) { Time.now - 10 }
+
+  before do
+    stub_job_class("ThrottledTestJob")
+  end
 
   describe ".new" do
     it "fails if neither :threshold nor :concurrency given" do
