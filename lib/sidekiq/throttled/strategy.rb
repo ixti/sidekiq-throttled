@@ -84,18 +84,14 @@ module Sidekiq
         # Resolve :with and :to arguments, calling them if they are Procs
         job_args = JSON.parse(work.job)["args"]
         requeue_with = with.respond_to?(:call) ? with.call(*job_args) : with
-        requeue_to = to.respond_to?(:call) ? to.call(*job_args) : to
+        target_queue = calc_target_queue(work, to)
 
         case requeue_with
         when :enqueue
-          # Push the job back to the head of the queue.
-          target_list = requeue_to.nil? ? work.queue : "queue:#{requeue_to}"
-
-          # This is the same operation Sidekiq performs upon `Sidekiq::Worker.perform_async` call.
-          Sidekiq.redis { |conn| conn.lpush(target_list, work.job) }
+          re_enqueue_throttled(work, target_queue)
         when :schedule
           # Find out when we will next be able to execute this job, and reschedule for then.
-          reschedule_throttled(work, requeue_to: requeue_to)
+          reschedule_throttled(work, requeue_to: target_queue)
         else
           raise "unrecognized :with option #{with}"
         end
@@ -107,7 +103,7 @@ module Sidekiq
         @concurrency&.finalize!(jid, *job_args)
       end
 
-      # Resets count of jobs of all avaliable strategies
+      # Resets count of jobs of all available strategies
       # @return [void]
       def reset!
         @concurrency&.reset!
@@ -116,13 +112,50 @@ module Sidekiq
 
       private
 
-      def reschedule_throttled(work, requeue_to: nil)
+      def calc_target_queue(work, to)
+        target = case to
+        when Proc, Method
+          to.call(*JSON.parse(work.job)["args"])
+        when NilClass
+          work.queue
+        when String, Symbol
+          to.to_s
+        else
+          raise ArgumentError, "Invalid argument for `to`"
+        end
+
+        target = work.queue if target.nil? || target.empty?
+
+        target.start_with?("queue:") ? target : "queue:#{target}"
+      end
+
+      # Push the job back to the head of the queue.
+      def re_enqueue_throttled(work, requeue_to)
+        case work
+        when Sidekiq::Pro::SuperFetch::UnitOfWork
+          # Calls SuperFetch UnitOfWork's requeue to remove the job from the
+          # temporary queue and push job back to the head of the target queue, so that
+          # the job won't be tried immediately after it was requeued (in most cases).
+          work.queue = requeue_to if requeue_to
+          work.requeue
+        else
+          # This is the same operation Sidekiq performs upon `Sidekiq::Worker.perform_async` call.
+          Sidekiq.redis { |conn| conn.lpush(requeue_to, work.job) }
+        end
+      end
+
+      def reschedule_throttled(work, requeue_to)
         message = JSON.parse(work.job)
         job_class = message.fetch("wrapped") { message.fetch("class") { return false } }
         job_args = message["args"]
 
-        target_queue = requeue_to.nil? ? work.queue : "queue:#{requeue_to}"
-        Sidekiq::Client.enqueue_to_in(target_queue, retry_in(work), Object.const_get(job_class), *job_args)
+        # Re-enqueue the job to the target queue at another time as a NEW unit of work
+        # AND THEN mark this work as done, so SuperFetch doesn't think this instance is orphaned
+        # Technically, the job could processed twice if the process dies between the two lines,
+        # but your job should be idempotent anyway, right?
+        # The job running twice was already a risk with SuperFetch anyway and this doesn't really increase that risk.
+        Sidekiq::Client.enqueue_to_in(requeue_to, retry_in(work), Object.const_get(job_class), *job_args)
+        work.acknowledge
       end
 
       def retry_in(work)
