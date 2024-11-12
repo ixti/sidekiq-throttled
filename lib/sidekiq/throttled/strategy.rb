@@ -112,17 +112,17 @@ module Sidekiq
 
       private
 
-      def calc_target_queue(work, to)
+      def calc_target_queue(work, to) # rubocop:disable Metrics/MethodLength
         target = case to
-        when Proc, Method
-          to.call(*JSON.parse(work.job)["args"])
-        when NilClass
-          work.queue
-        when String, Symbol
-          to.to_s
-        else
-          raise ArgumentError, "Invalid argument for `to`"
-        end
+                 when Proc, Method
+                   to.call(*JSON.parse(work.job)["args"])
+                 when NilClass
+                   work.queue
+                 when String, Symbol
+                   to.to_s
+                 else
+                   raise ArgumentError, "Invalid argument for `to`"
+                 end
 
         target = work.queue if target.nil? || target.empty?
 
@@ -131,8 +131,8 @@ module Sidekiq
 
       # Push the job back to the head of the queue.
       def re_enqueue_throttled(work, requeue_to)
-        case work
-        when Sidekiq::Pro::SuperFetch::UnitOfWork
+        case work.class.to_s
+        when "Sidekiq::Pro::SuperFetch::UnitOfWork"
           # Calls SuperFetch UnitOfWork's requeue to remove the job from the
           # temporary queue and push job back to the head of the target queue, so that
           # the job won't be tried immediately after it was requeued (in most cases).
@@ -144,7 +144,7 @@ module Sidekiq
         end
       end
 
-      def reschedule_throttled(work, requeue_to)
+      def reschedule_throttled(work, requeue_to:)
         message = JSON.parse(work.job)
         job_class = message.fetch("wrapped") { message.fetch("class") { return false } }
         job_args = message["args"]
