@@ -49,7 +49,7 @@ RSpec.describe Sidekiq::Throttled::Patches::BasicFetch do
         fetch.retrieve_work
 
         expect { fetch.retrieve_work }
-          .to change { enqueued_jobs("default") }.to([["TestJob", 2], ["TestJob", 3]])
+          .to change { enqueued_jobs("default") }.to([["TestJob", [2]], ["TestJob", [3]]])
           .and(keep_unchanged { enqueued_jobs("critical") })
       end
 
@@ -65,7 +65,7 @@ RSpec.describe Sidekiq::Throttled::Patches::BasicFetch do
 
         it "updates cooldown queues" do
           expect { fetch.retrieve_work }
-            .to change { enqueued_jobs("default") }.to([["TestJob", 2], ["TestJob", 3]])
+            .to change { enqueued_jobs("default") }.to([["TestJob", [2]], ["TestJob", [3]]])
             .and(change { Sidekiq::Throttled.cooldown.queues }.to(["queue:default"]))
         end
 
