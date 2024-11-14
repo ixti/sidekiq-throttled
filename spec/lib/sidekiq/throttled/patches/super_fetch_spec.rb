@@ -53,7 +53,7 @@ RSpec.describe Sidekiq::Throttled::Patches::SuperFetch, :sidekiq_pro do
         fetch.retrieve_work
 
         expect { fetch.retrieve_work }
-          .to change { enqueued_jobs(base_queue) }.to([["TestJob", 2], ["TestJob", 3]])
+          .to change { enqueued_jobs(base_queue) }.to([["TestJob", [2]], ["TestJob", [3]]])
           .and(keep_unchanged { enqueued_jobs(critical_queue) })
       end
 
@@ -69,7 +69,7 @@ RSpec.describe Sidekiq::Throttled::Patches::SuperFetch, :sidekiq_pro do
 
         it "updates cooldown queues" do
           expect { fetch.retrieve_work }
-            .to change { enqueued_jobs(base_queue) }.to([["TestJob", 2], ["TestJob", 3]])
+            .to change { enqueued_jobs(base_queue) }.to([["TestJob", [2]], ["TestJob", [3]]])
             .and(change { Sidekiq::Throttled.cooldown.queues }.to(["queue:#{base_queue}"]))
         end
 

@@ -131,7 +131,7 @@ module Sidekiq
 
       # Push the job back to the head of the queue.
       def re_enqueue_throttled(work, requeue_to)
-        case work.class.to_s
+        case work.class.name
         when "Sidekiq::Pro::SuperFetch::UnitOfWork"
           # Calls SuperFetch UnitOfWork's requeue to remove the job from the
           # temporary queue and push job back to the head of the target queue, so that
@@ -165,7 +165,11 @@ module Sidekiq
 
         # Ask both concurrency and threshold, if relevant, how long minimum until we can retry.
         # If we get two answers, take the longer one.
-        interval = [@concurrency&.retry_in(jid, *job_args), @threshold&.retry_in(*job_args)].compact.max
+        intervals = [@concurrency&.retry_in(jid, *job_args), @threshold&.retry_in(*job_args)].compact
+
+        raise "Cannot compute a valid retry interval" if intervals.empty?
+
+        interval = intervals.max
 
         # Add a random amount of jitter, proportional to the length of the minimum retry time.
         # This helps spread out jobs more evenly and avoid clumps of jobs on the queue.
