@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2024-11-17
+
+### Added
+
+- Allow configuring whether throttled jobs are put back on the queue immediately
+  or scheduled for the future
+  [#150](https://github.com/ixti/sidekiq-throttled/pull/150).
+
 ### Changed
 
 - Change default cooldown period to `1.0` (was `2.0`),
@@ -18,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Drop Sidekiq < 7 support
 - Remove deprecated `Sidekiq::Throttled.setup!`
+
 
 ## [1.4.0] - 2024-04-07
 
@@ -124,7 +133,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove queue exclusion from fetcher pon throttled job
 
 
-[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v1.4.0...main
+[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v1.5.0...main
+[1.5.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.1.0...v1.2.0
