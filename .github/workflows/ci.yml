@@ -44,9 +44,7 @@ jobs:
         run: bundle exec rake test
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        uses: codecov/codecov-action@v5
 
   # See: https://github.com/orgs/community/discussions/26822#discussioncomment-3305794
   test-finale:
