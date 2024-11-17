@@ -2,6 +2,13 @@
 
 require "json"
 
+class ThrottledTestJob
+  include Sidekiq::Job
+  include Sidekiq::Throttled::Job
+
+  def perform(*); end
+end
+
 RSpec.describe Sidekiq::Throttled do
   it "registers server middleware" do
     require "sidekiq/processor"
@@ -111,6 +118,32 @@ RSpec.describe Sidekiq::Throttled do
       expect(strategy).to receive(:throttled?).with payload_jid, *args
 
       described_class.throttled? message
+    end
+  end
+
+  describe ".requeue_throttled" do
+    let(:sidekiq_config) do
+      if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
+        Sidekiq::DEFAULTS
+      else
+        Sidekiq::Config.new(queues: %w[default]).default_capsule
+      end
+    end
+
+    let!(:strategy) { Sidekiq::Throttled::Registry.add("ThrottledTestJob", threshold: { limit: 1, period: 1 }) }
+
+    before do
+      ThrottledTestJob.sidekiq_throttled_requeue_options = { to: :other_queue, with: :enqueue }
+    end
+
+    it "invokes requeue_throttled on the strategy" do
+      payload_jid = jid
+      job = { class: "ThrottledTestJob", jid: payload_jid.inspect }.to_json
+      work = Sidekiq::BasicFetch::UnitOfWork.new("queue:default", job, sidekiq_config)
+
+      expect(strategy).to receive(:requeue_throttled).with(work, to: :other_queue, with: :enqueue)
+
+      described_class.requeue_throttled work
     end
   end
 end

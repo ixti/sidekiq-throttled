@@ -40,6 +40,62 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
     end
   end
 
+  describe "#retry_in" do
+    context "when limit is exceeded with all jobs starting just now" do
+      before { 5.times { strategy.throttled? jid } }
+
+      it "tells us to wait roughly one ttl" do
+        expect(subject.retry_in(jid)).to be_within(0.1).of(900)
+      end
+    end
+
+    context "when limit exceeded, with first job starting 800 seconds ago" do
+      before do
+        Timecop.travel(Time.now - 800) do
+          strategy.throttled? jid
+        end
+        4.times { strategy.throttled? jid }
+      end
+
+      it "tells us to wait 100 seconds" do
+        expect(subject.retry_in(jid)).to be_within(0.1).of(100)
+      end
+    end
+
+    context "when limit not exceeded, because the oldest job was more than the ttl ago" do
+      before do
+        Timecop.travel(Time.now - 1000) do
+          strategy.throttled? jid
+        end
+        4.times { strategy.throttled? jid }
+      end
+
+      it "tells us we do not need to wait" do
+        expect(subject.retry_in(jid)).to eq 0
+      end
+    end
+
+    context "when limit not exceeded, because there are fewer jobs than the limit" do
+      before do
+        4.times { strategy.throttled? jid }
+      end
+
+      it "tells us we do not need to wait" do
+        expect(subject.retry_in(jid)).to eq 0
+      end
+    end
+
+    context "when dynamic limit returns nil" do
+      let(:strategy) { described_class.new :test, limit: proc { |*| } }
+
+      before { 5.times { strategy.throttled? jid } }
+
+      it "tells us we do not need to wait" do
+        expect(subject.retry_in(jid)).to eq 0
+      end
+    end
+  end
+
   describe "#count" do
     subject { strategy.count }
 

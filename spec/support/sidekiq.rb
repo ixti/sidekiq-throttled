@@ -58,10 +58,11 @@ module SidekiqThrottledHelper
   end
 
   def enqueued_jobs(queue)
+    q = queue.start_with?("queue:") ? queue : "queue:#{queue}"
     Sidekiq.redis do |conn|
-      conn.lrange("queue:#{queue}", 0, -1).map do |job|
+      conn.lrange(q, 0, -1).map do |job|
         JSON.parse(job).then do |payload|
-          [payload["class"], *payload["args"]]
+          [payload["class"], payload["args"]]
         end
       end
     end

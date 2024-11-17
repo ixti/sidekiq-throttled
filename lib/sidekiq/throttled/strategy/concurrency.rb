@@ -52,6 +52,16 @@ module Sidekiq
           Sidekiq.redis { |redis| 1 == SCRIPT.call(redis, keys: keys, argv: argv) }
         end
 
+        # @return [Float] How long, in seconds, before we'll next be able to take on jobs
+        def retry_in(_jid, *job_args)
+          job_limit = limit(job_args)
+          return 0.0 if !job_limit || count(*job_args) < job_limit
+
+          oldest_jid_with_score = Sidekiq.redis { |redis| redis.zrange(key(job_args), 0, 0, withscores: true) }.first
+          expiry_time = oldest_jid_with_score.last.to_f
+          expiry_time - Time.now.to_f
+        end
+
         # @return [Integer] Current count of jobs
         def count(*job_args)
           Sidekiq.redis { |conn| conn.zcard(key(job_args)) }.to_i
