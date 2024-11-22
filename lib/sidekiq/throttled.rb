@@ -102,7 +102,7 @@ module Sidekiq
         job_class = Object.const_get(message.fetch("wrapped") { message.fetch("class") { return false } })
 
         Registry.get job_class do |strategy|
-          strategy.requeue_throttled(work, **job_class.sidekiq_throttled_requeue_options)
+          strategy.requeue_throttled(work)
         end
       end
     end

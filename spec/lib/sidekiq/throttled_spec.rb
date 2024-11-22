@@ -130,10 +130,9 @@ RSpec.describe Sidekiq::Throttled do
       end
     end
 
-    let!(:strategy) { Sidekiq::Throttled::Registry.add("ThrottledTestJob", threshold: { limit: 1, period: 1 }) }
-
-    before do
-      ThrottledTestJob.sidekiq_throttled_requeue_options = { to: :other_queue, with: :enqueue }
+    let!(:strategy) do
+      Sidekiq::Throttled::Registry.add("ThrottledTestJob", threshold: { limit: 1, period: 1 },
+        requeue: { to: :other_queue, with: :enqueue })
     end
 
     it "invokes requeue_throttled on the strategy" do
@@ -141,7 +140,7 @@ RSpec.describe Sidekiq::Throttled do
       job = { class: "ThrottledTestJob", jid: payload_jid.inspect }.to_json
       work = Sidekiq::BasicFetch::UnitOfWork.new("queue:default", job, sidekiq_config)
 
-      expect(strategy).to receive(:requeue_throttled).with(work, to: :other_queue, with: :enqueue)
+      expect(strategy).to receive(:requeue_throttled).with(work)
 
       described_class.requeue_throttled work
     end
