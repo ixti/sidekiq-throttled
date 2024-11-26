@@ -586,7 +586,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
           expect do
             subject.requeue_throttled(work)
-          end.to raise_error(RuntimeError, "unrecognized :with option #{with_proc}")
+          end.to raise_error(RuntimeError, "unrecognized :with option invalid_value")
         end
       end
 
