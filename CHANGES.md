@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.5.1] - 2024-12-09
+
+### Changed
+
+- Fix regresssion in `sidekiq_throttle_as` caused by re-scheduler feature
+  [#200](https://github.com/ixti/sidekiq-throttled/pull/200).
+
+
 ## [1.5.0] - 2024-11-17
 
 ### Added
@@ -133,7 +142,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove queue exclusion from fetcher pon throttled job
 
 
-[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v1.5.0...main
+[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v1.5.1...main
+[1.5.1]: https://github.com/ixti/sidekiq-throttled/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.2.0...v1.3.0
