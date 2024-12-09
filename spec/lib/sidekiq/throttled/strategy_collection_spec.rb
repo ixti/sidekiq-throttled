@@ -90,6 +90,26 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
     end
   end
 
+  describe '#retry_in' do
+    let(:strategies) do
+      [
+        { limit: 1, key_suffix: ->(_project_id, user_id) { user_id } },
+        { limit: 10 },
+        { limit: 30 }
+      ]
+    end
+    let(:job_id) { jid }
+
+    it do
+      collection.each_with_index do |s, i|
+        allow(s).to receive(:retry_in).with(job_id, 11, 22).and_return(i * 10)
+      end
+
+      # Returns the max value from the strategies' retry_in returned values
+      expect(collection.retry_in(job_id, 11, 22)).to eq 20
+    end
+  end
+
   describe "#finalize!" do
     subject(:finalize!) { collection.finalize!(job_id, *job_args) }
 
