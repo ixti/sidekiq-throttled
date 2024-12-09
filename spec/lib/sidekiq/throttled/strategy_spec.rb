@@ -401,7 +401,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
               item, score = scheduled_redis_item_and_score
               expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
-                "queue" => "queue:default")
+                "queue" => "default")
               expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
 
               # Ensure that the job is no longer in the private queue
@@ -425,7 +425,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
               item, score = scheduled_redis_item_and_score
               expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
-                "queue" => "queue:other_queue")
+                "queue" => "other_queue")
               expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
 
               # Ensure that the job is no longer in the private queue
@@ -449,7 +449,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
               item, score = scheduled_redis_item_and_score
               expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
-                "queue" => "queue:default")
+                "queue" => "default")
               expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
 
               # Ensure that the job is no longer in the private queue
@@ -475,7 +475,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
               item, score = scheduled_redis_item_and_score
               expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
-                "queue" => "queue:other_queue")
+                "queue" => "other_queue")
               expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
 
               # Ensure that the job is no longer in the private queue
@@ -503,7 +503,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
             item, score = scheduled_redis_item_and_score
             expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
-              "queue" => "queue:default")
+              "queue" => "default")
             expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
 
             # Ensure that the job is no longer in the private queue
@@ -531,7 +531,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
             item, score = scheduled_redis_item_and_score
             expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
-              "queue" => "queue:default")
+              "queue" => "default")
             expect(score.to_f).to be_within(51.0).of(Time.now.to_f + 550.0)
 
             # Ensure that the job is no longer in the private queue
@@ -666,7 +666,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           it "returns false and does not reschedule the job" do
             expect(Sidekiq::Client).not_to receive(:enqueue_to_in)
             expect(work).not_to receive(:acknowledge)
-            expect(subject.send(:reschedule_throttled, work, requeue_to: "queue:default")).to be_falsey
+            expect(subject.send(:reschedule_throttled, work, requeue_to: "default")).to be_falsey
           end
         end
       end
@@ -807,7 +807,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
               item, score = scheduled_redis_item_and_score
               expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
-                "queue" => "queue:default")
+                "queue" => "default")
               expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
             end
           end
@@ -823,7 +823,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
               item, score = scheduled_redis_item_and_score
               expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
-                "queue" => "queue:other_queue")
+                "queue" => "other_queue")
               expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
             end
           end
@@ -839,7 +839,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
               item, score = scheduled_redis_item_and_score
               expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
-                "queue" => "queue:default")
+                "queue" => "default")
               expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
             end
           end
@@ -859,7 +859,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
               item, score = scheduled_redis_item_and_score
               expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
-                "queue" => "queue:other_queue")
+                "queue" => "other_queue")
               expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
             end
           end
@@ -879,7 +879,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
             item, score = scheduled_redis_item_and_score
             expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
-              "queue" => "queue:default")
+              "queue" => "default")
             expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
           end
         end
@@ -899,7 +899,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
             item, score = scheduled_redis_item_and_score
             expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
-              "queue" => "queue:default")
+              "queue" => "default")
             expect(score.to_f).to be_within(51.0).of(Time.now.to_f + 550.0)
           end
         end
@@ -998,7 +998,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           it "returns false and does not reschedule the job" do
             expect(Sidekiq::Client).not_to receive(:enqueue_to_in)
             expect(work).not_to receive(:acknowledge)
-            expect(subject.send(:reschedule_throttled, work, requeue_to: "queue:default")).to be_falsey
+            expect(subject.send(:reschedule_throttled, work, requeue_to: "default")).to be_falsey
           end
         end
       end

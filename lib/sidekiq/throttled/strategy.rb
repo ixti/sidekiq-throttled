@@ -150,7 +150,7 @@ module Sidekiq
 
         target = work.queue if target.nil? || target.empty?
 
-        target.start_with?("queue:") ? target : "queue:#{target}"
+        target.to_s.gsub("queue:", "")
       end
 
       # Push the job back to the head of the queue.
@@ -164,6 +164,8 @@ module Sidekiq
           work.requeue
         else
           # This is the same operation Sidekiq performs upon `Sidekiq::Worker.perform_async` call.
+          # The queue name is expected to include the "queue:" prefix, so we add it if it's missing.
+          target_queue = "queue:#{target_queue}" unless target_queue.start_with?("queue:")
           Sidekiq.redis { |conn| conn.lpush(target_queue, work.job) }
         end
       end
