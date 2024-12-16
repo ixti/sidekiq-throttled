@@ -90,7 +90,7 @@ RSpec.describe Sidekiq::Throttled::StrategyCollection do
     end
   end
 
-  describe '#retry_in' do
+  describe "#retry_in" do
     let(:strategies) do
       [
         { limit: 1, key_suffix: ->(_project_id, user_id) { user_id } },
