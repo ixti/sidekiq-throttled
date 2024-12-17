@@ -143,34 +143,38 @@ module Sidekiq
                  when NilClass
                    work.queue
                  when String, Symbol
-                   requeue_to.to_s
+                   requeue_to
                  else
                    raise ArgumentError, "Invalid argument for `to`"
                  end
 
         target = work.queue if target.nil? || target.empty?
 
-        target.to_s.gsub("queue:", "")
+        target.to_s
       end
 
       # Push the job back to the head of the queue.
+      # The queue name is expected to include the "queue:" prefix, so we add it if it's missing.
       def re_enqueue_throttled(work, target_queue)
+        target_queue = "queue:#{target_queue}" unless target_queue.start_with?("queue:")
+
         case work.class.name
         when "Sidekiq::Pro::SuperFetch::UnitOfWork"
           # Calls SuperFetch UnitOfWork's requeue to remove the job from the
           # temporary queue and push job back to the head of the target queue, so that
           # the job won't be tried immediately after it was requeued (in most cases).
-          work.queue = target_queue if target_queue
+          work.queue = target_queue
           work.requeue
         else
           # This is the same operation Sidekiq performs upon `Sidekiq::Worker.perform_async` call.
-          # The queue name is expected to include the "queue:" prefix, so we add it if it's missing.
-          target_queue = "queue:#{target_queue}" unless target_queue.start_with?("queue:")
           Sidekiq.redis { |conn| conn.lpush(target_queue, work.job) }
         end
       end
 
+      # Reschedule the job to be executed later in the target queue.
+      # The queue name should NOT include the "queue:" prefix, so we remove it if it's present.
       def reschedule_throttled(work, target_queue)
+        target_queue = target_queue.gsub(/^queue:/, "")
         message = JSON.parse(work.job)
         job_class = message.fetch("wrapped") { message.fetch("class") { return false } }
         job_args = message["args"]
