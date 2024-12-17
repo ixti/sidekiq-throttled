@@ -43,7 +43,7 @@ module Sidekiq
 
       # @return [Float] How long, in seconds, before we'll next be able to take on jobs
       def retry_in(*args)
-        max { |s| s.retry_in(*args) }
+        map { |s| s.retry_in(*args) }.max
       end
 
       # Marks job as being processed.
