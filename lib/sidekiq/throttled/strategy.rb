@@ -174,7 +174,7 @@ module Sidekiq
       # Reschedule the job to be executed later in the target queue.
       # The queue name should NOT include the "queue:" prefix, so we remove it if it's present.
       def reschedule_throttled(work, target_queue)
-        target_queue = target_queue.gsub(/^queue:/, "")
+        target_queue = target_queue.gsub(%r{^queue:}, "")
         message = JSON.parse(work.job)
         job_class = message.fetch("wrapped") { message.fetch("class") { return false } }
         job_args = message["args"]
