@@ -174,10 +174,10 @@ module Sidekiq
       # Reschedule the job to be executed later in the target queue.
       # The queue name should NOT include the "queue:" prefix, so we remove it if it's present.
       def reschedule_throttled(work, target_queue)
-        target_queue = target_queue.gsub(%r{^queue:}, "")
-        message = JSON.parse(work.job)
-        job_class = message.fetch("wrapped") { message.fetch("class") { return false } }
-        job_args = message["args"]
+        target_queue = target_queue.delete_prefix("queue:")
+        message      = JSON.parse(work.job)
+        job_class    = message.fetch("wrapped") { message.fetch("class") { return false } }
+        job_args     = message["args"]
 
         # Re-enqueue the job to the target queue at another time as a NEW unit of work
         # AND THEN mark this work as done, so SuperFetch doesn't think this instance is orphaned
@@ -185,6 +185,7 @@ module Sidekiq
         # but your job should be idempotent anyway, right?
         # The job running twice was already a risk with SuperFetch anyway and this doesn't really increase that risk.
         Sidekiq::Client.enqueue_to_in(target_queue, retry_in(work), Object.const_get(job_class), *job_args)
+
         work.acknowledge
       end
 
