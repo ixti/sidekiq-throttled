@@ -262,6 +262,33 @@ IMPORTANT: Don't forget to specify `:key_suffix` and make it return different
   values if you are using dynamic limit/period options. Otherwise, you risk
   getting into some trouble.
 
+[source,ruby]
+----
+class MyJob
+  include Sidekiq::Job
+  include Sidekiq::Throttled::Job
+
+  sidekiq_options queue: :my_queue
+
+  sidekiq_throttle(
+    concurrency: { limit: 10 },
+    # Allow 500 jobs per minute, 5,000 per hour, and 50,000 per day:
+    threshold: [
+      { limit: 500, period: 1.minute, key_suffix: "minutely" },
+      { limit: 5_000, period: 1.hour, key_suffix: "hourly" },
+      { limit: 50_000, period: 1.day, key_suffix: "daily" },
+    ]
+  )
+
+  def perform(project_id, user_id)
+    # ...
+  end
+end
+----
+
+NOTE: `key_suffix` does not have to be a proc/lambda, it can just be a
+  string value. This can come in handy to set throttle limits for different
+  ranges of time
 
 === Concurrency throttling fine-tuning
 
