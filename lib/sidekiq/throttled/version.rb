@@ -3,6 +3,6 @@
 module Sidekiq
   module Throttled
     # Gem version
-    VERSION = "1.5.1"
+    VERSION = "1.5.2"
   end
 end
