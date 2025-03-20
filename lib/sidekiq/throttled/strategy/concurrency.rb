@@ -26,13 +26,21 @@ module Sidekiq
         # @param [#to_s] strategy_key
         # @param [#to_i, #call] limit Amount of allowed concurrent jobs
         #   per processors running for given key.
-        # @param [#to_i] ttl Concurrency lock TTL in seconds.
+        # @param [#to_i] avg_job_duration Average number of seconds needed
+        #   to complete a job of this type. Default: 300 or 1/3 of lost_job_threshold
+        # @param [#to_i] lost_job_threshold Seconds to wait before considering
+        #   a job lost or dead. Default: 900 or 3 * avg_job_duration
         # @param [Proc] key_suffix Dynamic key suffix generator.
-        def initialize(strategy_key, limit:, ttl: 900, key_suffix: nil)
-          @base_key   = "#{strategy_key}:concurrency.v2"
-          @limit      = limit
-          @ttl        = ttl.to_i
+        # @deprecated @param [#to_i] ttl Obsolete alias for `lost_job_threshold`.
+        #   Default: 900 or 3 * avg_job_duration
+        def initialize(strategy_key, limit:, avg_job_duration: nil, ttl: nil, lost_job_threshold: ttl, key_suffix: nil) # rubocop:disable Metrics/ParameterLists
+          @base_key = "#{strategy_key}:concurrency.v2"
+          @limit = limit
+          @avg_job_duration, @lost_job_threshold = interp_duration_args(avg_job_duration, lost_job_threshold)
           @key_suffix = key_suffix
+
+          raise(ArgumentError, "lost_job_threshold must be greater than avg_job_duration") if
+            @lost_job_threshold <= @avg_job_duration
         end
 
         # @return [Boolean] Whenever strategy has dynamic config
@@ -46,8 +54,8 @@ module Sidekiq
           return false unless job_limit
           return true if job_limit <= 0
 
-          keys = [key(job_args)]
-          argv = [jid.to_s, job_limit, @ttl, Time.now.to_f]
+          keys = [key(job_args), backlog_info_key(job_args)]
+          argv = [jid.to_s, job_limit, @lost_job_threshold, Time.now.to_f]
 
           Sidekiq.redis { |redis| 1 == SCRIPT.call(redis, keys: keys, argv: argv) }
         end
@@ -57,11 +65,7 @@ module Sidekiq
           job_limit = limit(job_args)
           return 0.0 if !job_limit || count(*job_args) < job_limit
 
-          oldest_jid_with_score = Sidekiq.redis { |redis| redis.zrange(key(job_args), 0, 0, withscores: true) }.first
-          return 0.0 unless oldest_jid_with_score
-
-          expiry_time = oldest_jid_with_score.last.to_f
-          expiry_time - Time.now.to_f
+          estimated_backlog_size(job_args) * @avg_job_duration / limit(job_args)
         end
 
         # @return [Integer] Current count of jobs
@@ -78,7 +82,40 @@ module Sidekiq
         # Remove jid from the pool of jobs in progress
         # @return [void]
         def finalize!(jid, *job_args)
-          Sidekiq.redis { |conn| conn.zrem(key(job_args), jid.to_s) }
+          Sidekiq.redis do |conn|
+            conn.zrem(key(job_args), jid.to_s)
+          end
+        end
+
+        private
+
+        def backlog_info_key(job_args)
+          "#{key(job_args)}.backlog_info"
+        end
+
+        def estimated_backlog_size(job_args)
+          old_size_str, old_timestamp_str =
+            Sidekiq.redis { |conn| conn.hmget(backlog_info_key(job_args), "size", "timestamp") }
+          old_size = (old_size_str || 0).to_f
+          old_timestamp = (old_timestamp_str || Time.now).to_f
+
+          (old_size - jobs_lost_since(old_timestamp, job_args)).clamp(0, Float::INFINITY)
+        end
+
+        def jobs_lost_since(timestamp, job_args)
+          (Time.now.to_f - timestamp) / @lost_job_threshold * limit(job_args)
+        end
+
+        def interp_duration_args(avg_job_duration, lost_job_threshold)
+          if avg_job_duration && lost_job_threshold
+            [avg_job_duration.to_i, lost_job_threshold.to_i]
+          elsif avg_job_duration && lost_job_threshold.nil?
+            [avg_job_duration.to_i, avg_job_duration.to_i * 3]
+          elsif avg_job_duration.nil? && lost_job_threshold
+            [lost_job_threshold.to_i / 3, lost_job_threshold.to_i]
+          else
+            [300, 900]
+          end
         end
       end
     end
