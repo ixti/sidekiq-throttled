@@ -58,6 +58,8 @@ module Sidekiq
           return 0.0 if !job_limit || count(*job_args) < job_limit
 
           oldest_jid_with_score = Sidekiq.redis { |redis| redis.zrange(key(job_args), 0, 0, withscores: true) }.first
+          return 0.0 unless oldest_jid_with_score
+
           expiry_time = oldest_jid_with_score.last.to_f
           expiry_time - Time.now.to_f
         end
