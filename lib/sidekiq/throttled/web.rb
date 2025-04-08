@@ -2,6 +2,7 @@
 
 # stdlib
 require "pathname"
+require "rubygems"
 
 # 3rd party
 require "sidekiq"
@@ -39,5 +40,15 @@ module Sidekiq
   end
 end
 
-Sidekiq::Web.register Sidekiq::Throttled::Web
-Sidekiq::Web.tabs["Throttled"] = "throttled"
+sidekiq_version = Gem::Version.new(Sidekiq::VERSION)
+if sidekiq_version >= Gem::Version.new("8.0.0")
+  Sidekiq::Web.configure do |config|
+    config.register_extension(Sidekiq::Throttled::Web,
+      name:  "throttled",
+      tab:   ["Throttled"],
+      index: ["throttled"])
+  end
+else
+  Sidekiq::Web.register Sidekiq::Throttled::Web
+  Sidekiq::Web.tabs["Throttled"] = "throttled"
+end
