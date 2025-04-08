@@ -309,6 +309,43 @@ lock TTL to fit your needs:
 sidekiq_throttle(concurrency: { limit: 20, ttl: 1.hour.to_i })
 ----
 
+=== Scheduling based concurrency tuning
+
+The default concurrency throttling algorithm immediately requeues throttled
+jobs. This can lead to a lot of wasted work picking up the same set of still
+throttled jobs repeatedly. This churn also often starves lower priority
+jobs/queues. The `:schedule` requeue strategy delays checking the runability of
+throttled jobs until likely to be runnable. This future time is estimated based
+on the expected runtime of the job and current number of throttled jobs. This
+eliminates -- or greatly reduces -- the negative impacts to non-throttled job
+types and queues and reduces wasted work constantly rechecking the same still
+throttled jobs.
+
+Config items: 
+* limit - max number of this job to run simultaneously
+* avg_job_duration - expected runtime in seconds of this type of job. Pick a
+  value on the high-side of plausible. Under heavy load values less than the
+  actual average will lead to sub-optimal delays in job processing.
+* lost_job_threshold - duration in seconds of a job's lease on it's concurrency slot
+* ttl - alias for lost_job_threshold
+
+[source,ruby]
+---
+sidekiq_throttle(
+  concurrency: {
+    # only run 10 of this job at a time 
+    limit: 10, 
+    
+    # these jobs finish in less that 30 seconds 
+    avg_job_duration: 30,  
+
+    # if it doesn't release it's lease in 2 minutes it's never going to
+    lost_job_threshold: 120  
+  }, 
+  requeue: { with: :schedule }
+)
+---
+
 
 == Supported Ruby Versions
 
