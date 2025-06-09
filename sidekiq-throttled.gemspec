@@ -22,15 +22,15 @@ Gem::Specification.new do |spec|
     docs = %w[LICENSE.txt README.adoc].freeze
 
     `git ls-files -z`.split("\x0").select do |f|
-      f.start_with?("lib/") || docs.include?(f)
+      f.start_with?("lib/", "web/") || docs.include?(f)
     end
   end
 
   spec.require_paths = ["lib"]
 
-  spec.required_ruby_version = ">= 2.7"
+  spec.required_ruby_version = ">= 3.2"
 
   spec.add_dependency "concurrent-ruby", ">= 1.2.0"
   spec.add_dependency "redis-prescription", "~> 2.2"
-  spec.add_dependency "sidekiq", ">= 6.5"
+  spec.add_dependency "sidekiq", ">= 8.0"
 end

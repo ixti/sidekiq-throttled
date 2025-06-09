@@ -4,15 +4,9 @@ require "sidekiq/throttled/patches/basic_fetch"
 
 RSpec.describe Sidekiq::Throttled::Patches::BasicFetch do
   let(:fetch) do
-    if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
-      Sidekiq.instance_variable_set(:@config, Sidekiq::DEFAULTS.dup)
-      Sidekiq.queues = %w[default critical]
-      Sidekiq::BasicFetch.new(Sidekiq)
-    else
-      config = Sidekiq::Config.new
-      config.queues = %w[default critical]
-      Sidekiq::BasicFetch.new(config.default_capsule)
-    end
+    config = Sidekiq::Config.new
+    config.queues = %w[default critical]
+    Sidekiq::BasicFetch.new(config.default_capsule)
   end
 
   before do
@@ -21,7 +15,8 @@ RSpec.describe Sidekiq::Throttled::Patches::BasicFetch do
     stub_job_class("TestJob")
     stub_job_class("AnotherTestJob") { sidekiq_options(queue: :critical) }
 
-    allow(Process).to receive(:clock_gettime).with(Process::CLOCK_MONOTONIC).and_return(0.0)
+    allow(Process).to receive(:clock_gettime).with(anything, :millisecond).and_return(0)
+    allow(Process).to receive(:clock_gettime).with(anything).and_return(0.0)
 
     # Sidekiq is FIFO queue, with head on right side of the list,
     # meaning jobs below will be stored in 3, 2, 1 order.
@@ -82,13 +77,13 @@ RSpec.describe Sidekiq::Throttled::Patches::BasicFetch do
     context "when job was throttled due to concurrency" do
       before { TestJob.sidekiq_throttle(concurrency: { limit: 1 }) }
 
-      include_examples "requeues throttled job"
+      it_behaves_like "requeues throttled job"
     end
 
     context "when job was throttled due to threshold" do
       before { TestJob.sidekiq_throttle(threshold: { limit: 1, period: 60 }) }
 
-      include_examples "requeues throttled job"
+      it_behaves_like "requeues throttled job"
     end
   end
 end

@@ -23,7 +23,8 @@ RSpec.describe Sidekiq::Throttled::Patches::SuperFetch, :sidekiq_pro do
     stub_job_class("TestJob") { sidekiq_options(queue: bq) }
     stub_job_class("AnotherTestJob") { sidekiq_options(queue: cq) }
 
-    allow(Process).to receive(:clock_gettime).with(Process::CLOCK_MONOTONIC).and_return(0.0)
+    allow(Process).to receive(:clock_gettime).with(anything, :millisecond).and_return(0)
+    allow(Process).to receive(:clock_gettime).with(anything).and_return(0.0)
 
     # Give super_fetch a chance to finish its initialization, but also check that there are no pre-existing jobs
     pre_existing_job = fetch.retrieve_work
@@ -86,13 +87,13 @@ RSpec.describe Sidekiq::Throttled::Patches::SuperFetch, :sidekiq_pro do
     context "when job was throttled due to concurrency" do
       before { TestJob.sidekiq_throttle(concurrency: { limit: 1 }) }
 
-      include_examples "requeues throttled job"
+      it_behaves_like "requeues throttled job"
     end
 
     context "when job was throttled due to threshold" do
       before { TestJob.sidekiq_throttle(threshold: { limit: 1, period: 60 }) }
 
-      include_examples "requeues throttled job"
+      it_behaves_like "requeues throttled job"
     end
   end
 end

@@ -61,10 +61,11 @@ RSpec.describe Sidekiq::Throttled::Cooldown do
       config.cooldown_threshold = 1
     end
 
-    it "keeps queue in the exclusion list for the duration of cooldown_period" do
+    it "keeps queue in the exclusion list for the duration of cooldown_period" do # rubocop:disable RSpec/ExampleLength
       monotonic_time = 0.0
 
-      allow(Process).to receive(:clock_gettime).with(Process::CLOCK_MONOTONIC) { monotonic_time }
+      allow(Process).to receive(:clock_gettime).with(anything, :millisecond) { monotonic_time.to_i }
+      allow(Process).to receive(:clock_gettime).with(anything) { monotonic_time }
 
       cooldown.notify_throttled("queue:at_the_end_of")
 

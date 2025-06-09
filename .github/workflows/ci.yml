@@ -29,8 +29,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby: [ ruby-2.7, ruby-3.0, ruby-3.1, ruby-3.2, ruby-3.3 ]
-        redis: [ "redis:6.2", "redis:7.0", "redis:7.2" ]
+        ruby: [ ruby-3.2, ruby-3.3, ruby-3.4 ]
+        redis: [ "redis:7.0", "redis:7.2" ]
 
     steps:
       - uses: actions/checkout@v4

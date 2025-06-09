@@ -35,7 +35,8 @@ RSpec.describe Sidekiq::Throttled::ExpirableSet do
     before do
       monotonic_time = 0.0
 
-      allow(Process).to receive(:clock_gettime).with(Process::CLOCK_MONOTONIC) { monotonic_time }
+      allow(Process).to receive(:clock_gettime).with(anything, :millisecond) { monotonic_time.to_i }
+      allow(Process).to receive(:clock_gettime).with(anything) { monotonic_time }
 
       expirable_set.add("lorem")
       expirable_set.add("ipsum")

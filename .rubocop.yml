@@ -1,4 +1,4 @@
-require:
+plugins:
   - rubocop-capybara
   - rubocop-performance
   - rubocop-rake
@@ -18,8 +18,4 @@ AllCops:
     - gemfiles/**/*
     - vendor/**/*
   NewCops: enable
-  TargetRubyVersion: 2.7
-
-# Broken: https://github.com/rubocop/rubocop/issues/12113
-Bundler/DuplicatedGroup:
-  Enabled: false
+  TargetRubyVersion: 3.2

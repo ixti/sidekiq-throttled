@@ -17,10 +17,10 @@ module Sidekiq
         #
         # @param (see Strategy#initialize)
         # @return [Strategy]
-        def add(name, **kwargs)
+        def add(name, **)
           name = name.to_s
 
-          @strategies[name] = Strategy.new(name, **kwargs)
+          @strategies[name] = Strategy.new(name, **)
         end
 
         # Adds alias for existing strategy.

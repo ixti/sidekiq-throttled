@@ -1,0 +1,41 @@
+<section>
+  <header>
+    <h1>Throttled</h1>
+  </header>
+
+  <div class="table_container">
+    <table class="throttled">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Concurrency</th>
+          <th>Threshold</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% Sidekiq::Throttled::Registry.each_with_static_keys do |name, strategy| %>
+          <tr>
+            <td style="vertical-align:middle;"><%= name %></td>
+            <td style="vertical-align:middle;text-align:center;">
+              <% strategy.concurrency.each do |concurrency| %>
+                <%= Sidekiq::Throttled::Web::Stats.new(concurrency).to_html %>
+              <% end %>
+            </td>
+            <td style="vertical-align:middle;text-align:center;">
+              <% strategy.threshold.each do |threshold| %>
+                <%= Sidekiq::Throttled::Web::Stats.new(threshold).to_html %>
+              <% end %>
+            </td>
+            <td style="vertical-align:middle;text-align:center;">
+              <form action="<%= root_path %>throttled/<%= CGI.escape name %>/reset" method="post">
+                <%= csrf_tag %>
+                <button class="btn btn-danger" type="submit">Reset</button>
+              </form>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

@@ -314,11 +314,9 @@ sidekiq_throttle(concurrency: { limit: 20, ttl: 1.hour.to_i })
 
 This library aims to support and is tested against the following Ruby versions:
 
-* Ruby 2.7.x
-* Ruby 3.0.x
-* Ruby 3.1.x
 * Ruby 3.2.x
 * Ruby 3.3.x
+* Ruby 3.4.x
 
 If something doesn't work on one of these versions, it's a bug.
 
@@ -338,15 +336,11 @@ dropped.
 
 This library aims to support and work with following Sidekiq versions:
 
-* Sidekiq 7.0.x
-* Sidekiq 7.1.x
-* Sidekiq 7.2.x
+* Sidekiq 8.0.x
 
 And the following Sidekiq Pro versions:
 
-* Sidekiq Pro 7.0.x
-* Sidekiq Pro 7.1.x
-* Sidekiq Pro 7.2.x
+* Sidekiq Pro 8.0.x
 
 == Development
 
@@ -360,6 +354,7 @@ And the following Sidekiq Pro versions:
 If you're working on Sidekiq-Pro support make sure that you have Sidekiq-Pro
 license set either in the global config, or in `BUNDLE_GEMS\__CONTRIBSYS__COM`
 environment variable.
+
 
 == Contributing
 
