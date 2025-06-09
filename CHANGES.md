@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [2.0.0] - 2025-06-09
+
+### Fixed
+
+- Fixed NoMethodError in throttled job retry logic caused by race condition when
+  pending queue drains between throttle check and delay calculation
+  [#208](https://github.com/ixti/sidekiq-throttled/pull/208).
+
+### Added
+
+- Add Sidekiq-8.0 support.
+
+### Removed
+
+- (BREAKING) Drop Sidekiq-7.x support
+- (BREAKING) Drop Redis-6.x support
+- (BREAKING) Drop Ruby-3.0 support
+- (BREAKING) Drop Ruby-3.1 support
+
+
 ## [1.5.2] - 2025-01-12
 
 ### Fixed
@@ -150,7 +170,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove queue exclusion from fetcher pon throttled job
 
 
-[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v1.5.2...main
+[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v2.0.0...main
+[2.0.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.5.2...v2.0.0
 [1.5.2]: https://github.com/ixti/sidekiq-throttled/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/ixti/sidekiq-throttled/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.4.0...v1.5.0
