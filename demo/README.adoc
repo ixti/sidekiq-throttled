@@ -1,0 +1,12 @@
+= Sidekiq::Throttled DEMO
+
+. Install dependencies: `bin/setup`
+. Start Puma and Sidekiq: `bin/run`
+. Start IRB console: `bin/console`
+  * Fire up some demo jobs:
++
+[source,ruby]
+----
+ThrottledDemo::FirstJob.perform_bulk(Array.new(100) { |n| [n] })
+ThrottledDemo::SecondJob.perform_bulk(Array.new(100) { |n| [n] })
+----

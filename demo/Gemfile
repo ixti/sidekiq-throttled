@@ -1,0 +1,11 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+gem "irb"
+gem "puma"
+gem "rack"
+gem "rack-session"
+gem "sidekiq"
+gem "sidekiq-throttled", path: ".."
+gem "sinatra"
