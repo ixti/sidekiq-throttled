@@ -80,7 +80,7 @@ end
 ----
 
 === Requeue Strategy
-The default requeue strategy `:enqueue` puts jobs immiediately back on the queue if they are being limited, with a potential `cooldown_period`. This is often an appropriate strategy but in some situations may cause the system to repeatedly dequeue and reenque the same job.
+The default requeue strategy `:enqueue` puts jobs immiediately back on the queue if they are being limited, with a potential `cooldown_period`. This is often an appropriate strategy but in some situations may cause the system to repeatedly dequeue and reenque the same job causing excessive redis CPU usage.
 
 An alternative requeue strategy `:schedule` is available that schedules the work for the future. This can be less appropriate for highly concurrent jobs, but may be a good way to reduce redis load when the number of jobs to be processed is modest.
 
