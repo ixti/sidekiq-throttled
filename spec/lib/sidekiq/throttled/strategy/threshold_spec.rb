@@ -288,4 +288,20 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
       it { is_expected.to be_falsy }
     end
   end
+
+  describe "with string key suffix" do
+    subject(:strategy) do
+      described_class.new(:test, limit: 2, period: 10, key_suffix: "xxx")
+    end
+
+    describe "#throttled?" do
+      subject { strategy.throttled? }
+
+      before do
+        3.times { strategy.throttled? }
+      end
+
+      it { is_expected.to be true }
+    end
+  end
 end
