@@ -9,35 +9,36 @@ module Sidekiq
     # Set of elements with expirations.
     #
     # @example
-    #   set = ExpirableSet.new(10.0)
-    #   set.add("a")
+    #   set = ExpirableSet.new
+    #   set.add("a", ttl: 10.0)
     #   sleep(5)
-    #   set.add("b")
+    #   set.add("b", ttl: 10.0)
     #   set.to_a # => ["a", "b"]
     #   sleep(5)
     #   set.to_a # => ["b"]
     class ExpirableSet
       include Enumerable
 
-      # @param ttl [Float] expiration is seconds
-      # @raise [ArgumentError] if `ttl` is not positive Float
-      def initialize(ttl)
-        raise ArgumentError, "ttl must be positive Float" unless ttl.is_a?(Float) && ttl.positive?
-
+      def initialize
         @elements = Concurrent::Map.new
-        @ttl      = ttl
       end
 
       # @param element [Object]
+      # @param ttl [Float] expiration is seconds
+      # @raise [ArgumentError] if `ttl` is not positive Float
       # @return [ExpirableSet] self
-      def add(element)
-        # cleanup expired elements to avoid mem-leak
+      def add(element, ttl:)
+        raise ArgumentError, "ttl must be positive Float" unless ttl.is_a?(Float) && ttl.positive?
+
         horizon = now
+
+        # Cleanup expired elements
         expired = @elements.each_pair.select { |(_, sunset)| expired?(sunset, horizon) }
         expired.each { |pair| @elements.delete_pair(*pair) }
 
-        # add new element
-        @elements[element] = now + @ttl
+        # Add or update an element
+        sunset = horizon + ttl
+        @elements.merge_pair(element, sunset) { |old_sunset| [old_sunset, sunset].max }
 
         self
       end
