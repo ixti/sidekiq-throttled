@@ -62,12 +62,13 @@ module Sidekiq
 
         # @return [String]
         def humanize_integer(int)
-          digits = int.to_s.chars
-          str    = digits.shift(digits.count % 3).join
-
-          str << " " << digits.shift(3).join while digits.count.positive?
-
-          str.strip
+          int.to_s.chars
+            .reverse
+            .each_slice(3)
+            .map(&:reverse)
+            .reverse
+            .map(&:join)
+            .join(",")
         end
       end
     end

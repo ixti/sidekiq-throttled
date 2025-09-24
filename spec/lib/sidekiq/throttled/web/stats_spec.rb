@@ -60,6 +60,14 @@ RSpec.describe Sidekiq::Throttled::Web::Stats do
       end
     end
 
+    context "with Concurrency strategy with large limit" do
+      let :strategy do
+        Sidekiq::Throttled::Strategy::Concurrency.new(:foo, limit: 1000)
+      end
+
+      it { is_expected.to start_with "1,000 jobs<br />" }
+    end
+
     context "with Threshold strategy" do
       let :strategy do
         Sidekiq::Throttled::Strategy::Threshold.new(:foo, limit:  10,
