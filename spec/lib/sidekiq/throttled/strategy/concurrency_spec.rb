@@ -105,10 +105,22 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
     end
 
     context "when there is a deep backlog of this type of job" do
+      subject(:strategy) { # rubocop:disable Style/BlockDelimiters
+        described_class.new(:test, limit: 5, avg_job_duration: 300, lost_job_threshold: 1000, max_delay: 10 * 60)
+      }
+
       before { 15.times { |a_jid| strategy.throttled? a_jid } }
 
       it "tells us to wait a time proportional to the approximate backlog size" do
-        expect(subject.retry_in(jid)).to be_within(1).of(10 * 300 / 5)
+        expect(subject.retry_in("brand-new-job-#{Time.now.iso8601}")).to be_between(1, 10 * 300 / 5)
+      end
+
+      it "never delays more than max_delay" do
+        Array.new(1_000) { SecureRandom.hex }
+          .each do |a_jid|
+            expect(strategy.throttled?(a_jid)).to be true
+            expect(subject.retry_in(a_jid)).to be <= (10 * 60)
+          end
       end
     end
 
@@ -120,7 +132,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
       end
 
       it "tells us to wait a time proportional to the remaining backlog" do
-        expect(subject.retry_in(jid)).to be_within(1).of(5 * 300 / 5)
+        expect(subject.retry_in(jid)).to be_between(1, 5 * 300 / 5)
       end
     end
 
@@ -130,7 +142,7 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
       before { 15.times { |a_jid| strategy.throttled? a_jid } }
 
       it "takes the explicit job duration into account" do
-        expect(subject.retry_in(jid)).to be_within(1).of(10 * 15 / 5)
+        expect(subject.retry_in(jid)).to be_between(1, 10 * 15 / 5)
       end
     end
 

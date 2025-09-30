@@ -31,13 +31,18 @@ module Sidekiq
         # @param [#to_i] lost_job_threshold Seconds to wait before considering
         #   a job lost or dead. Default: 900 or 3 * avg_job_duration
         # @param [Proc] key_suffix Dynamic key suffix generator.
+        # @param [#to_i] max_delay Maximum number of seconds to delay a job when it
+        #   throttled. This prevents jobs from being schedule very far in the future
+        #   when the backlog is large. Default: the smaller of 30 minutes or 10 * avg_job_duration
         # @deprecated @param [#to_i] ttl Obsolete alias for `lost_job_threshold`.
         #   Default: 900 or 3 * avg_job_duration
-        def initialize(strategy_key, limit:, avg_job_duration: nil, ttl: nil, lost_job_threshold: ttl, key_suffix: nil) # rubocop:disable Metrics/ParameterLists
+        def initialize(strategy_key, limit:, avg_job_duration: nil, ttl: nil, # rubocop:disable Metrics/ParameterLists
+                       lost_job_threshold: ttl, key_suffix: nil, max_delay: nil)
           @base_key = "#{strategy_key}:concurrency.v2"
           @limit = limit
           @avg_job_duration, @lost_job_threshold = interp_duration_args(avg_job_duration, lost_job_threshold)
           @key_suffix = key_suffix
+          @max_delay = max_delay || [(10 * @avg_job_duration), 1_800].min
 
           raise(ArgumentError, "lost_job_threshold must be greater than avg_job_duration") if
             @lost_job_threshold <= @avg_job_duration
@@ -65,7 +70,8 @@ module Sidekiq
           job_limit = limit(job_args)
           return 0.0 if !job_limit || count(*job_args) < job_limit
 
-          estimated_backlog_size(job_args) * @avg_job_duration / limit(job_args)
+          (estimated_backlog_size(job_args) * @avg_job_duration / limit(job_args))
+            .then { |delay_sec| @max_delay * (1 - Math.exp(-delay_sec / @max_delay)) } # limit to max_delay
         end
 
         # @return [Integer] Current count of jobs

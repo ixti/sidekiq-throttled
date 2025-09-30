@@ -19,8 +19,8 @@ end
 -- can cause unnecessary delays in job processing. Underestimates are much
 -- safer as they only increase workload of sidekiq processors. 
 local function est_current_backlog_size()
-  local old_size = tonumber(redis.call("HGET", backlog_info_key, "size") or 0)
-  local old_timestamp = tonumber(redis.call("HGET", backlog_info_key, "timestamp") or now)
+  local old_size = tonumber(redis.call("HGET", backlog_info_key, "size")) or 0
+  local old_timestamp = tonumber(redis.call("HGET", backlog_info_key, "timestamp")) or now
   
   local jobs_lost_since_old_timestamp = (now - old_timestamp) / lost_job_threshold * lmt
 
