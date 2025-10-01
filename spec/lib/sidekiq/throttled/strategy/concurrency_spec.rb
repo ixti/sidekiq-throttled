@@ -3,6 +3,27 @@
 RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
   subject(:strategy) { described_class.new :test, limit: 5 }
 
+  describe "#initialize" do
+    it "accepts all parameters" do
+      expect(
+        described_class.new(:test, limit: 5, avg_job_duration: 300, lost_job_threshold: 900, key_suffix: -> { "xxx" })
+      ).to be_a described_class
+    end
+
+    it "accepts ttl as alias of lost_job_threshold" do
+      expect(
+        described_class.new(:test, limit: 5, avg_job_duration: 300, ttl: 900)
+      ).to be_a described_class
+    end
+
+    it "doesn't allow lost_job_threshold > avg_job_duration" do
+      expect do
+        described_class.new(:test, limit: 5, avg_job_duration: 300, lost_job_threshold: 100)
+      end
+        .to raise_error ArgumentError
+    end
+  end
+
   describe "#throttled?" do
     subject { strategy.throttled? jid }
 
@@ -38,27 +59,100 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
         expect(strategy.throttled?(jid)).to be false
       end
     end
+
+    context "when ttl is explicitly set to non-default value" do
+      subject(:strategy) { described_class.new :test, limit: 5, ttl: 1000 }
+
+      it "invalidates expired locks avoiding strategy starvation" do
+        5.times { strategy.throttled? jid }
+
+        Timecop.travel(Time.now + 900) do
+          expect(strategy.throttled?(jid)).to be true
+        end
+
+        Timecop.travel(Time.now + 1000) do
+          expect(strategy.throttled?(jid)).to be false
+        end
+      end
+    end
+
+    context "when lost_job_threshold is explicitly set to non-default value" do
+      subject(:strategy) { described_class.new :test, limit: 5, lost_job_threshold: 1000 }
+
+      it "invalidates expired locks avoiding strategy starvation" do
+        5.times { strategy.throttled? jid }
+
+        Timecop.travel(Time.now + 900) do
+          expect(strategy.throttled?(jid)).to be true
+        end
+
+        Timecop.travel(Time.now + 1000) do
+          expect(strategy.throttled?(jid)).to be false
+        end
+      end
+    end
   end
 
   describe "#retry_in" do
     context "when limit is exceeded with all jobs starting just now" do
       before { 5.times { strategy.throttled? jid } }
 
-      it "tells us to wait roughly one ttl" do
-        expect(subject.retry_in(jid)).to be_within(0.1).of(900)
+      it "tells us to wait roughly the expected time between job completions (expected job duration / max concurrency)" do # rubocop:disable Layout/LineLength
+        strategy.throttled? jid # register that we are delaying this job
+
+        expect(subject.retry_in(jid)).to be_within(1).of(300 / 5)
       end
     end
 
-    context "when limit exceeded, with first job starting 800 seconds ago" do
-      before do
-        Timecop.travel(Time.now - 800) do
-          strategy.throttled? jid
-        end
-        4.times { strategy.throttled? jid }
+    context "when there is a deep backlog of this type of job" do
+      subject(:strategy) { # rubocop:disable Style/BlockDelimiters
+        described_class.new(:test, limit: 5, avg_job_duration: 300, lost_job_threshold: 1000, max_delay: 10 * 60)
+      }
+
+      before { 15.times { |a_jid| strategy.throttled? a_jid } }
+
+      it "tells us to wait a time proportional to the approximate backlog size" do
+        expect(subject.retry_in("brand-new-job-#{Time.now.iso8601}")).to be_between(1, 10 * 300 / 5)
       end
 
-      it "tells us to wait 100 seconds" do
-        expect(subject.retry_in(jid)).to be_within(0.1).of(100)
+      it "never delays more than max_delay" do
+        Array.new(1_000) { SecureRandom.hex }
+          .each do |a_jid|
+            expect(strategy.throttled?(a_jid)).to be true
+            expect(subject.retry_in(a_jid)).to be <= (10 * 60)
+          end
+      end
+    end
+
+    context "when some jobs have finished" do
+      before do
+        (1..15).each { |a_jid| strategy.throttled? a_jid } # 5 in-progress; 10 delayed jobs
+        (1..5).each { |a_jid| strategy.finalize! a_jid } # finish in-progress jobs
+        (6..10).each { |a_jid| strategy.throttled? a_jid } # start next batch of job
+      end
+
+      it "tells us to wait a time proportional to the remaining backlog" do
+        expect(subject.retry_in(jid)).to be_between(1, 5 * 300 / 5)
+      end
+    end
+
+    context "when created with non-default job duration not the default" do
+      subject(:strategy) { described_class.new :fast_job_test, limit: 5, avg_job_duration: 15 }
+
+      before { 15.times { |a_jid| strategy.throttled? a_jid } }
+
+      it "takes the explicit job duration into account" do
+        expect(subject.retry_in(jid)).to be_between(1, 10 * 15 / 5)
+      end
+    end
+
+    context "when jobs that don't get subtracted backlog size because of a bug or something crashed" do
+      before { 15.times { |a_jid| strategy.throttled? a_jid } }
+
+      it "doesn't delay jobs forever" do
+        Timecop.travel(Time.now + (24 * 60 * 60)) do
+          expect(subject.retry_in(jid)).to eq 0
+        end
       end
     end
 
