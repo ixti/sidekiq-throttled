@@ -79,6 +79,30 @@ class MyWorker
 end
 ----
 
+=== Requeue Strategy
+The default requeue strategy `:enqueue` puts jobs immiediately back on the queue if they are being limited, with a potential `cooldown_period`. This is often an appropriate strategy but in some situations may cause the system to repeatedly dequeue and reenque the same job causing excessive redis CPU usage.
+
+An alternative requeue strategy `:schedule` is available that schedules the work for the future. This can be less appropriate for highly concurrent jobs, but may be a good way to reduce redis load when the number of jobs to be processed is modest.
+
+The alternative `:schedule` strategy may be configured globally with `config.default_requeue_options = { with: :schedule }`
+
+It may be configured on a per job basis with:
+
+```ruby
+  sidekiq_throttle(
+    # Allow 5 jobs to processed within 1 minute, using the 
+    threshold: { limit: 5, period: 1.minute, requeue: {with: :schedule} }
+  )
+```
+
+It is also possible to requeue jobs to another queue:
+
+```ruby
+  sidekiq_throttle(
+    # Allow 5 jobs to processed within 1 minute, using the 
+    threshold: { limit: 5, period: 1.minute, requeue: {to: :other_queue, with: :schedule} }
+  )
+```
 
 === Web UI
 
