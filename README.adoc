@@ -270,8 +270,8 @@ class MyJob
   sidekiq_throttle(
     # Allow maximum 10 concurrent jobs per project at a time and maximum 2 jobs per user
     concurrency: [
-      { limit: 10, key_suffix: -> (project_id, user_id) { project_id } },
-      { limit: 2, key_suffix: -> (project_id, user_id) { user_id } }
+      { limit: 10, key_suffix: -> (project_id, user_id) { "project_id:#{product_id}" } },
+      { limit: 2, key_suffix: -> (project_id, user_id) { "user_id:#{user_id}" } }
     ]
     # For :threshold it works the same
   )
