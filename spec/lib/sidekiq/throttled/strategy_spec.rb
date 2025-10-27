@@ -139,7 +139,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         {
           concurrency: [
             { limit: 7, key_suffix: ->(_, *) { 1 } },
-            { limit: 3, key_suffix: ->(job_arg, *) { job_arg } },
+            { limit: 3, key_suffix: ->(job_arg, *) { job_arg } }
           ]
         }
       end
@@ -180,7 +180,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
             in_progress_count += 4.times.count { !strategy.throttled? jid, [99] }
             in_progress_count += 3.times.count { |i| !strategy.throttled? jid, i }
 
-            expect(in_progress_count).to eq(6)
+            raise "unexpected in_progress_count" if in_progress_count != 6
           end
 
           it { is_expected.to be false }
