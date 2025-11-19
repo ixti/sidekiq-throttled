@@ -356,9 +356,8 @@ throttled jobs.
   Prevents excessively long scheduling delays as the backlog grows.  
   _Default: the smaller of 30 minutes or `10 × avg_job_duration`._
 
-
 [source,ruby]
----
+----
 sidekiq_throttle(
   concurrency: {
     # only run 10 of this job at a time 
@@ -373,7 +372,7 @@ sidekiq_throttle(
   # requeue using Sidekiq's scheduler
   requeue: { with: :schedule }
 )
----
+----
 
 
 == Supported Ruby Versions
