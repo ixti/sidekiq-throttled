@@ -40,18 +40,18 @@ module Sidekiq
       def throttled?(...)
         strategies_not_throttled = []
 
-        each do |strategy|
-          if strategy.throttled?(...)
+        any? do |strategy|
+          throttled = strategy.throttled?(...)
+
+          if throttled
             # Tell already processed strategies that the job is not running.
             strategies_not_throttled.each { |s| s.finalize!(...) }
-            return true
           else
             strategies_not_throttled << strategy
           end
-        end
 
-        # No strategy in the collection was throttled.
-        false
+          throttled
+        end
       end
 
       # @return [Float] How long, in seconds, before we'll next be able to take on jobs
