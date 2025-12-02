@@ -57,7 +57,7 @@ module Sidekiq
         map { |s| s.retry_in(*args) }.max
       end
 
-      # Marks job as being processed.
+      # Marks job as not processing.
       # @return [void]
       def finalize!(...)
         each { |c| c.finalize!(...) }
