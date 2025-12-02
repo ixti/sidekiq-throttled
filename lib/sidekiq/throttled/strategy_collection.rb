@@ -38,17 +38,19 @@ module Sidekiq
       # @return [Boolean] whenever job is throttled or not
       # by any strategy in collection.
       def throttled?(...)
-        allows = []
+        strategies_not_throttled = []
 
-        each do |s|
-          if s.throttled?(...)
-            allows.each { |s| s.finalize!(...) }
+        each do |strategy|
+          if strategy.throttled?(...)
+            # Tell already processed strategies that the job is not running.
+            strategies_not_throttled.each { |s| s.finalize!(...) }
             return true
           else
-            allows << s
+            strategies_not_throttled << strategy
           end
         end
 
+        # No strategy in the collection was throttled.
         false
       end
 
