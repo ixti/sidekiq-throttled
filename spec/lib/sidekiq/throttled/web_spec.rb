@@ -19,7 +19,9 @@ require "sidekiq/throttled/web"
 RSpec.describe Sidekiq::Throttled::Web do
   include Rack::Test::Methods
 
-  SIDEKIQ_EIGHT_ONE_OR_NEWER = Gem::Version.new(Sidekiq::VERSION) >= Gem::Version.new("8.1.0")
+  def sidekiq_eight_one_or_newer?
+    Gem::Version.new(Sidekiq::VERSION) >= Gem::Version.new("8.1.0")
+  end
 
   def app
     @app ||= Rack::Builder.app do
@@ -33,7 +35,7 @@ RSpec.describe Sidekiq::Throttled::Web do
   end
 
   def post_with_auth(path, params = {})
-    if SIDEKIQ_EIGHT_ONE_OR_NEWER
+    if sidekiq_eight_one_or_newer?
       header "Sec-Fetch-Site", "same-origin"
       post path, params
     else
