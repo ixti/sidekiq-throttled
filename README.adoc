@@ -398,6 +398,7 @@ dropped.
 This library aims to support and work with following Sidekiq versions:
 
 * Sidekiq 8.0.x
+* Sidekiq 8.1.x
 
 And the following Sidekiq Pro versions:
 

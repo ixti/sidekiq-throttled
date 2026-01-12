@@ -19,6 +19,8 @@ require "sidekiq/throttled/web"
 RSpec.describe Sidekiq::Throttled::Web do
   include Rack::Test::Methods
 
+  SIDEKIQ_EIGHT_ONE_OR_NEWER = Gem::Version.new(Sidekiq::VERSION) >= Gem::Version.new("8.1.0")
+
   def app
     @app ||= Rack::Builder.app do
       use Rack::Session::Cookie, secret: SecureRandom.hex(32), same_site: true
@@ -27,8 +29,15 @@ RSpec.describe Sidekiq::Throttled::Web do
   end
 
   def csrf_token
-    SecureRandom.base64(Sidekiq::Web::CsrfProtection::TOKEN_LENGTH).tap do |csrf|
-      env("rack.session", { csrf: csrf })
+    SecureRandom.base64(32).tap { |csrf| env("rack.session", { csrf: csrf }) }
+  end
+
+  def post_with_auth(path, params = {})
+    if SIDEKIQ_EIGHT_ONE_OR_NEWER
+      header "Sec-Fetch-Site", "same-origin"
+      post path, params
+    else
+      post path, params.merge(authenticity_token: csrf_token)
     end
   end
 
@@ -63,28 +72,24 @@ RSpec.describe Sidekiq::Throttled::Web do
   end
 
   describe "POST /throttled/:id/reset" do
-    before do
-      env "rack.session", csrf: csrf_token
-    end
-
     context "when id is unknown" do
       it "does not fail" do
-        post "/throttled/abc/reset", authenticity_token: csrf_token
+        post_with_auth "/throttled/abc/reset"
         expect(last_response.status).to eq 302
       end
     end
 
     context "when id is known" do
       it "does not fail" do
-        post "/throttled/foo/reset", authenticity_token: csrf_token
+        post_with_auth "/throttled/foo/reset"
         expect(last_response.status).to eq 302
       end
 
-      it "calls #reset! on matchin strategy" do
+      it "calls #reset! on matching strategy" do
         strategy = Sidekiq::Throttled::Registry.get "foo"
         expect(strategy).to receive(:reset!)
 
-        post "/throttled/foo/reset", authenticity_token: csrf_token
+        post_with_auth "/throttled/foo/reset"
       end
     end
   end
