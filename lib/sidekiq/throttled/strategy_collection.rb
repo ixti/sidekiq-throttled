@@ -38,18 +38,7 @@ module Sidekiq
       # @return [Boolean] whenever job is throttled or not
       # by any strategy in collection.
       def throttled?(...)
-        allows = []
-
-        each do |s|
-          if s.throttled?(...)
-            allows.each { |s| s.finalize!(...) }
-            return true
-          else
-            allows << s
-          end
-        end
-
-        false
+        any? { |s| s.throttled?(...) }
       end
 
       # @return [Float] How long, in seconds, before we'll next be able to take on jobs
