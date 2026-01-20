@@ -144,7 +144,19 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         }
       end
 
-      context "with dynamic key suffix" do
+      context "when both rules result in the same suffix" do
+        let(:job_args) { [1] }
+
+        # This puts 3 jobs under the key_suffix "1", due to the second rule.
+        before { 3.times { strategy.throttled? jid, 99 } }
+
+        # Since the arg is 1 the key_suffix for the first rule will be "1".
+        # There are already 3 jobs under this key, and the limit is 3, so the
+        # job is throttled.
+        it { is_expected.to be true }
+      end
+
+      context "with first concurrency rule" do
         let(:job_args) { [11] }
 
         context "when limit is not yet reached" do
