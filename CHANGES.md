@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [2.1.0] - 2026-01-20
+
 ### Fixed
 
 - Fix Web UI compatibility with Sidekiq 8.1+ (view file naming and CSRF changes)
@@ -188,7 +191,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove queue exclusion from fetcher pon throttled job
 
 
-[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v2.0.0...main
+[unreleased]: https://github.com/ixti/sidekiq-throttled/compare/v2.1.0...main
+[2.1.0]: https://github.com/ixti/sidekiq-throttled/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/ixti/sidekiq-throttled/compare/v1.5.2...v2.0.0
 [1.5.2]: https://github.com/ixti/sidekiq-throttled/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/ixti/sidekiq-throttled/compare/v1.5.0...v1.5.1
