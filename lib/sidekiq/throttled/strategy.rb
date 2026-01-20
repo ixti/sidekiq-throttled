@@ -112,7 +112,7 @@ module Sidekiq
         end
       end
 
-      # Marks job as not processing.
+      # Marks job as being processed.
       # @return [void]
       def finalize!(jid, *job_args)
         @concurrency&.finalize!(jid, *job_args)
