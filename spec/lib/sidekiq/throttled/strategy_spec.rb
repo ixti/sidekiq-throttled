@@ -138,8 +138,8 @@ RSpec.describe Sidekiq::Throttled::Strategy do
       let(:concurrency) do
         {
           concurrency: [
-            { limit: 3, key_suffix: ->(job_arg, *) { job_arg } },
-            { limit: 7, key_suffix: ->(_, *) { 1 } }
+            { limit: 7, key_suffix: ->(_, *) { 1 } },
+            { limit: 3, key_suffix: ->(job_arg, *) { job_arg } }
           ]
         }
       end
@@ -180,11 +180,20 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         end
       end
 
-      context "with second concurrency rule" do
+      context "with static key suffix" do
         let(:job_args) { [10] }
 
         context "when limit is not yet reached" do
-          before { 6.times { |i| strategy.throttled? jid, i } }
+          before do
+            in_progress_count = 0
+
+            # Since there is a limit of 3 the 4th job will not be
+            # enqueued and should not count towards the static limit of 7.
+            in_progress_count += 4.times.count { !strategy.throttled? jid, [99] }
+            in_progress_count += 3.times.count { |i| !strategy.throttled? jid, i }
+
+            raise "unexpected in_progress_count" if in_progress_count != 6
+          end
 
           it { is_expected.to be false }
         end
