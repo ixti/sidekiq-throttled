@@ -345,30 +345,34 @@ eliminates -- or greatly reduces -- the negative impacts to non-throttled job
 types and queues and reduces wasted work constantly rechecking the same still
 throttled jobs.
 
-Config items: 
-* limit - max number of this job to run simultaneously
-* avg_job_duration - expected runtime in seconds of this type of job. Pick a
-  value on the high-side of plausible. Under heavy load values less than the
-  actual average will lead to sub-optimal delays in job processing.
-* lost_job_threshold - duration in seconds of a job's lease on it's concurrency slot
-* ttl - alias for lost_job_threshold
+**Config items**
+
+- `limit` — Maximum number of this job allowed to run simultaneously.
+- `avg_job_duration` — Expected runtime (in seconds) for this job type.  
+  Choose a value on the high end of what’s plausible; if you set this too low under heavy load, job scheduling will become sub-optimal.
+- `lost_job_threshold` — Duration (in seconds) representing how long a job “owns” its concurrency slot before being considered lost.
+- `ttl` — Deprecated alias for `lost_job_threshold`.
+- `max_delay` — The maximum number of seconds to delay a job when it is throttled.  
+  Prevents excessively long scheduling delays as the backlog grows.  
+  _Default: the smaller of 30 minutes or `10 × avg_job_duration`._
 
 [source,ruby]
----
+----
 sidekiq_throttle(
   concurrency: {
     # only run 10 of this job at a time 
-    limit: 10, 
-    
-    # these jobs finish in less that 30 seconds 
-    avg_job_duration: 30,  
-
-    # if it doesn't release it's lease in 2 minutes it's never going to
-    lost_job_threshold: 120  
-  }, 
+    limit: 10,
+    # these jobs finish in less than 30 seconds 
+    avg_job_duration: 30,
+    # if it doesn't release its lease in 2 minutes it's considered lost
+    lost_job_threshold: 120,
+    # maximum delay allowed when throttled
+    max_delay: 300
+  },
+  # requeue using Sidekiq's scheduler
   requeue: { with: :schedule }
 )
----
+----
 
 
 == Supported Ruby Versions
