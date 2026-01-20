@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix Web UI compatibility with Sidekiq 8.1+ (view file naming and CSRF changes)
+
 
 ## [2.0.0] - 2025-06-09
 
