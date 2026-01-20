@@ -11,6 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix Web UI compatibility with Sidekiq 8.1+ (view file naming and CSRF changes)
+  [#228](https://github.com/ixti/sidekiq-throttled/pull/228).
+- Fix string key suffix behavior
+  [#215](https://github.com/ixti/sidekiq-throttled/pull/215).
+- (doc) Update job configuration items docs for clarity
+  [#224](https://github.com/ixti/sidekiq-throttled/pull/224).
+- (doc) Clarify that key_suffix is not scoped to each strategy
+  [#221](https://github.com/ixti/sidekiq-throttled/pull/221).
+- (doc) Update docs for requeue strategy
+  [#214](https://github.com/ixti/sidekiq-throttled/pull/214).
+
+### Added
+
+- Backlog size aware throttling
+  [#209](https://github.com/ixti/sidekiq-throttled/pull/209).
 
 
 ## [2.0.0] - 2025-06-09

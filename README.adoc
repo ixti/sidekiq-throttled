@@ -382,6 +382,7 @@ This library aims to support and is tested against the following Ruby versions:
 * Ruby 3.2.x
 * Ruby 3.3.x
 * Ruby 3.4.x
+* Ruby 4.0.x
 
 If something doesn't work on one of these versions, it's a bug.
 
@@ -404,9 +405,10 @@ This library aims to support and work with following Sidekiq versions:
 * Sidekiq 8.0.x
 * Sidekiq 8.1.x
 
-And the following Sidekiq Pro versions:
+And (might work with) the following Sidekiq Pro versions:
 
 * Sidekiq Pro 8.0.x
+* Sidekiq Pro 8.1.x
 
 == Development
 
