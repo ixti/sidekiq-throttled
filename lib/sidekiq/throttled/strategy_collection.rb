@@ -38,7 +38,20 @@ module Sidekiq
       # @return [Boolean] whenever job is throttled or not
       # by any strategy in collection.
       def throttled?(...)
-        any? { |s| s.throttled?(...) }
+        strategies_not_throttled = []
+
+        throttled = any? do |strategy|
+          throttled = strategy.throttled?(...)
+          strategies_not_throttled << strategy unless throttled
+          throttled
+        end
+
+        if throttled
+          # Tell already processed strategies that the job is not running.
+          strategies_not_throttled.each { |s| s.finalize!(...) }
+        end
+
+        throttled
       end
 
       # @return [Float] How long, in seconds, before we'll next be able to take on jobs
@@ -46,7 +59,7 @@ module Sidekiq
         map { |s| s.retry_in(*args) }.max
       end
 
-      # Marks job as being processed.
+      # Marks job as not processing.
       # @return [void]
       def finalize!(...)
         each { |c| c.finalize!(...) }
