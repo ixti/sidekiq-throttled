@@ -138,19 +138,20 @@ RSpec.describe Sidekiq::Throttled::Strategy do
       let(:concurrency) do
         {
           concurrency: [
-            { limit: 7, key_suffix: ->(_, *) { 1 } },
-            { limit: 3, key_suffix: ->(job_arg, *) { job_arg } }
+            { limit: 7, key_suffix: ->(_, *) { 0 } },
+            { limit: 3, key_suffix: ->(job_arg, *) { job_arg } },
+            { limit: 7, key_suffix: ->(_, *) { 1 } }
           ]
         }
       end
 
-      context "when both rules result in the same suffix" do
+      context "when multiple rules result in the same suffix" do
         let(:job_args) { [1] }
 
-        # This puts 3 jobs under the key_suffix "1", due to the second rule.
+        # This puts 3 jobs under the key_suffix "1", due to the rule with key_suffix = 1..
         before { 3.times { strategy.throttled? jid, 99 } }
 
-        # Since the arg is 1 the key_suffix for the first rule will be "1".
+        # Since the arg is 1 the key_suffix for the dynamic rule will be "1".
         # There are already 3 jobs under this key, and the limit is 3, so the
         # job is throttled.
         it { is_expected.to be true }
@@ -190,7 +191,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
             # Since there is a limit of 3 the 4th job will not be
             # enqueued and should not count towards the static limit of 7.
             in_progress_count += 4.times.count { !strategy.throttled? jid, [99] }
-            in_progress_count += 3.times.count { |i| !strategy.throttled? jid, i }
+            in_progress_count += 3.times.count { |i| !strategy.throttled? jid, 99 + i }
 
             raise "unexpected in_progress_count" if in_progress_count != 6
           end
