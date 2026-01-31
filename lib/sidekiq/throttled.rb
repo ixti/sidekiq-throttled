@@ -118,10 +118,12 @@ module Sidekiq
       def requeue_throttled(work, throttled_strategies = nil)
         message = Message.new(work.job)
         strategies = throttled_strategies || strategies_for(message)
-        return if strategies.empty?
-
+        return false if strategies.empty?
+      
         strategy = select_strategy_for_requeue(strategies, message)
-        strategy&.requeue_throttled(work)
+        return false unless strategy
+      
+        strategy.requeue_throttled(work)
       end
 
       private
