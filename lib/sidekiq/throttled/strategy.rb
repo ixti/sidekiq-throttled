@@ -54,9 +54,6 @@ module Sidekiq
       end
 
       def throttled?(jid, *job_args)
-        return true if throttled_by_concurrency_limits?(job_args)
-        return true if throttled_by_threshold_limits?(job_args)
-
         multi_strategy_payloads = []
         multi_strategy_keys = []
         multi_strategy_types = []
@@ -65,6 +62,19 @@ module Sidekiq
         @concurrency.each do |strategy|
           job_limit = strategy.limit(job_args)
           next unless job_limit
+
+          if job_limit <= 0
+            in_progress_jobs_key, = strategy.multi_strategy_keys(job_args)
+            job_already_in_progress =
+              Sidekiq.redis { |redis| redis.zscore(in_progress_jobs_key, jid.to_s) }
+
+            if job_already_in_progress.nil?
+              @observer&.call(:concurrency, *job_args)
+              return true
+            end
+
+            next
+          end
 
           multi_strategy_payloads << strategy.multi_strategy_payload(jid, job_args, now, job_limit)
           multi_strategy_keys.concat(strategy.multi_strategy_keys(job_args))
@@ -75,8 +85,16 @@ module Sidekiq
           job_limit = strategy.limit(job_args)
           next unless job_limit
 
+          if job_limit <= 0
+            @observer&.call(:threshold, *job_args)
+            return true
+          end
+
           multi_strategy_payloads << strategy.multi_strategy_payload(
-            job_args, now, job_limit, strategy.period(job_args)
+            job_args,
+            now,
+            job_limit,
+            strategy.period(job_args)
           )
           multi_strategy_keys.concat(strategy.multi_strategy_keys(job_args))
           multi_strategy_types << :threshold
@@ -210,32 +228,6 @@ module Sidekiq
         )
 
         work.acknowledge
-      end
-
-      def throttled_by_concurrency_limits?(job_args)
-        @concurrency.each do |strategy|
-          job_limit = strategy.limit(job_args)
-          next unless job_limit
-          next unless job_limit <= 0
-
-          @observer&.call(:concurrency, *job_args)
-          return true
-        end
-
-        false
-      end
-
-      def throttled_by_threshold_limits?(job_args)
-        @threshold.each do |strategy|
-          job_limit = strategy.limit(job_args)
-          next unless job_limit
-          next unless job_limit <= 0
-
-          @observer&.call(:threshold, *job_args)
-          return true
-        end
-
-        false
       end
 
       def throttled_type?(types, per_strategy, target)
