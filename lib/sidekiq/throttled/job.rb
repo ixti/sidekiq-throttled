@@ -94,7 +94,7 @@ module Sidekiq
           strategy_key = options.delete(:as) || default_throttle_key
           strategy_key = normalize_strategy_key(strategy_key)
 
-          raise ArgumentError, "Duplicate throttling strategy: #{strategy_key}" if throttled_strategy_keys.include?(strategy_key)
+          raise ArgumentError, "Duplicate throttling strategy: #{strategy_key}" if throttled_strategy_keys.map(&:to_s).include?(strategy_key.to_s)
 
           Registry.add(strategy_key, **options)
 
@@ -147,16 +147,16 @@ module Sidekiq
         def sidekiq_throttle_as(*names)
           keys = normalize_strategy_keys(names)
           raise ArgumentError, "No throttling strategy provided" if keys.empty?
-        
+
           keys.each do |key|
             raise "Strategy not found: #{key}" unless Registry.get(key)
           end
-        
+
           existing = normalize_strategy_keys(throttled_strategy_keys)
           ensure_unique_strategy_keys!(existing + keys)
-        
+
           self.sidekiq_throttled_strategy_keys = (existing + keys).uniq
-        
+
           Registry.add_alias(self, keys.first) if keys.length == 1
           update_throttled_strategy_options!
         end
@@ -164,7 +164,7 @@ module Sidekiq
         private
 
         def throttled_strategy_keys
-          Array(sidekiq_throttled_strategy_keys).map(&:to_s)
+          Array(sidekiq_throttled_strategy_keys)
         end
 
         def normalize_strategy_keys(keys)
@@ -172,26 +172,27 @@ module Sidekiq
         end
 
         def normalize_strategy_key(key)
+          return key if key.is_a?(Class) || key.is_a?(Module)
           key.to_s
         end
 
         def ensure_unique_strategy_keys!(keys)
-          duplicates = keys.group_by { |key| key }.select { |_key, items| items.length > 1 }.keys
+          duplicates = keys.map(&:to_s).group_by { |key| key }.select { |_key, items| items.length > 1 }.keys
           raise ArgumentError, "Duplicate throttling strategy: #{duplicates.first}" if duplicates.any?
         end
 
         def default_throttle_key
-          name || to_s
+          name || self
         end
 
         def update_throttled_strategy_options!
           keys = throttled_strategy_keys
           return if keys.empty?
-        
+
           opts = get_sidekiq_options.dup
-          opts["throttled_strategy_keys"] = keys
+          opts["throttled_strategy_keys"] = keys.map(&:to_s)
           opts.delete("throttled_strategy_key")
-        
+
           sidekiq_options(opts)
         end
       end
