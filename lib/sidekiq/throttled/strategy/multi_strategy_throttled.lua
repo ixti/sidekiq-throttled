@@ -64,17 +64,13 @@ for i = 1, #strategies do
     state.now = now
 
     local throttled = false
-    local job_already_in_progress = redis.call("ZSCORE", in_progress_jobs_key, jid)
-    local over_limit = false
 
-    if lmt <= 0 then
+    clear_stale_in_progress_jobs(in_progress_jobs_key, backlog_info_key, lost_job_threshold, lmt, now)
+    local job_already_in_progress = redis.call("ZSCORE", in_progress_jobs_key, jid)
+    local over_limit = lmt <= redis.call("ZCARD", in_progress_jobs_key)
+
+    if over_limit and not job_already_in_progress then
       throttled = true
-    else
-      clear_stale_in_progress_jobs(in_progress_jobs_key, backlog_info_key, lost_job_threshold, lmt, now)
-      over_limit = lmt <= redis.call("ZCARD", in_progress_jobs_key)
-      if over_limit and not job_already_in_progress then
-        throttled = true
-      end
     end
 
     state.over_limit = over_limit
