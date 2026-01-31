@@ -32,6 +32,8 @@ module Sidekiq
       # @private
       def self.included(base)
         base.sidekiq_class_attribute :sidekiq_throttled_requeue_options
+        base.sidekiq_class_attribute :sidekiq_throttled_strategy_keys
+        base.sidekiq_throttled_strategy_keys = []
         base.extend(ClassMethods)
       end
 
@@ -88,8 +90,16 @@ module Sidekiq
         # @param [Hash] requeue What to do with jobs that are throttled
         # @see Registry.add
         # @return [void]
-        def sidekiq_throttle(**)
-          Registry.add(self, **)
+        def sidekiq_throttle(**options)
+          strategy_key = options.delete(:as) || default_throttle_key
+          strategy_key = normalize_strategy_key(strategy_key)
+
+          raise ArgumentError, "Duplicate throttling strategy: #{strategy_key}" if throttled_strategy_keys.include?(strategy_key)
+
+          Registry.add(strategy_key, **options)
+
+          self.sidekiq_throttled_strategy_keys = throttled_strategy_keys + [strategy_key]
+          update_throttled_strategy_options!
         end
 
         # Adds current worker to preconfigured throttling strategy. Allows
@@ -134,8 +144,55 @@ module Sidekiq
         #
         # @see Registry.add_alias
         # @return [void]
-        def sidekiq_throttle_as(name)
-          Registry.add_alias(self, name)
+        def sidekiq_throttle_as(*names)
+          keys = normalize_strategy_keys(names)
+          raise ArgumentError, "No throttling strategy provided" if keys.empty?
+          ensure_unique_strategy_keys!(keys)
+
+          keys.each do |key|
+            raise "Strategy not found: #{key}" unless Registry.get(key)
+          end
+
+          self.sidekiq_throttled_strategy_keys = keys
+          Registry.add_alias(self, keys.first) if keys.length == 1
+          update_throttled_strategy_options!
+        end
+
+        private
+
+        def throttled_strategy_keys
+          Array(sidekiq_throttled_strategy_keys).map(&:to_s)
+        end
+
+        def normalize_strategy_keys(keys)
+          Array(keys).flatten.compact.map { |key| normalize_strategy_key(key) }
+        end
+
+        def normalize_strategy_key(key)
+          key.to_s
+        end
+
+        def ensure_unique_strategy_keys!(keys)
+          duplicates = keys.group_by { |key| key }.select { |_key, items| items.length > 1 }.keys
+          raise ArgumentError, "Duplicate throttling strategy: #{duplicates.first}" if duplicates.any?
+        end
+
+        def default_throttle_key
+          name || to_s
+        end
+
+        def update_throttled_strategy_options!
+          keys = throttled_strategy_keys
+          return if keys.empty?
+
+          if keys.length > 1
+            sidekiq_options("throttled_strategy_keys" => keys)
+            sidekiq_options("throttled_strategy_key" => nil)
+          elsif keys.first != default_throttle_key
+            sidekiq_options("throttled_strategy_key" => keys.first)
+          else
+            sidekiq_options("throttled_strategy_keys" => nil, "throttled_strategy_key" => nil)
+          end
         end
       end
     end

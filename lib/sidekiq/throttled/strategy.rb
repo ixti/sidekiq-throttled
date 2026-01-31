@@ -97,8 +97,9 @@ module Sidekiq
       # @return [void]
       def requeue_throttled(work) # rubocop:disable Metrics/MethodLength
         # Resolve :with and :to options, calling them if they are Procs
-        job_args = JSON.parse(work.job)["args"]
-        with = requeue_with.respond_to?(:call) ? requeue_with.call(*job_args) : requeue_with
+        message = JSON.parse(work.job)
+        job_args = message["args"]
+        with = resolved_requeue_with(*job_args)
         target_queue = calc_target_queue(work)
 
         case with
@@ -106,7 +107,8 @@ module Sidekiq
           re_enqueue_throttled(work, target_queue)
         when :schedule
           # Find out when we will next be able to execute this job, and reschedule for then.
-          reschedule_throttled(work, target_queue)
+          jid = message.fetch("jid") { return false }
+          reschedule_throttled(work, target_queue, jid, job_args)
         else
           raise "unrecognized :with option #{with}"
         end
@@ -116,6 +118,28 @@ module Sidekiq
       # @return [void]
       def finalize!(jid, *job_args)
         @concurrency&.finalize!(jid, *job_args)
+      end
+
+      # @return [Proc, Symbol] How to requeue the throttled job, resolved with job args if needed.
+      def resolved_requeue_with(*job_args)
+        requeue_with.respond_to?(:call) ? requeue_with.call(*job_args) : requeue_with
+      end
+
+      # @return [Float] How long until we can retry.
+      def retry_in(jid, *job_args)
+        # Ask both concurrency and threshold, if relevant, how long minimum until we can retry.
+        # If we get two answers, take the longer one.
+        intervals = [@concurrency&.retry_in(jid, *job_args), @threshold&.retry_in(*job_args)].compact
+
+        raise "Cannot compute a valid retry interval" if intervals.empty?
+
+        interval = intervals.max
+
+        # Add a random amount of jitter, proportional to the length of the minimum retry time.
+        # This helps spread out jobs more evenly and avoid clumps of jobs on the queue.
+        interval += rand(interval / 5) if interval > 10
+
+        interval
       end
 
       # Resets count of jobs of all available strategies
@@ -173,40 +197,19 @@ module Sidekiq
 
       # Reschedule the job to be executed later in the target queue.
       # The queue name should NOT include the "queue:" prefix, so we remove it if it's present.
-      def reschedule_throttled(work, target_queue)
+      def reschedule_throttled(work, target_queue, jid, job_args)
         target_queue = target_queue.delete_prefix("queue:")
         message      = JSON.parse(work.job)
         job_class    = message.fetch("wrapped") { message.fetch("class") { return false } }
-        job_args     = message["args"]
 
         # Re-enqueue the job to the target queue at another time as a NEW unit of work
         # AND THEN mark this work as done, so SuperFetch doesn't think this instance is orphaned
         # Technically, the job could processed twice if the process dies between the two lines,
         # but your job should be idempotent anyway, right?
         # The job running twice was already a risk with SuperFetch anyway and this doesn't really increase that risk.
-        Sidekiq::Client.enqueue_to_in(target_queue, retry_in(work), Object.const_get(job_class), *job_args)
+        Sidekiq::Client.enqueue_to_in(target_queue, retry_in(jid, *job_args), Object.const_get(job_class), *job_args)
 
         work.acknowledge
-      end
-
-      def retry_in(work)
-        message = JSON.parse(work.job)
-        jid = message.fetch("jid") { return false }
-        job_args = message["args"]
-
-        # Ask both concurrency and threshold, if relevant, how long minimum until we can retry.
-        # If we get two answers, take the longer one.
-        intervals = [@concurrency&.retry_in(jid, *job_args), @threshold&.retry_in(*job_args)].compact
-
-        raise "Cannot compute a valid retry interval" if intervals.empty?
-
-        interval = intervals.max
-
-        # Add a random amount of jitter, proportional to the length of the minimum retry time.
-        # This helps spread out jobs more evenly and avoid clumps of jobs on the queue.
-        interval += rand(interval / 5) if interval > 10
-
-        interval
       end
     end
   end

@@ -81,29 +81,79 @@ module Sidekiq
       # @param [String] message Job's JSON payload
       # @return [Boolean]
       def throttled?(message)
-        message = Message.new(message)
-        return false unless message.job_class && message.job_id
-
-        Registry.get(message.job_class) do |strategy|
-          return strategy.throttled?(message.job_id, *message.job_args)
-        end
-
-        false
+        throttled_with(message).first
       rescue StandardError
         false
+      end
+
+      # Tells whenever job is throttled or not.
+      #
+      # @param [String] message Job's JSON payload
+      # @return [Array(Boolean, Array<Strategy>)] throttled result and strategies
+      def throttled_with(message)
+        message = Message.new(message)
+        return [false, []] unless message.job_id
+
+        strategies = strategies_for(message)
+        return [false, []] if strategies.empty?
+
+        throttled_strategies = []
+        strategies.each do |strategy|
+          throttled_strategies << strategy if strategy.throttled?(message.job_id, *message.job_args)
+        end
+
+        if throttled_strategies.any?
+          (strategies - throttled_strategies).each do |strategy|
+            strategy.finalize!(message.job_id, *message.job_args)
+          end
+
+          return [true, throttled_strategies]
+        end
+
+        [false, []]
+      rescue StandardError
+        [false, []]
       end
 
       # Return throttled job to be executed later, delegating the details of how to do that
       # to the Strategy for that job.
       #
       # @return [void]
-      def requeue_throttled(work)
-        message = JSON.parse(work.job)
-        job_class = Object.const_get(message.fetch("wrapped") { message.fetch("class") { return false } })
+      def requeue_throttled(work, throttled_strategies = nil)
+        message = Message.new(work.job)
+        strategies = throttled_strategies || strategies_for(message)
+        return if strategies.empty?
 
-        Registry.get job_class do |strategy|
-          strategy.requeue_throttled(work)
-        end
+        strategy = select_strategy_for_requeue(strategies, message)
+        strategy&.requeue_throttled(work)
+      end
+
+      private
+
+      def strategies_for(message)
+        keys = message.strategy_keys
+        keys = [message.job_class] if keys.empty? && message.job_class
+
+        keys.map { |key| Registry.get(key) }.compact.uniq
+      end
+
+      def select_strategy_for_requeue(strategies, message)
+        jid = message.job_id
+        job_args = message.job_args
+
+        strategies
+          .map do |strategy|
+            with = resolve_requeue_with(strategy, job_args)
+            cooldown = with == :schedule ? strategy.retry_in(jid, *job_args) : 0.0
+
+            [cooldown, strategy]
+          end
+          .max_by { |cooldown, _strategy| cooldown }
+          &.last
+      end
+
+      def resolve_requeue_with(strategy, job_args)
+        strategy.resolved_requeue_with(*job_args)
       end
     end
   end
