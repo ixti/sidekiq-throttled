@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# external
+require "json"
+require "redis_prescription"
+
 # internal
 require_relative "./errors"
 require_relative "./strategy_collection"
@@ -13,6 +17,11 @@ module Sidekiq
     #
     # @private
     class Strategy # rubocop:disable Metrics/ClassLength
+      MULTI_STRATEGY_SCRIPT = RedisPrescription.new(
+        File.read("#{__dir__}/strategy/multi_strategy_throttled.lua")
+      )
+      private_constant :MULTI_STRATEGY_SCRIPT
+
       # :enqueue means put the job back at the end of the queue immediately
       # :schedule means schedule enqueueing the job for a later time when we expect to have capacity
       VALID_VALUES_FOR_REQUEUE_WITH = %i[enqueue schedule].freeze
@@ -45,14 +54,53 @@ module Sidekiq
       end
 
       def throttled?(jid, *job_args)
-        if @concurrency&.throttled?(jid, *job_args)
+        return true if throttled_by_concurrency_limits?(job_args)
+        return true if throttled_by_threshold_limits?(job_args)
+
+        multi_strategy_payloads = []
+        multi_strategy_keys = []
+        multi_strategy_types = []
+        now = Time.now.to_f
+
+        @concurrency.each do |strategy|
+          job_limit = strategy.limit(job_args)
+          next unless job_limit
+
+          multi_strategy_payloads << strategy.multi_strategy_payload(jid, job_args, now, job_limit)
+          multi_strategy_keys.concat(strategy.multi_strategy_keys(job_args))
+          multi_strategy_types << :concurrency
+        end
+
+        @threshold.each do |strategy|
+          job_limit = strategy.limit(job_args)
+          next unless job_limit
+
+          multi_strategy_payloads << strategy.multi_strategy_payload(
+            job_args, now, job_limit, strategy.period(job_args)
+          )
+          multi_strategy_keys.concat(strategy.multi_strategy_keys(job_args))
+          multi_strategy_types << :threshold
+        end
+
+        return false if multi_strategy_payloads.empty?
+
+        any_throttled, *per_strategy = Sidekiq.redis do |redis|
+          MULTI_STRATEGY_SCRIPT.call(
+            redis,
+            keys: multi_strategy_keys,
+            argv: [JSON.generate(multi_strategy_payloads)]
+          )
+        end
+
+        return false unless any_throttled == 1
+
+        if throttled_type?(multi_strategy_types, per_strategy, :concurrency)
           @observer&.call(:concurrency, *job_args)
           return true
         end
 
-        if @threshold&.throttled?(*job_args)
+        if throttled_type?(multi_strategy_types, per_strategy, :threshold)
           @observer&.call(:threshold, *job_args)
-          finalize!(jid, *job_args)
           return true
         end
 
@@ -162,6 +210,40 @@ module Sidekiq
         )
 
         work.acknowledge
+      end
+
+      def throttled_by_concurrency_limits?(job_args)
+        @concurrency.each do |strategy|
+          job_limit = strategy.limit(job_args)
+          next unless job_limit
+          next unless job_limit <= 0
+
+          @observer&.call(:concurrency, *job_args)
+          return true
+        end
+
+        false
+      end
+
+      def throttled_by_threshold_limits?(job_args)
+        @threshold.each do |strategy|
+          job_limit = strategy.limit(job_args)
+          next unless job_limit
+          next unless job_limit <= 0
+
+          @observer&.call(:threshold, *job_args)
+          return true
+        end
+
+        false
+      end
+
+      def throttled_type?(types, per_strategy, target)
+        per_strategy.each_with_index do |result, index|
+          return true if result == 1 && types[index] == target
+        end
+
+        false
       end
     end
   end
