@@ -186,17 +186,8 @@ module Sidekiq
           return if keys.empty?
         
           opts = get_sidekiq_options.dup
-        
-          if keys.length > 1
-            opts["throttled_strategy_keys"] = keys
-            opts.delete("throttled_strategy_key")
-          elsif keys.first != default_throttle_key
-            opts["throttled_strategy_key"] = keys.first
-            opts.delete("throttled_strategy_keys")
-          else
-            opts.delete("throttled_strategy_keys")
-            opts.delete("throttled_strategy_key")
-          end
+          opts["throttled_strategy_keys"] = keys
+          opts.delete("throttled_strategy_key")
         
           sidekiq_options(opts)
         end
