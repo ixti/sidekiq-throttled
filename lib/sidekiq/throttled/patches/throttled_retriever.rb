@@ -10,10 +10,14 @@ module Sidekiq
         def retrieve_work
           work = super
 
-          if work && Throttled.throttled?(work.job)
-            Throttled.cooldown&.notify_throttled(work.queue)
-            Throttled.requeue_throttled(work)
-            return nil
+          if work
+            throttled, strategies = Throttled.throttled_with(work.job)
+
+            if throttled
+              Throttled.cooldown&.notify_throttled(work.queue)
+              Throttled.requeue_throttled(work, strategies)
+              return nil
+            end
           end
 
           Throttled.cooldown&.notify_admitted(work.queue) if work

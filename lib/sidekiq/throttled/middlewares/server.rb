@@ -17,8 +17,13 @@ module Sidekiq
           message = Message.new(msg)
 
           if message.job_class && message.job_id
-            Registry.get(message.job_class) do |strategy|
-              strategy.finalize!(message.job_id, *message.job_args)
+            keys = message.strategy_keys
+            keys = [message.job_class] if keys.empty?
+
+            keys.uniq.each do |key|
+              Registry.get(key) do |strategy|
+                strategy.finalize!(message.job_id, *message.job_args)
+              end
             end
           end
         end
