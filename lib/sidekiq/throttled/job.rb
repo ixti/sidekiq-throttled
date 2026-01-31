@@ -184,15 +184,21 @@ module Sidekiq
         def update_throttled_strategy_options!
           keys = throttled_strategy_keys
           return if keys.empty?
-
+        
+          opts = get_sidekiq_options.dup
+        
           if keys.length > 1
-            sidekiq_options("throttled_strategy_keys" => keys)
-            sidekiq_options("throttled_strategy_key" => nil)
+            opts["throttled_strategy_keys"] = keys
+            opts.delete("throttled_strategy_key")
           elsif keys.first != default_throttle_key
-            sidekiq_options("throttled_strategy_key" => keys.first)
+            opts["throttled_strategy_key"] = keys.first
+            opts.delete("throttled_strategy_keys")
           else
-            sidekiq_options("throttled_strategy_keys" => nil, "throttled_strategy_key" => nil)
+            opts.delete("throttled_strategy_keys")
+            opts.delete("throttled_strategy_key")
           end
+        
+          sidekiq_options(opts)
         end
       end
     end
