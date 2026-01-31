@@ -92,7 +92,7 @@ module Sidekiq
           )
         end
 
-        return false unless any_throttled == 1
+        return false unless any_throttled.to_i == 1
 
         if throttled_type?(multi_strategy_types, per_strategy, :concurrency)
           @observer&.call(:concurrency, *job_args)
@@ -240,7 +240,7 @@ module Sidekiq
 
       def throttled_type?(types, per_strategy, target)
         per_strategy.each_with_index do |result, index|
-          return true if result == 1 && types[index] == target
+          return true if result.to_i == 1 && types[index] == target
         end
 
         false
