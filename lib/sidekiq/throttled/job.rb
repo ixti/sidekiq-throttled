@@ -147,13 +147,16 @@ module Sidekiq
         def sidekiq_throttle_as(*names)
           keys = normalize_strategy_keys(names)
           raise ArgumentError, "No throttling strategy provided" if keys.empty?
-          ensure_unique_strategy_keys!(keys)
-
+        
           keys.each do |key|
             raise "Strategy not found: #{key}" unless Registry.get(key)
           end
-
-          self.sidekiq_throttled_strategy_keys = keys
+        
+          existing = normalize_strategy_keys(throttled_strategy_keys)
+          ensure_unique_strategy_keys!(existing + keys)
+        
+          self.sidekiq_throttled_strategy_keys = (existing + keys).uniq
+        
           Registry.add_alias(self, keys.first) if keys.length == 1
           update_throttled_strategy_options!
         end
