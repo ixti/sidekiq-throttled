@@ -79,6 +79,123 @@ class MyWorker
 end
 ----
 
+=== Multiple throttling strategies per job
+
+A job can now be throttled by **multiple independent throttling strategies**.
+
+Each strategy is evaluated separately, and a job will be throttled if **any**
+strategy reports that it should be throttled.
+
+This makes it possible to combine different limits, such as:
+
+- global limits (shared across jobs)
+- per-user or per-account limits
+- job-specific limits
+
+==== How multiple strategies are evaluated
+
+* All configured strategies are checked when a job is fetched.
+* If **any strategy throttles**, the job is considered throttled.
+* When requeueing, the strategy with the **longest retry delay** is used
+  (for `:schedule` requeue strategies).
+* If all strategies allow execution, the job is admitted and processed normally.
+
+==== Combining registry strategies with job-specific strategies
+
+You can attach an existing strategy from the registry and also define
+additional throttling rules directly in the job.
+
+Example:
+
+[source,ruby]
+----
+class StormProxyJob
+  include Sidekiq::Job
+  include Sidekiq::Throttled::Job
+
+  # Shared/global strategy (defined in an initializer)
+  sidekiq_throttle_as :storm_proxy_global
+
+  # Job-specific strategy
+  sidekiq_throttle(
+    as: :storm_proxy_per_user,
+    threshold: { limit: 5, period: 5.seconds },
+    key_suffix: ->(user_id, *_rest) { "user:#{user_id}" }
+  )
+
+  def perform(user_id, url)
+    # ...
+  end
+end
+----
+
+In this example:
+
+- `:storm_proxy_global` limits total system usage
+- `:storm_proxy_per_user` limits usage per user
+- The job is throttled if **either** limit is exceeded
+
+==== Defining multiple strategies directly on a job
+
+You can define more than one strategy inline by calling `sidekiq_throttle`
+multiple times, each with a unique `:as` key:
+
+[source,ruby]
+----
+class MyJob
+  include Sidekiq::Job
+  include Sidekiq::Throttled::Job
+
+  sidekiq_throttle(
+    as: :global_limit,
+    concurrency: { limit: 10 }
+  )
+
+  sidekiq_throttle(
+    as: :per_account_limit,
+    threshold: { limit: 100, period: 1.hour },
+    key_suffix: ->(account_id) { account_id }
+  )
+
+  def perform(account_id)
+    # ...
+  end
+end
+----
+
+==== Using sidekiq_throttle_as with multiple strategies
+
+You can attach multiple preconfigured strategies from the registry:
+
+[source,ruby]
+----
+sidekiq_throttle_as :global_api_limit, :per_user_limit
+----
+
+All referenced strategies must already exist in the registry.
+
+==== Omitting :as for job-defined strategies
+
+If `:as` is not provided when calling `sidekiq_throttle`, the job’s class
+name is used as the strategy key.
+
+[source,ruby]
+----
+sidekiq_throttle(
+  threshold: { limit: 5, period: 5.seconds }
+)
+----
+
+This works, but explicitly providing `:as` is recommended for clarity,
+especially when combining multiple strategies.
+
+==== Important notes
+
+* Strategy keys must be unique per job.
+* A strategy defined in the registry cannot be redefined inside a job.
+* Strategies are independent — concurrency and threshold limits are evaluated
+  separately for each one.
+
 === Requeue Strategy
 The default requeue strategy `:enqueue` puts jobs immiediately back on the queue if they are being limited, with a potential `cooldown_period`. This is often an appropriate strategy but in some situations may cause the system to repeatedly dequeue and reenque the same job causing excessive redis CPU usage.
 
