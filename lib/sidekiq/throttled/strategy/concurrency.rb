@@ -93,6 +93,20 @@ module Sidekiq
           end
         end
 
+        def multi_strategy_payload(jid, job_args, now, job_limit)
+          {
+            type: "concurrency",
+            jid: jid.to_s,
+            limit: job_limit,
+            lost_job_threshold: @lost_job_threshold,
+            now: now
+          }
+        end
+
+        def multi_strategy_keys(job_args)
+          [key(job_args), backlog_info_key(job_args)]
+        end
+
         private
 
         def backlog_info_key(job_args)
