@@ -120,34 +120,84 @@ RSpec.describe Sidekiq::Throttled do
       described_class.throttled? message
     end
   end
-
+  
   describe ".throttled_with" do
     it "returns throttled strategies and finalizes the rest" do
       throttled_strategy = instance_double(Sidekiq::Throttled::Strategy)
       open_strategy = instance_double(Sidekiq::Throttled::Strategy)
-
+  
       payload_jid = jid
       args = ["alpha", 1]
+  
       message = JSON.dump({
         "class" => "ThrottledTestJob",
         "jid" => payload_jid,
         "args" => args,
         "throttled_strategy_keys" => %w[first second]
       })
-
+  
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("first").and_return(throttled_strategy)
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("second").and_return(open_strategy)
-
+  
       allow(throttled_strategy).to receive(:throttled?).with(payload_jid, *args).and_return(true)
       allow(open_strategy).to receive(:throttled?).with(payload_jid, *args).and_return(false)
-
+  
       expect(open_strategy).to receive(:finalize!).with(payload_jid, *args)
       expect(throttled_strategy).not_to receive(:finalize!)
-
+  
       expect(described_class.throttled_with(message)).to eq([true, [throttled_strategy]])
     end
+  
+    it "returns false with no strategies if all open" do
+      first_strategy = instance_double(Sidekiq::Throttled::Strategy)
+      second_strategy = instance_double(Sidekiq::Throttled::Strategy)
+  
+      payload_jid = jid
+      args = ["alpha", 1]
+  
+      message = JSON.dump({
+        "class" => "ThrottledTestJob",
+        "jid" => payload_jid,
+        "args" => args,
+        "throttled_strategy_keys" => %w[first second]
+      })
+  
+      allow(Sidekiq::Throttled::Registry).to receive(:get).with("first").and_return(first_strategy)
+      allow(Sidekiq::Throttled::Registry).to receive(:get).with("second").and_return(second_strategy)
+  
+      allow(first_strategy).to receive(:throttled?).with(payload_jid, *args).and_return(false)
+      allow(second_strategy).to receive(:throttled?).with(payload_jid, *args).and_return(false)
+  
+      expect(first_strategy).to receive(:finalize!).with(payload_jid, *args)
+      expect(second_strategy).to receive(:finalize!).with(payload_jid, *args)
+  
+      expect(described_class.throttled_with(message)).to eq([false, []])
+    end
+  
+    it "handles missing strategies gracefully" do
+      open_strategy = instance_double(Sidekiq::Throttled::Strategy)
+  
+      payload_jid = jid
+      args = ["alpha", 1]
+  
+      message = JSON.dump({
+        "class" => "ThrottledTestJob",
+        "jid" => payload_jid,
+        "args" => args,
+        "throttled_strategy_keys" => %w[missing open]
+      })
+  
+      allow(Sidekiq::Throttled::Registry).to receive(:get).with("missing").and_return(nil)
+      allow(Sidekiq::Throttled::Registry).to receive(:get).with("open").and_return(open_strategy)
+  
+      allow(open_strategy).to receive(:throttled?).with(payload_jid, *args).and_return(false)
+  
+      expect(open_strategy).to receive(:finalize!).with(payload_jid, *args)
+  
+      expect(described_class.throttled_with(message)).to eq([false, []])
+    end
   end
-
+  
   describe ".requeue_throttled" do
     let(:sidekiq_config) do
       if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
@@ -156,42 +206,80 @@ RSpec.describe Sidekiq::Throttled do
         Sidekiq::Config.new(queues: %w[default]).default_capsule
       end
     end
-
+  
     let!(:strategy) do
-      Sidekiq::Throttled::Registry.add("ThrottledTestJob", threshold: { limit: 1, period: 1 },
-        requeue: { to: :other_queue, with: :enqueue })
+      Sidekiq::Throttled::Registry.add(
+        "ThrottledTestJob",
+        threshold: { limit: 1, period: 1 },
+        requeue: { to: :other_queue, with: :enqueue }
+      )
     end
-
+  
     it "invokes requeue_throttled on the strategy" do
       payload_jid = jid
-      job = { class: "ThrottledTestJob", jid: payload_jid.inspect }.to_json
+      job = { class: "ThrottledTestJob", jid: payload_jid }.to_json
       work = Sidekiq::BasicFetch::UnitOfWork.new("queue:default", job, sidekiq_config)
-
+  
       expect(strategy).to receive(:requeue_throttled).with(work)
-
+  
       described_class.requeue_throttled work
     end
-
+  
     it "selects the strategy with the maximum cooldown when requeueing" do
       fast_strategy = instance_double(Sidekiq::Throttled::Strategy)
       slow_strategy = instance_double(Sidekiq::Throttled::Strategy)
-
+  
       payload_jid = jid
       args = ["alpha", 1]
+  
       job = { class: "ThrottledTestJob", jid: payload_jid, args: args }.to_json
       work = Sidekiq::BasicFetch::UnitOfWork.new("queue:default", job, sidekiq_config)
-
+  
       allow(fast_strategy).to receive(:resolved_requeue_with).with(*args).and_return(:schedule)
       allow(slow_strategy).to receive(:resolved_requeue_with).with(*args).and_return(:schedule)
+  
       allow(fast_strategy).to receive(:retry_in).with(payload_jid, *args).and_return(2.0)
       allow(slow_strategy).to receive(:retry_in).with(payload_jid, *args).and_return(10.0)
+  
       allow(fast_strategy).to receive(:requeue_throttled)
       allow(slow_strategy).to receive(:requeue_throttled)
-
+  
       described_class.requeue_throttled(work, [fast_strategy, slow_strategy])
-
+  
       expect(slow_strategy).to have_received(:requeue_throttled).with(work)
       expect(fast_strategy).not_to have_received(:requeue_throttled)
+    end
+  
+    it "does nothing if no strategies" do
+      payload_jid = jid
+      args = ["alpha", 1]
+  
+      job = { class: "ThrottledTestJob", jid: payload_jid, args: args }.to_json
+      work = Sidekiq::BasicFetch::UnitOfWork.new("queue:default", job, sidekiq_config)
+  
+      expect { described_class.requeue_throttled(work, []) }.not_to raise_error
+    end
+  
+    it "handles :enqueue with no cooldown" do
+      first_strategy = instance_double(Sidekiq::Throttled::Strategy)
+      second_strategy = instance_double(Sidekiq::Throttled::Strategy)
+  
+      payload_jid = jid
+      args = ["alpha", 1]
+  
+      job = { class: "ThrottledTestJob", jid: payload_jid, args: args }.to_json
+      work = Sidekiq::BasicFetch::UnitOfWork.new("queue:default", job, sidekiq_config)
+  
+      allow(first_strategy).to receive(:resolved_requeue_with).with(*args).and_return(:enqueue)
+      allow(second_strategy).to receive(:resolved_requeue_with).with(*args).and_return(:enqueue)
+  
+      allow(first_strategy).to receive(:requeue_throttled)
+      allow(second_strategy).to receive(:requeue_throttled)
+  
+      described_class.requeue_throttled(work, [first_strategy, second_strategy])
+  
+      expect(first_strategy).to have_received(:requeue_throttled).with(work)
+      expect(second_strategy).not_to have_received(:requeue_throttled)
     end
   end
 end
