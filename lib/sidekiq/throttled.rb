@@ -15,32 +15,6 @@ require_relative "./throttled/worker"
 
 # @see https://github.com/mperham/sidekiq/
 module Sidekiq
-  # Concurrency and threshold throttling for Sidekiq.
-  #
-  # Just add somewhere in your bootstrap:
-  #
-  #     require "sidekiq/throttled"
-  #
-  # Once you've done that you can include {Sidekiq::Throttled::Job} to your
-  # job classes and configure throttling:
-  #
-  #     class MyJob
-  #       include Sidekiq::Job
-  #       include Sidekiq::Throttled::Job
-  #
-  #       sidekiq_options :queue => :my_queue
-  #
-  #       sidekiq_throttle({
-  #         # Allow maximum 10 concurrent jobs of this class at a time.
-  #         :concurrency => { :limit => 10 },
-  #         # Allow maximum 1K jobs being processed within one hour window.
-  #         :threshold => { :limit => 1_000, :period => 1.hour }
-  #       })
-  #
-  #       def perform
-  #         # ...
-  #       end
-  #     end
   module Throttled
     MUTEX = Mutex.new
     private_constant :MUTEX
@@ -49,22 +23,9 @@ module Sidekiq
     @cooldown = Cooldown[@config]
 
     class << self
-      # @api internal
-      #
-      # @return [Cooldown, nil]
       attr_reader :cooldown
-
-      # @api internal
-      #
-      # @return [Config, nil]
       attr_reader :config
 
-      # @example
-      #   Sidekiq::Throttled.configure do |config|
-      #     config.cooldown_period = nil # Disable queues cooldown manager
-      #   end
-      #
-      # @yieldparam config [Config]
       def configure
         MUTEX.synchronize do
           config = @config.dup
@@ -76,20 +37,12 @@ module Sidekiq
         end
       end
 
-      # Tells whenever job is throttled or not.
-      #
-      # @param [String] message Job's JSON payload
-      # @return [Boolean]
       def throttled?(message)
         throttled_with(message).first
       rescue StandardError
         false
       end
 
-      # Tells whenever job is throttled or not.
-      #
-      # @param [String] message Job's JSON payload
-      # @return [Array(Boolean, Array<Strategy>)] throttled result and strategies
       def throttled_with(message)
         message = Message.new(message)
         return [false, []] unless message.job_id
@@ -97,24 +50,17 @@ module Sidekiq
         strategies = strategies_for(message)
         return [false, []] if strategies.empty?
 
-        throttled_strategies = []
-        strategies.each do |strategy|
-          throttled_strategies << strategy if strategy.throttled?(message.job_id, *message.job_args)
-        end
+        jid = message.job_id
+        job_args = Array(message.job_args)
 
-        if throttled_strategies.any?
-          return [true, throttled_strategies]
-        end
-        
-        [false, []]
+        throttled, throttled_strategies =
+          Strategy.multi_throttled_with(strategies, jid, job_args)
+
+        [throttled, throttled_strategies]
       rescue StandardError
         [false, []]
       end
 
-      # Return throttled job to be executed later, delegating the details of how to do that
-      # to the Strategy for that job.
-      #
-      # @return [void]
       def requeue_throttled(work, throttled_strategies = nil)
         message = Message.new(work.job)
         strategies = throttled_strategies || strategies_for(message)
@@ -135,7 +81,7 @@ module Sidekiq
 
       def select_strategy_for_requeue(strategies, message)
         jid = message.job_id
-        job_args = message.job_args
+        job_args = Array(message.job_args)
 
         strategies
           .map do |strategy|
