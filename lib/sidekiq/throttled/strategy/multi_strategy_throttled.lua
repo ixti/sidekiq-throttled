@@ -91,9 +91,7 @@ for i = 1, #strategies do
     state.now = now
 
     local throttled = false
-    if lmt <= 0 then
-      throttled = true
-    elseif lmt <= redis.call("LLEN", key) and now - redis.call("LINDEX", key, -1) < ttl then
+    if lmt <= redis.call("LLEN", key) and now - redis.call("LINDEX", key, -1) < ttl then
       throttled = true
     end
 
@@ -114,7 +112,7 @@ if any_throttled then
   for i = 1, #strategy_states do
     local state = strategy_states[i]
     if state.type == "concurrency" and state.throttled then
-      if state.lmt > 0 and state.over_limit and not state.job_already_in_progress then
+      if state.over_limit and not state.job_already_in_progress then
         change_backlog_size(state.backlog_info_key, state.lost_job_threshold, state.lmt, state.now, 1)
       end
     end
@@ -123,10 +121,8 @@ else
   for i = 1, #strategy_states do
     local state = strategy_states[i]
     if state.type == "concurrency" then
-      if state.lmt > 0 then
-        register_job_in_progress(state.in_progress_jobs_key, state.lost_job_threshold, state.jid, state.now)
-        change_backlog_size(state.backlog_info_key, state.lost_job_threshold, state.lmt, state.now, -1)
-      end
+      register_job_in_progress(state.in_progress_jobs_key, state.lost_job_threshold, state.jid, state.now)
+      change_backlog_size(state.backlog_info_key, state.lost_job_threshold, state.lmt, state.now, -1)
     elseif state.type == "threshold" then
       redis.call("LPUSH", state.key, state.now)
       redis.call("LTRIM", state.key, 0, state.lmt - 1)
