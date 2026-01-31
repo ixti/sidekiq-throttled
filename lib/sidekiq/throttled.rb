@@ -97,16 +97,16 @@ module Sidekiq
         strategies = strategies_for(message)
         return [false, []] if strategies.empty?
 
-        throttled_strategies = []
-        strategies.each do |strategy|
-          throttled_strategies << strategy if strategy.throttled?(message.job_id, *message.job_args)
+        job_args = Array(message.job_args)
+
+        if strategies.length == 1
+          strategy = strategies.first
+          return [true, [strategy]] if strategy.throttled?(message.job_id, *job_args)
+
+          return [false, []]
         end
 
-        if throttled_strategies.any?
-          return [true, throttled_strategies]
-        end
-        
-        [false, []]
+        Strategy.throttled_for(strategies, message.job_id, job_args)
       rescue StandardError
         [false, []]
       end
