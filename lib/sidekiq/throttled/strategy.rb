@@ -166,7 +166,7 @@ module Sidekiq
           re_enqueue_throttled(work, target_queue)
         when :schedule
           jid = payload.job_id or return false
-          reschedule_throttled(work, target_queue, payload, jid, job_args)
+          reschedule_throttled(work, target_queue)
         else
           raise "unrecognized :with option #{with}"
         end
@@ -270,16 +270,20 @@ module Sidekiq
         end
       end
 
-      def reschedule_throttled(work, target_queue, payload, jid, job_args)
+      # Reschedule the job to be executed later in the target queue.
+      # The queue name should NOT include the "queue:" prefix, so we remove it if it's present.
+      def reschedule_throttled(work, target_queue)
         target_queue = target_queue.delete_prefix("queue:")
-        job_class    = payload.job_class or return false
+        message      = JSON.parse(work.job)
+        job_class    = message.fetch("wrapped") { message.fetch("class") { return false } }
+        job_args     = message["args"]
 
-        Sidekiq::Client.enqueue_to_in(
-          target_queue,
-          retry_in(jid, *job_args),
-          Object.const_get(job_class),
-          *job_args
-        )
+        # Re-enqueue the job to the target queue at another time as a NEW unit of work
+        # AND THEN mark this work as done, so SuperFetch doesn't think this instance is orphaned
+        # Technically, the job could processed twice if the process dies between the two lines,
+        # but your job should be idempotent anyway, right?
+        # The job running twice was already a risk with SuperFetch anyway and this doesn't really increase that risk.
+        Sidekiq::Client.enqueue_to_in(target_queue, retry_in(work), Object.const_get(job_class), *job_args)
 
         work.acknowledge
       end
