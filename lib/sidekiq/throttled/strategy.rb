@@ -73,14 +73,16 @@ module Sidekiq
 
           if types.include?(:concurrency)
             strategy.observer&.call(:concurrency, *job_args)
-          elsif types.include?(:threshold)
+          end
+          
+          if types.include?(:threshold)
             strategy.observer&.call(:threshold, *job_args)
           end
 
           throttled_strategies << strategy
         end
 
-        [true, throttled_strategies]
+        [true, throttled_strategies.uniq]
       end
 
       def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil, observer: nil, requeue: nil) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
@@ -199,7 +201,8 @@ module Sidekiq
 
         @concurrency.each do |strategy|
           job_limit = strategy.limit(job_args)
-          next unless job_limit
+          next if job_limit.nil?
+          job_limit = job_limit.to_i
 
           multi_strategy_payloads << strategy.multi_strategy_payload(jid, job_args, now, job_limit)
           multi_strategy_keys.concat(strategy.multi_strategy_keys(job_args))
@@ -208,7 +211,8 @@ module Sidekiq
 
         @threshold.each do |strategy|
           job_limit = strategy.limit(job_args)
-          next unless job_limit
+          next if job_limit.nil?
+          job_limit = job_limit.to_i
 
           multi_strategy_payloads << strategy.multi_strategy_payload(
             job_args,
