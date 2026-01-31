@@ -57,7 +57,13 @@ module Sidekiq
           )
         end
 
-        return [false, []] unless any_throttled.to_i == 1
+        unless any_throttled.to_i == 1
+          payload_strategy_indexes.uniq.each do |strategy_index|
+            strategies[strategy_index].finalize!(jid, *job_args)
+          end
+
+          return [false, []]
+        end
 
         throttled_types_by_strategy = Hash.new { |hash, key| hash[key] = [] }
         per_strategy.each_with_index do |result, payload_index|
