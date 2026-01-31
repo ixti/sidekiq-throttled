@@ -109,16 +109,16 @@ Example:
 
 [source,ruby]
 ----
-class StormProxyJob
+class ProxyJob
   include Sidekiq::Job
   include Sidekiq::Throttled::Job
 
   # Shared/global strategy (defined in an initializer)
-  sidekiq_throttle_as :storm_proxy_global
+  sidekiq_throttle_as :proxy_global
 
   # Job-specific strategy
   sidekiq_throttle(
-    as: :storm_proxy_per_user,
+    as: :proxy_per_user,
     threshold: { limit: 5, period: 5.seconds },
     key_suffix: ->(user_id, *_rest) { "user:#{user_id}" }
   )
@@ -131,8 +131,8 @@ end
 
 In this example:
 
-- `:storm_proxy_global` limits total system usage
-- `:storm_proxy_per_user` limits usage per user
+- `:proxy_global` limits total system usage
+- `:proxy_per_user` limits usage per user
 - The job is throttled if **either** limit is exceeded
 
 ==== Defining multiple strategies directly on a job
