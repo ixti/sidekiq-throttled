@@ -103,13 +103,9 @@ module Sidekiq
         end
 
         if throttled_strategies.any?
-          (strategies - throttled_strategies).each do |strategy|
-            strategy.finalize!(message.job_id, *message.job_args)
-          end
-
           return [true, throttled_strategies]
         end
-
+        
         [false, []]
       rescue StandardError
         [false, []]
