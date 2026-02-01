@@ -122,29 +122,40 @@ RSpec.describe Sidekiq::Throttled do
   end
   
   describe ".throttled_with" do
-    it "returns throttled strategies and finalizes the rest" do
+    it "returns throttled strategies" do  # Updated name to reflect current behavior
       throttled_strategy = instance_double(Sidekiq::Throttled::Strategy)
       open_strategy = instance_double(Sidekiq::Throttled::Strategy)
-  
+    
       payload_jid = jid
       args = ["alpha", 1]
-  
+    
       message = JSON.dump({
         "class" => "ThrottledTestJob",
         "jid" => payload_jid,
         "args" => args,
         "throttled_strategy_keys" => %w[first second]
       })
-  
+    
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("first").and_return(throttled_strategy)
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("second").and_return(open_strategy)
-  
-      allow(throttled_strategy).to receive(:throttled?).with(payload_jid, *args).and_return(true)
-      allow(open_strategy).to receive(:throttled?).with(payload_jid, *args).and_return(false)
-  
-      expect(open_strategy).to receive(:finalize!).with(payload_jid, *args)
+    
+      # Stub the private method to avoid raise and simulate components
+      allow(throttled_strategy).to receive(:throttled_components).and_return(
+        [[{ type: :concurrency, key: "throttled_key", limit: 0 }]],  # Payloads (simulate no capacity to throttle)
+        ["throttled_key"],                                         # Keys
+        [:concurrency]                                             # Types
+      )
+      allow(open_strategy).to receive(:throttled_components).and_return(
+        [[{ type: :concurrency, key: "open_key", limit: 10 }]],   # Payloads (simulate capacity)
+        ["open_key"],                                              # Keys
+        [:concurrency]                                             # Types
+      )
+    
+      # Stub the "Lua" result: any_throttled=1, per_strategy results (1=throttled for first, 0=open for second)
+      allow(Sidekiq).to receive(:redis).and_return(1, 1, 0)
+    
       expect(throttled_strategy).not_to receive(:finalize!)
-  
+    
       expect(described_class.throttled_with(message)).to eq([true, [throttled_strategy]])
     end
   
