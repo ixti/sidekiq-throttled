@@ -58,10 +58,6 @@ module Sidekiq
         end
 
         unless any_throttled.to_i == 1
-          payload_strategy_indexes.uniq.each do |strategy_index|
-            strategies[strategy_index].finalize!(jid, *job_args)
-          end
-
           return [false, []]
         end
 
