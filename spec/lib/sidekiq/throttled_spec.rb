@@ -123,7 +123,7 @@ RSpec.describe Sidekiq::Throttled do
       )
   
       # Stub the Redis evalsha result: any_throttled=1, per_strategy results (1=throttled for first, 0=open for second)
-      conn = instance_double(Redis)
+      conn = instance_double("Redis")
       allow(Sidekiq).to receive(:redis).and_yield(conn)
       allow(conn).to receive(:evalsha).and_return([1, 1, 0])
   
@@ -162,7 +162,7 @@ RSpec.describe Sidekiq::Throttled do
       )
   
       # Stub the Redis evalsha result: any_throttled=0, per_strategy results (0=open for both)
-      conn = instance_double(Redis)
+      conn = instance_double("Redis")
       allow(Sidekiq).to receive(:redis).and_yield(conn)
       allow(conn).to receive(:evalsha).and_return([0, 0, 0])
   
@@ -188,9 +188,9 @@ RSpec.describe Sidekiq::Throttled do
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("missing").and_return(nil)
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("open").and_return(open_strategy)
   
-      allow(open_strategy).to receive(:throttled?).and_return(false)
+      allow(open_strategy).to receive(:throttled?).with(payload_jid, *args).and_return(false)
   
-      expect(open_strategy).to receive(:finalize!)
+      expect(open_strategy).to receive(:finalize!).with(payload_jid, *args)
   
       expect(described_class.throttled_with(message)).to eq([false, []])
     end
