@@ -110,13 +110,13 @@ RSpec.describe Sidekiq::Throttled do
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("first").and_return(throttled_strategy)
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("second").and_return(open_strategy)
   
-      # Stub with args to ensure matching
-      allow(throttled_strategy).to receive(:throttled_components).with(payload_jid, *args).and_return(
+      # Stub with full args (jid, job_args array, now float)
+      allow(throttled_strategy).to receive(:throttled_components).with(payload_jid, args, kind_of(Float)).and_return(
         [[{ type: :concurrency, key: "throttled_key", limit: 0 }]],  # Payloads
         ["throttled_key"],  # Keys
         [:concurrency]  # Types
       )
-      allow(open_strategy).to receive(:throttled_components).with(payload_jid, *args).and_return(
+      allow(open_strategy).to receive(:throttled_components).with(payload_jid, args, kind_of(Float)).and_return(
         [[{ type: :concurrency, key: "open_key", limit: 10 }]],  # Payloads
         ["open_key"],  # Keys
         [:concurrency]  # Types
@@ -149,13 +149,13 @@ RSpec.describe Sidekiq::Throttled do
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("first").and_return(first_strategy)
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("second").and_return(second_strategy)
   
-      # Stub with args to ensure matching
-      allow(first_strategy).to receive(:throttled_components).with(payload_jid, *args).and_return(
+      # Stub with full args (jid, job_args array, now float)
+      allow(first_strategy).to receive(:throttled_components).with(payload_jid, args, kind_of(Float)).and_return(
         [[{ type: :concurrency, key: "first_key", limit: 10 }]],  # Payloads
         ["first_key"],  # Keys
         [:concurrency]  # Types
       )
-      allow(second_strategy).to receive(:throttled_components).with(payload_jid, *args).and_return(
+      allow(second_strategy).to receive(:throttled_components).with(payload_jid, args, kind_of(Float)).and_return(
         [[{ type: :concurrency, key: "second_key", limit: 10 }]],  # Payloads
         ["second_key"],  # Keys
         [:concurrency]  # Types
