@@ -110,6 +110,10 @@ RSpec.describe Sidekiq::Throttled do
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("first").and_return(throttled_strategy)
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("second").and_return(open_strategy)
   
+      # Stub observer to prevent raise on &.
+      allow(throttled_strategy).to receive(:observer).and_return(nil)
+      allow(open_strategy).to receive(:observer).and_return(nil)
+  
       # Stub with full args (jid, job_args array, now float)
       allow(throttled_strategy).to receive(:throttled_components).with(payload_jid, args, kind_of(Float)).and_return(
         [[{ type: :concurrency, key: "throttled_key", limit: 0 }]],  # Payloads
@@ -125,7 +129,7 @@ RSpec.describe Sidekiq::Throttled do
       # Stub the Lua script constant with a double
       script_double = instance_double("RedisPrescription")
       stub_const("Sidekiq::Throttled::Strategy::MULTI_STRATEGY_SCRIPT", script_double)
-      allow(script_double).to receive(:call).with(any_args).and_return([1, 1, 0])  # any_throttled=1, results=[1,0]
+      allow(script_double).to receive(:call).and_return([1, 1, 0])  # any_throttled=1, results=[1,0]
   
       # Stub Sidekiq.redis to yield a double (ensures block is called)
       conn = instance_double("Redis")
@@ -153,6 +157,10 @@ RSpec.describe Sidekiq::Throttled do
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("first").and_return(first_strategy)
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("second").and_return(second_strategy)
   
+      # Stub observer to prevent raise on &.
+      allow(first_strategy).to receive(:observer).and_return(nil)
+      allow(second_strategy).to receive(:observer).and_return(nil)
+  
       # Stub with full args (jid, job_args array, now float)
       allow(first_strategy).to receive(:throttled_components).with(payload_jid, args, kind_of(Float)).and_return(
         [[{ type: :concurrency, key: "first_key", limit: 10 }]],  # Payloads
@@ -168,7 +176,7 @@ RSpec.describe Sidekiq::Throttled do
       # Stub the Lua script constant with a double
       script_double = instance_double("RedisPrescription")
       stub_const("Sidekiq::Throttled::Strategy::MULTI_STRATEGY_SCRIPT", script_double)
-      allow(script_double).to receive(:call).with(any_args).and_return([0, 0, 0])  # any_throttled=0, results=[0,0]
+      allow(script_double).to receive(:call).and_return([0, 0, 0])  # any_throttled=0, results=[0,0]
   
       # Stub Sidekiq.redis to yield a double (ensures block is called)
       conn = instance_double("Redis")
@@ -200,7 +208,7 @@ RSpec.describe Sidekiq::Throttled do
       expect(described_class.throttled_with(message)).to eq([false, []])
     end
   end
- 
+   
   describe ".requeue_throttled" do
     let(:sidekiq_config) do
       if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
