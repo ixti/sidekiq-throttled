@@ -30,37 +30,65 @@ module Sidekiq
 
       def self.throttled_for(strategies, jid, job_args)
         job_args = Array(job_args)
-        now = Time.now.to_f
-        payloads = []
-        keys = []
-        payload_types = []
-        payload_strategy_indexes = []
-
-        strategies.each_with_index do |strategy, index|
-          strategy_payloads, strategy_keys, strategy_types =
-            strategy.send(:throttled_components, jid, job_args, now)
-          next if strategy_payloads.empty?
-
-          payloads.concat(strategy_payloads)
-          keys.concat(strategy_keys)
-          payload_types.concat(strategy_types)
-          payload_strategy_indexes.concat([index] * strategy_payloads.length)
-        end
-
+        payloads, keys, payload_types, payload_strategy_indexes =
+          collect_strategy_payloads(strategies, jid, job_args, Time.now.to_f)
         return [false, []] if payloads.empty?
 
+        per_strategy_results = execute_multi_strategy_script(keys, payloads)
+        return [false, []] unless per_strategy_results
+
+        throttled_strategies = process_throttled_strategies(
+          strategies, per_strategy_results, payload_types, payload_strategy_indexes, job_args
+        )
+        [true, throttled_strategies.uniq]
+      end
+
+      def self.collect_strategy_payloads(strategies, jid, job_args, now)
+        collections = { payloads: [], keys: [], types: [], indexes: [] }
+        job_context = { jid: jid, job_args: job_args, now: now }
+
+        strategies.each_with_index do |strategy, index|
+          append_strategy_payload(strategy, index, job_context, collections)
+        end
+
+        [collections[:payloads], collections[:keys], collections[:types], collections[:indexes]]
+      end
+      private_class_method :collect_strategy_payloads
+
+      def self.append_strategy_payload(strategy, index, job_context, collections)
+        strategy_payloads, strategy_keys, strategy_types =
+          strategy.send(:throttled_components, job_context[:jid], job_context[:job_args], job_context[:now])
+        return if strategy_payloads.empty?
+
+        collections[:payloads].concat(strategy_payloads)
+        collections[:keys].concat(strategy_keys)
+        collections[:types].concat(strategy_types)
+        collections[:indexes].concat([index] * strategy_payloads.length)
+      end
+      private_class_method :append_strategy_payload
+
+      def self.execute_multi_strategy_script(keys, payloads)
         any_throttled, *per_strategy = Sidekiq.redis do |redis|
-          MULTI_STRATEGY_SCRIPT.call(
-            redis,
-            keys: keys,
-            argv: [JSON.generate(payloads)]
-          )
+          MULTI_STRATEGY_SCRIPT.call(redis, keys: keys, argv: [JSON.generate(payloads)])
         end
+        per_strategy if any_throttled.to_i == 1
+      end
+      private_class_method :execute_multi_strategy_script
 
-        unless any_throttled.to_i == 1
-          return [false, []]
+      def self.process_throttled_strategies(strategies, per_strategy, payload_types, payload_strategy_indexes, job_args)
+        throttled_types_by_strategy = build_throttled_types_map(per_strategy, payload_types, payload_strategy_indexes)
+
+        throttled_strategies = []
+        throttled_types_by_strategy.each do |strategy_index, types|
+          strategy = strategies[strategy_index]
+          notify_strategy_observers(strategy, types, job_args)
+          throttled_strategies << strategy
         end
+        throttled_strategies
+      end
+      private_class_method :process_throttled_strategies
 
+      def self.build_throttled_types_map(per_strategy, payload_types, payload_strategy_indexes)
         throttled_types_by_strategy = Hash.new { |hash, key| hash[key] = [] }
         per_strategy.each_with_index do |result, payload_index|
           next unless result.to_i == 1
@@ -68,24 +96,15 @@ module Sidekiq
           strategy_index = payload_strategy_indexes[payload_index]
           throttled_types_by_strategy[strategy_index] << payload_types[payload_index]
         end
-
-        throttled_strategies = []
-        throttled_types_by_strategy.each do |strategy_index, types|
-          strategy = strategies[strategy_index]
-
-          if types.include?(:concurrency)
-            strategy.observer&.call(:concurrency, *job_args)
-          end
-          
-          if types.include?(:threshold)
-            strategy.observer&.call(:threshold, *job_args)
-          end
-
-          throttled_strategies << strategy
-        end
-
-        [true, throttled_strategies.uniq]
+        throttled_types_by_strategy
       end
+      private_class_method :build_throttled_types_map
+
+      def self.notify_strategy_observers(strategy, types, job_args)
+        strategy.observer&.call(:concurrency, *job_args) if types.include?(:concurrency)
+        strategy.observer&.call(:threshold, *job_args) if types.include?(:threshold)
+      end
+      private_class_method :notify_strategy_observers
 
       def initialize(name, concurrency: nil, threshold: nil, key_suffix: nil, observer: nil, requeue: nil) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
         @observer = observer
@@ -119,27 +138,10 @@ module Sidekiq
           throttled_components(jid, job_args, now)
         return false if multi_strategy_payloads.empty?
 
-        any_throttled, *per_strategy = Sidekiq.redis do |redis|
-          MULTI_STRATEGY_SCRIPT.call(
-            redis,
-            keys: multi_strategy_keys,
-            argv: [JSON.generate(multi_strategy_payloads)]
-          )
-        end
+        per_strategy_results = execute_throttle_check(multi_strategy_keys, multi_strategy_payloads)
+        return false unless per_strategy_results
 
-        return false unless any_throttled.to_i == 1
-
-        if throttled_type?(multi_strategy_types, per_strategy, :concurrency)
-          @observer&.call(:concurrency, *job_args)
-          return true
-        end
-
-        if throttled_type?(multi_strategy_types, per_strategy, :threshold)
-          @observer&.call(:threshold, *job_args)
-          return true
-        end
-
-        false
+        throttled_and_notify?(multi_strategy_types, per_strategy_results, job_args)
       end
 
       def requeue_with
@@ -161,7 +163,7 @@ module Sidekiq
         when :enqueue
           re_enqueue_throttled(work, target_queue)
         when :schedule
-          jid = payload.job_id or return false
+          payload.job_id or return false
           reschedule_throttled(work, target_queue)
         else
           raise "unrecognized :with option #{with}"
@@ -197,36 +199,57 @@ module Sidekiq
       private
 
       def throttled_components(jid, job_args, now)
-        multi_strategy_payloads = []
-        multi_strategy_keys = []
-        multi_strategy_types = []
+        collections = { payloads: [], keys: [], types: [] }
 
+        collect_concurrency_components(jid, job_args, now, collections)
+        collect_threshold_components(job_args, now, collections)
+
+        [collections[:payloads], collections[:keys], collections[:types]]
+      end
+
+      def collect_concurrency_components(jid, job_args, now, collections)
         @concurrency.each do |strategy|
-          job_limit = strategy.limit(job_args)
+          job_limit = strategy.limit(job_args)&.to_i
           next if job_limit.nil?
-          job_limit = job_limit.to_i
 
-          multi_strategy_payloads << strategy.multi_strategy_payload(jid, job_args, now, job_limit)
-          multi_strategy_keys.concat(strategy.multi_strategy_keys(job_args))
-          multi_strategy_types << :concurrency
+          collections[:payloads] << strategy.multi_strategy_payload(jid, job_args, now, job_limit)
+          collections[:keys].concat(strategy.multi_strategy_keys(job_args))
+          collections[:types] << :concurrency
         end
+      end
 
+      def collect_threshold_components(job_args, now, collections)
         @threshold.each do |strategy|
-          job_limit = strategy.limit(job_args)
+          job_limit = strategy.limit(job_args)&.to_i
           next if job_limit.nil?
-          job_limit = job_limit.to_i
 
-          multi_strategy_payloads << strategy.multi_strategy_payload(
-            job_args,
-            now,
-            job_limit,
-            strategy.period(job_args)
+          collections[:payloads] << strategy.multi_strategy_payload(
+            job_args, now, job_limit, strategy.period(job_args)
           )
-          multi_strategy_keys.concat(strategy.multi_strategy_keys(job_args))
-          multi_strategy_types << :threshold
+          collections[:keys].concat(strategy.multi_strategy_keys(job_args))
+          collections[:types] << :threshold
+        end
+      end
+
+      def execute_throttle_check(keys, payloads)
+        any_throttled, *per_strategy = Sidekiq.redis do |redis|
+          MULTI_STRATEGY_SCRIPT.call(redis, keys: keys, argv: [JSON.generate(payloads)])
+        end
+        per_strategy if any_throttled.to_i == 1
+      end
+
+      def throttled_and_notify?(types, per_strategy, job_args)
+        if throttled_type?(types, per_strategy, :concurrency)
+          @observer&.call(:concurrency, *job_args)
+          return true
         end
 
-        [multi_strategy_payloads, multi_strategy_keys, multi_strategy_types]
+        if throttled_type?(types, per_strategy, :threshold)
+          @observer&.call(:threshold, *job_args)
+          return true
+        end
+
+        false
       end
 
       def validate!

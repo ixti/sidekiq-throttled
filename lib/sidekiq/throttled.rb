@@ -99,12 +99,7 @@ module Sidekiq
 
         job_args = Array(message.job_args)
 
-        if strategies.length == 1
-          strategy = strategies.first
-          return [true, [strategy]] if strategy.throttled?(message.job_id, *job_args)
-
-          return [false, []]
-        end
+        return check_single_strategy(strategies.first, message.job_id, job_args) if strategies.length == 1
 
         Strategy.throttled_for(strategies, message.job_id, job_args)
       rescue StandardError
@@ -119,35 +114,40 @@ module Sidekiq
         message = Message.new(work.job)
         strategies = throttled_strategies || strategies_for(message)
         return false if strategies.empty?
-      
+
         strategy = select_strategy_for_requeue(strategies, message)
         return false unless strategy
-      
+
         strategy.requeue_throttled(work)
       end
 
       private
 
+      def check_single_strategy(strategy, job_id, job_args)
+        return [true, [strategy]] if strategy.throttled?(job_id, *job_args)
+
+        [false, []]
+      end
+
       def strategies_for(message)
         keys = message.strategy_keys
         keys = [message.job_class] if keys.empty? && message.job_class
 
-        keys.map { |key| Registry.get(key) }.compact.uniq
+        keys.filter_map { |key| Registry.get(key) }.uniq
       end
 
       def select_strategy_for_requeue(strategies, message)
         jid = message.job_id
         job_args = message.job_args
 
-        strategies
-          .map do |strategy|
-            with = resolve_requeue_with(strategy, job_args)
-            cooldown = with == :schedule ? strategy.retry_in(jid, *job_args) : 0.0
+        cooldowns = strategies.map do |strategy|
+          with = resolve_requeue_with(strategy, job_args)
+          cooldown = with == :schedule ? strategy.retry_in(jid, *job_args) : 0.0
 
-            [cooldown, strategy]
-          end
-          .max_by { |cooldown, _strategy| cooldown }
-          &.last
+          [cooldown, strategy]
+        end
+
+        cooldowns.max_by { |cooldown, _strategy| cooldown }&.last
       end
 
       def resolve_requeue_with(strategy, job_args)

@@ -99,12 +99,12 @@ module Sidekiq
           Sidekiq.redis { |conn| conn.del(key(job_args)) }
         end
 
-        def multi_strategy_payload(job_args, now, job_limit, job_period)
+        def multi_strategy_payload(_job_args, now, job_limit, job_period)
           {
-            type: "threshold",
-            limit: job_limit,
+            type:   "threshold",
+            limit:  job_limit,
             period: job_period,
-            now: now
+            now:    now
           }
         end
 

@@ -94,7 +94,10 @@ module Sidekiq
           strategy_key = options.delete(:as) || default_throttle_key
           strategy_key = normalize_strategy_key(strategy_key)
 
-          raise ArgumentError, "Duplicate throttling strategy: #{strategy_key}" if throttled_strategy_keys.map(&:to_s).include?(strategy_key.to_s)
+          if throttled_strategy_keys.map(&:to_s).include?(strategy_key.to_s)
+            raise ArgumentError,
+              "Duplicate throttling strategy: #{strategy_key}"
+          end
 
           Registry.add(strategy_key, **options)
 
@@ -148,9 +151,7 @@ module Sidekiq
           keys = normalize_strategy_keys(names)
           raise ArgumentError, "No throttling strategy provided" if keys.empty?
 
-          keys.each do |key|
-            raise "Strategy not found: #{key}" unless Registry.get(key)
-          end
+          validate_strategies_exist!(keys)
 
           existing = normalize_strategy_keys(throttled_strategy_keys)
           ensure_unique_strategy_keys!(existing + keys)
@@ -163,6 +164,12 @@ module Sidekiq
 
         private
 
+        def validate_strategies_exist!(keys)
+          keys.each do |key|
+            raise "Strategy not found: #{key}" unless Registry.get(key)
+          end
+        end
+
         def throttled_strategy_keys
           Array(sidekiq_throttled_strategy_keys)
         end
@@ -173,6 +180,7 @@ module Sidekiq
 
         def normalize_strategy_key(key)
           return key if key.is_a?(Class) || key.is_a?(Module)
+
           key.to_s
         end
 
