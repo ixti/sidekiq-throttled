@@ -122,10 +122,8 @@ RSpec.describe Sidekiq::Throttled do
         [:concurrency]  # Types
       )
   
-      # Stub Redis evalsha (Lua output)
-      conn = instance_double("Redis")
-      allow(Sidekiq).to receive(:redis).and_yield(conn)
-      allow(conn).to receive(:evalsha).with(any_args).and_return([1, 1, 0])  # any_throttled=1, results=[1,0]
+      # Stub the Lua script call directly to simulate output
+      allow(Sidekiq::Throttled::Strategy).to receive_message_chain(:MULTI_STRATEGY_SCRIPT, :call).and_return([1, 1, 0])  # any_throttled=1, results=[1,0]
   
       expect(throttled_strategy).not_to receive(:finalize!)
   
@@ -161,10 +159,8 @@ RSpec.describe Sidekiq::Throttled do
         [:concurrency]  # Types
       )
   
-      # Stub Redis evalsha (Lua output)
-      conn = instance_double("Redis")
-      allow(Sidekiq).to receive(:redis).and_yield(conn)
-      allow(conn).to receive(:evalsha).with(any_args).and_return([0, 0, 0])  # any_throttled=0, results=[0,0]
+      # Stub the Lua script call directly to simulate output
+      allow(Sidekiq::Throttled::Strategy).to receive_message_chain(:MULTI_STRATEGY_SCRIPT, :call).and_return([0, 0, 0])  # any_throttled=0, results=[0,0]
   
       # No finalize! expectation (incorrect for check phase)
   
