@@ -98,6 +98,19 @@ module Sidekiq
         def reset!(*job_args)
           Sidekiq.redis { |conn| conn.del(key(job_args)) }
         end
+
+        def multi_strategy_payload(_job_args, now, job_limit, job_period)
+          {
+            type:   "threshold",
+            limit:  job_limit,
+            period: job_period,
+            now:    now
+          }
+        end
+
+        def multi_strategy_keys(job_args)
+          [key(job_args)]
+        end
       end
     end
   end

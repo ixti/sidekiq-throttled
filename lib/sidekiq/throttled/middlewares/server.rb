@@ -14,10 +14,20 @@ module Sidekiq
         def call(_worker, msg, _queue)
           yield
         ensure
-          message = Message.new(msg)
+          finalize_strategies(msg)
+        end
 
-          if message.job_class && message.job_id
-            Registry.get(message.job_class) do |strategy|
+        private
+
+        def finalize_strategies(msg)
+          message = Message.new(msg)
+          return unless message.job_class && message.job_id
+
+          keys = message.strategy_keys
+          keys = [message.job_class] if keys.empty?
+
+          keys.uniq.each do |key|
+            Registry.get(key) do |strategy|
               strategy.finalize!(message.job_id, *message.job_args)
             end
           end
