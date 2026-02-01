@@ -6,6 +6,8 @@ class ThrottledTestJob
   def perform(*); end
 end
 RSpec.describe Sidekiq::Throttled do
+  let(:script) { Sidekiq::Throttled::Strategy.const_get(:MULTI_STRATEGY_SCRIPT) }
+
   it "registers server middleware" do
     require "sidekiq/processor"
     allow(Sidekiq).to receive(:server?).and_return true
@@ -91,115 +93,111 @@ RSpec.describe Sidekiq::Throttled do
       described_class.throttled? message
     end
   end
- 
+
   describe ".throttled_with" do
-    it "returns throttled strategies" do # Updated name to reflect current behavior
+    it "returns throttled strategies" do  # Updated name to reflect current behavior
       throttled_strategy = instance_double(Sidekiq::Throttled::Strategy)
       open_strategy = instance_double(Sidekiq::Throttled::Strategy)
-   
+
       payload_jid = jid
       args = ["alpha", 1]
-   
+
       message = JSON.dump({
         "class" => "ThrottledTestJob",
         "jid" => payload_jid,
         "args" => args,
         "throttled_strategy_keys" => %w[first second]
       })
-   
+
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("first").and_return(throttled_strategy)
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("second").and_return(open_strategy)
-   
+
       # Stub the private method to avoid raise and simulate components
       allow(throttled_strategy).to receive(:throttled_components).and_return(
-        [[{ type: :concurrency, key: "throttled_key", limit: 0 }]], # Payloads (simulate no capacity to throttle)
-        ["throttled_key"], # Keys
-        [:concurrency] # Types
+        [[{ type: :concurrency, key: "throttled_key", limit: 0 }]],  # Payloads (simulate no capacity to throttle)
+        ["throttled_key"],                                          # Keys
+        [:concurrency]                                              # Types
       )
       allow(open_strategy).to receive(:throttled_components).and_return(
-        [[{ type: :concurrency, key: "open_key", limit: 10 }]], # Payloads (simulate capacity)
-        ["open_key"], # Keys
-        [:concurrency] # Types
+        [[{ type: :concurrency, key: "open_key", limit: 10 }]],    # Payloads (simulate capacity)
+        ["open_key"],                                               # Keys
+        [:concurrency]                                              # Types
       )
-   
-      # Stub the "Lua" result: any_throttled=1, per_strategy results (1=throttled for first, 0=open for second)
-      allow(Sidekiq).to receive(:redis).and_return(1, 1, 0)
-   
+
+      # Stub the Lua script result: any_throttled=1, per_payload results (1=throttled for first, 0=open for second)
+      allow(script).to receive(:call).and_return([1, 1, 0])
+
       expect(throttled_strategy).not_to receive(:finalize!)
-   
+      expect(open_strategy).not_to receive(:finalize!)
+
       expect(described_class.throttled_with(message)).to eq([true, [throttled_strategy]])
     end
- 
-    it "returns false with no strategies if all open" do
+
+    it "returns false with no strategies if all open" do  # Updated name for clarity, removed finalize expectations (handled in Lua)
       first_strategy = instance_double(Sidekiq::Throttled::Strategy)
       second_strategy = instance_double(Sidekiq::Throttled::Strategy)
- 
+
       payload_jid = jid
       args = ["alpha", 1]
- 
+
       message = JSON.dump({
         "class" => "ThrottledTestJob",
         "jid" => payload_jid,
         "args" => args,
         "throttled_strategy_keys" => %w[first second]
       })
- 
+
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("first").and_return(first_strategy)
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("second").and_return(second_strategy)
- 
+
       # Stub the private method to avoid empty payloads and simulate components
       allow(first_strategy).to receive(:throttled_components).and_return(
-        [[{ type: :concurrency, key: "first_key", limit: 10 }]], # Payloads (simulate capacity)
-        ["first_key"], # Keys
-        [:concurrency] # Types
+        [[{ type: :concurrency, key: "first_key", limit: 10 }]],  # Payloads (simulate capacity)
+        ["first_key"],                                             # Keys
+        [:concurrency]                                             # Types
       )
       allow(second_strategy).to receive(:throttled_components).and_return(
         [[{ type: :concurrency, key: "second_key", limit: 10 }]], # Payloads (simulate capacity)
-        ["second_key"], # Keys
-        [:concurrency] # Types
+        ["second_key"],                                            # Keys
+        [:concurrency]                                             # Types
       )
- 
-      # Stub the "Lua" result: any_throttled=0, per_strategy results (0=open for both)
-      allow(Sidekiq).to receive(:redis).and_return(0, 0, 0)
- 
-      expect(first_strategy).to receive(:finalize!).with(payload_jid, *args)
-      expect(second_strategy).to receive(:finalize!).with(payload_jid, *args)
- 
+
+      # Stub the Lua script result: any_throttled=0, per_payload results (0=open for both)
+      allow(script).to receive(:call).and_return([0, 0, 0])
+
       expect(described_class.throttled_with(message)).to eq([false, []])
     end
- 
-    it "handles missing strategies gracefully" do
+
+    it "handles missing strategies gracefully" do  # Removed finalize expectation (handled in Lua)
       open_strategy = instance_double(Sidekiq::Throttled::Strategy)
- 
+
       payload_jid = jid
       args = ["alpha", 1]
- 
+
       message = JSON.dump({
         "class" => "ThrottledTestJob",
         "jid" => payload_jid,
         "args" => args,
         "throttled_strategy_keys" => %w[missing open]
       })
- 
+
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("missing").and_return(nil)
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("open").and_return(open_strategy)
- 
+
       # Stub the private method to avoid empty payloads and simulate components
       allow(open_strategy).to receive(:throttled_components).and_return(
-        [[{ type: :concurrency, key: "open_key", limit: 10 }]], # Payloads (simulate capacity)
-        ["open_key"], # Keys
-        [:concurrency] # Types
+        [[{ type: :concurrency, key: "open_key", limit: 10 }]],  # Payloads (simulate capacity)
+        ["open_key"],                                             # Keys
+        [:concurrency]                                            # Types
       )
- 
-      # Stub the "Lua" result: any_throttled=0, per_strategy result (0=open for the single valid strategy)
-      allow(Sidekiq).to receive(:redis).and_return(0, 0)
- 
-      expect(open_strategy).to receive(:finalize!).with(payload_jid, *args)
- 
+
+      # Stub the Lua script result: any_throttled=0, per_payload result (0=open for the single valid strategy)
+      allow(script).to receive(:call).and_return([0, 0])
+
       expect(described_class.throttled_with(message)).to eq([false, []])
     end
   end
- 
+
   describe ".requeue_throttled" do
     let(:sidekiq_config) do
       if Gem::Version.new(Sidekiq::VERSION) < Gem::Version.new("7.0.0")
@@ -208,7 +206,7 @@ RSpec.describe Sidekiq::Throttled do
         Sidekiq::Config.new(queues: %w[default]).default_capsule
       end
     end
- 
+
     let!(:strategy) do
       Sidekiq::Throttled::Registry.add(
         "ThrottledTestJob",
@@ -216,70 +214,70 @@ RSpec.describe Sidekiq::Throttled do
         requeue: { to: :other_queue, with: :enqueue }
       )
     end
- 
+
     it "invokes requeue_throttled on the strategy" do
       payload_jid = jid
       job = { class: "ThrottledTestJob", jid: payload_jid }.to_json
       work = Sidekiq::BasicFetch::UnitOfWork.new("queue:default", job, sidekiq_config)
- 
+
       expect(strategy).to receive(:requeue_throttled).with(work)
- 
+
       described_class.requeue_throttled work
     end
- 
+
     it "selects the strategy with the maximum cooldown when requeueing" do
       fast_strategy = instance_double(Sidekiq::Throttled::Strategy)
       slow_strategy = instance_double(Sidekiq::Throttled::Strategy)
- 
+
       payload_jid = jid
       args = ["alpha", 1]
- 
+
       job = { class: "ThrottledTestJob", jid: payload_jid, args: args }.to_json
       work = Sidekiq::BasicFetch::UnitOfWork.new("queue:default", job, sidekiq_config)
- 
+
       allow(fast_strategy).to receive(:resolved_requeue_with).with(*args).and_return(:schedule)
       allow(slow_strategy).to receive(:resolved_requeue_with).with(*args).and_return(:schedule)
- 
+
       allow(fast_strategy).to receive(:retry_in).with(payload_jid, *args).and_return(2.0)
       allow(slow_strategy).to receive(:retry_in).with(payload_jid, *args).and_return(10.0)
- 
+
       allow(fast_strategy).to receive(:requeue_throttled)
       allow(slow_strategy).to receive(:requeue_throttled)
- 
+
       described_class.requeue_throttled(work, [fast_strategy, slow_strategy])
- 
+
       expect(slow_strategy).to have_received(:requeue_throttled).with(work)
       expect(fast_strategy).not_to have_received(:requeue_throttled)
     end
- 
+
     it "does nothing if no strategies" do
       payload_jid = jid
       args = ["alpha", 1]
- 
+
       job = { class: "ThrottledTestJob", jid: payload_jid, args: args }.to_json
       work = Sidekiq::BasicFetch::UnitOfWork.new("queue:default", job, sidekiq_config)
- 
+
       expect { described_class.requeue_throttled(work, []) }.not_to raise_error
     end
- 
+
     it "handles :enqueue with no cooldown" do
       first_strategy = instance_double(Sidekiq::Throttled::Strategy)
       second_strategy = instance_double(Sidekiq::Throttled::Strategy)
- 
+
       payload_jid = jid
       args = ["alpha", 1]
- 
+
       job = { class: "ThrottledTestJob", jid: payload_jid, args: args }.to_json
       work = Sidekiq::BasicFetch::UnitOfWork.new("queue:default", job, sidekiq_config)
- 
+
       allow(first_strategy).to receive(:resolved_requeue_with).with(*args).and_return(:enqueue)
       allow(second_strategy).to receive(:resolved_requeue_with).with(*args).and_return(:enqueue)
- 
+
       allow(first_strategy).to receive(:requeue_throttled)
       allow(second_strategy).to receive(:requeue_throttled)
- 
+
       described_class.requeue_throttled(work, [first_strategy, second_strategy])
- 
+
       expect(first_strategy).to have_received(:requeue_throttled).with(work)
       expect(second_strategy).not_to have_received(:requeue_throttled)
     end
