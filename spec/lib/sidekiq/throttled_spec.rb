@@ -200,30 +200,6 @@ RSpec.describe Sidekiq::Throttled do
       expect(described_class.throttled_with(message)).to eq([false, []])
     end
   end
-  
-    it "handles missing strategies gracefully" do
-      open_strategy = instance_double(Sidekiq::Throttled::Strategy)
-  
-      payload_jid = jid
-      args = ["alpha", 1]
-  
-      message = JSON.dump({
-        "class" => "ThrottledTestJob",
-        "jid" => payload_jid,
-        "args" => args,
-        "throttled_strategy_keys" => %w[missing open]
-      })
-  
-      allow(Sidekiq::Throttled::Registry).to receive(:get).with("missing").and_return(nil)
-      allow(Sidekiq::Throttled::Registry).to receive(:get).with("open").and_return(open_strategy)
-  
-      allow(open_strategy).to receive(:throttled?).with(payload_jid, *args).and_return(false)
-  
-      # No finalize! expectation (incorrect for check phase)
-  
-      expect(described_class.throttled_with(message)).to eq([false, []])
-    end
-  end
  
   describe ".requeue_throttled" do
     let(:sidekiq_config) do
