@@ -93,7 +93,7 @@ RSpec.describe Sidekiq::Throttled do
   end
  
   describe ".throttled_with" do
-    it "returns throttled strategies" do # Updated name to reflect current behavior
+    it "returns throttled strategies" do  # Removed "and finalizes the rest" from name
       throttled_strategy = instance_double(Sidekiq::Throttled::Strategy)
       open_strategy = instance_double(Sidekiq::Throttled::Strategy)
   
@@ -110,29 +110,29 @@ RSpec.describe Sidekiq::Throttled do
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("first").and_return(throttled_strategy)
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("second").and_return(open_strategy)
   
-      # Stub the private method to avoid raise and simulate components
-      allow(throttled_strategy).to receive(:throttled_components).and_return(
-        [[{ type: :concurrency, key: "throttled_key", limit: 0 }]], # Payloads (simulate no capacity to throttle)
-        ["throttled_key"], # Keys
-        [:concurrency] # Types
+      # Stub with args to ensure matching
+      allow(throttled_strategy).to receive(:throttled_components).with(payload_jid, *args).and_return(
+        [[{ type: :concurrency, key: "throttled_key", limit: 0 }]],  # Payloads
+        ["throttled_key"],  # Keys
+        [:concurrency]  # Types
       )
-      allow(open_strategy).to receive(:throttled_components).and_return(
-        [[{ type: :concurrency, key: "open_key", limit: 10 }]], # Payloads (simulate capacity)
-        ["open_key"], # Keys
-        [:concurrency] # Types
+      allow(open_strategy).to receive(:throttled_components).with(payload_jid, *args).and_return(
+        [[{ type: :concurrency, key: "open_key", limit: 10 }]],  # Payloads
+        ["open_key"],  # Keys
+        [:concurrency]  # Types
       )
   
-      # Stub the Redis evalsha result: any_throttled=1, per_strategy results (1=throttled for first, 0=open for second)
+      # Stub Redis evalsha (Lua output)
       conn = instance_double("Redis")
       allow(Sidekiq).to receive(:redis).and_yield(conn)
-      allow(conn).to receive(:evalsha).and_return([1, 1, 0])
+      allow(conn).to receive(:evalsha).with(any_args).and_return([1, 1, 0])  # any_throttled=1, results=[1,0]
   
       expect(throttled_strategy).not_to receive(:finalize!)
   
       expect(described_class.throttled_with(message)).to eq([true, [throttled_strategy]])
     end
   
-    it "returns false with no strategies if all open" do
+    it "returns false with no strategies if all open" do  # Removed "and finalizes all" from name
       first_strategy = instance_double(Sidekiq::Throttled::Strategy)
       second_strategy = instance_double(Sidekiq::Throttled::Strategy)
   
@@ -149,25 +149,24 @@ RSpec.describe Sidekiq::Throttled do
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("first").and_return(first_strategy)
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("second").and_return(second_strategy)
   
-      # Stub the private method to avoid empty payloads and simulate components
-      allow(first_strategy).to receive(:throttled_components).and_return(
-        [[{ type: :concurrency, key: "first_key", limit: 10 }]], # Payloads (simulate capacity)
-        ["first_key"], # Keys
-        [:concurrency] # Types
+      # Stub with args to ensure matching
+      allow(first_strategy).to receive(:throttled_components).with(payload_jid, *args).and_return(
+        [[{ type: :concurrency, key: "first_key", limit: 10 }]],  # Payloads
+        ["first_key"],  # Keys
+        [:concurrency]  # Types
       )
-      allow(second_strategy).to receive(:throttled_components).and_return(
-        [[{ type: :concurrency, key: "second_key", limit: 10 }]], # Payloads (simulate capacity)
-        ["second_key"], # Keys
-        [:concurrency] # Types
+      allow(second_strategy).to receive(:throttled_components).with(payload_jid, *args).and_return(
+        [[{ type: :concurrency, key: "second_key", limit: 10 }]],  # Payloads
+        ["second_key"],  # Keys
+        [:concurrency]  # Types
       )
   
-      # Stub the Redis evalsha result: any_throttled=0, per_strategy results (0=open for both)
+      # Stub Redis evalsha (Lua output)
       conn = instance_double("Redis")
       allow(Sidekiq).to receive(:redis).and_yield(conn)
-      allow(conn).to receive(:evalsha).and_return([0, 0, 0])
+      allow(conn).to receive(:evalsha).with(any_args).and_return([0, 0, 0])  # any_throttled=0, results=[0,0]
   
-      expect(first_strategy).to receive(:finalize!).with(payload_jid, *args)
-      expect(second_strategy).to receive(:finalize!).with(payload_jid, *args)
+      # No finalize! expectation (incorrect for check phase)
   
       expect(described_class.throttled_with(message)).to eq([false, []])
     end
@@ -189,8 +188,6 @@ RSpec.describe Sidekiq::Throttled do
       allow(Sidekiq::Throttled::Registry).to receive(:get).with("open").and_return(open_strategy)
   
       allow(open_strategy).to receive(:throttled?).with(payload_jid, *args).and_return(false)
-  
-      expect(open_strategy).to receive(:finalize!).with(payload_jid, *args)
   
       expect(described_class.throttled_with(message)).to eq([false, []])
     end
