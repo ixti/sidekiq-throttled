@@ -122,9 +122,9 @@ RSpec.describe Sidekiq::Throttled do
         [:concurrency]  # Types
       )
   
-      # Stub the Lua script constant and its call
+      # Stub the Lua script constant with a double
       script_double = instance_double("RedisPrescription")
-      allow(Sidekiq::Throttled::Strategy).to receive(:MULTI_STRATEGY_SCRIPT).and_return(script_double)
+      stub_const("Sidekiq::Throttled::Strategy::MULTI_STRATEGY_SCRIPT", script_double)
       allow(script_double).to receive(:call).and_return([1, 1, 0])  # any_throttled=1, results=[1,0]
   
       expect(throttled_strategy).not_to receive(:finalize!)
@@ -161,9 +161,9 @@ RSpec.describe Sidekiq::Throttled do
         [:concurrency]  # Types
       )
   
-      # Stub the Lua script constant and its call
+      # Stub the Lua script constant with a double
       script_double = instance_double("RedisPrescription")
-      allow(Sidekiq::Throttled::Strategy).to receive(:MULTI_STRATEGY_SCRIPT).and_return(script_double)
+      stub_const("Sidekiq::Throttled::Strategy::MULTI_STRATEGY_SCRIPT", script_double)
       allow(script_double).to receive(:call).and_return([0, 0, 0])  # any_throttled=0, results=[0,0]
   
       # No finalize! expectation (incorrect for check phase)
