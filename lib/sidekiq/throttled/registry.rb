@@ -99,10 +99,19 @@ module Sidekiq
 
         # Find strategy by class or it's parents.
         #
+        # Uses +const_defined?+ before +const_get+ to avoid triggering
+        # autoloading (e.g. Zeitwerk) from Sidekiq's fetcher thread, which
+        # runs outside the Rails reloader and can deadlock or raise.
+        #
         # @param name [Class, #to_s]
         # @return [Strategy, nil]
         def find_by_class(name)
-          const = name.is_a?(Class) ? name : Object.const_get(name)
+          const = if name.is_a?(Class)
+                    name
+                  elsif Object.const_defined?(name)
+                    Object.const_get(name)
+                  end
+
           return unless const.is_a?(Class)
 
           const.ancestors.each do |m|

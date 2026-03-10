@@ -96,10 +96,17 @@ module Sidekiq
       # Return throttled job to be executed later, delegating the details of how to do that
       # to the Strategy for that job.
       #
+      # Uses +const_defined?+ before +const_get+ to avoid triggering
+      # autoloading (e.g. Zeitwerk) from Sidekiq's fetcher thread, which
+      # runs outside the Rails reloader and can deadlock or raise.
+      #
       # @return [void]
       def requeue_throttled(work)
         message = JSON.parse(work.job)
-        job_class = Object.const_get(message.fetch("wrapped") { message.fetch("class") { return false } })
+        class_name = message.fetch("wrapped") { message.fetch("class") { return false } }
+        return false unless Object.const_defined?(class_name)
+
+        job_class = Object.const_get(class_name)
 
         Registry.get job_class do |strategy|
           strategy.requeue_throttled(work)
