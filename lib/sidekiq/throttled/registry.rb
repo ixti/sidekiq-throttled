@@ -106,20 +106,13 @@ module Sidekiq
         # @param name [Class, #to_s]
         # @return [Strategy, nil]
         def find_by_class(name)
-          const = if name.is_a?(Class)
-                    name
-                  elsif Object.const_defined?(name)
-                    Object.const_get(name)
-                  end
-
+          const = name.is_a?(Class) ? name : (Object.const_get(name) if Object.const_defined?(name))
           return unless const.is_a?(Class)
 
           const.ancestors.each do |m|
             strategy = find(m.name)
             return strategy if strategy
           end
-
-          nil
         rescue NameError
           nil
         end

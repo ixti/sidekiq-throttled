@@ -73,7 +73,7 @@ module SidekiqThrottledHelper
   end
 end
 
-class PseudoLogger < Logger
+class PseudoLogger < Logger # rubocop:disable Style/OneClassPerFile
   include Singleton
 
   def initialize
