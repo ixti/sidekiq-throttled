@@ -99,22 +99,22 @@ module Sidekiq
 
         # Find strategy by class or it's parents.
         #
-        # Uses +const_defined?+ before +const_get+ to avoid triggering
-        # autoloading (e.g. Zeitwerk) from Sidekiq's fetcher thread, which
-        # runs outside the Rails reloader and can deadlock or raise.
+        # Only performs ancestor lookup when +name+ is already a Class.
+        # String-based lookup via +Object.const_get+ is intentionally
+        # skipped because it triggers autoloading (e.g. Zeitwerk) from
+        # Sidekiq's fetcher thread, which runs outside the Rails reloader
+        # and can deadlock or raise. Use +Registry.add_alias+ to register
+        # subclasses that should inherit a parent's throttle strategy.
         #
         # @param name [Class, #to_s]
         # @return [Strategy, nil]
         def find_by_class(name)
-          const = name.is_a?(Class) ? name : (Object.const_get(name) if Object.const_defined?(name))
-          return unless const.is_a?(Class)
+          return unless name.is_a?(Class)
 
-          const.ancestors.each do |m|
+          name.ancestors.each do |m|
             strategy = find(m.name)
             return strategy if strategy
           end
-        rescue NameError
-          nil
         end
       end
     end
