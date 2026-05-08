@@ -205,6 +205,37 @@ RSpec.describe Sidekiq::Throttled::Strategy do
       end
     end
 
+    context "when throttled by a later concurrency strategy in the collection" do
+      let(:options) do
+        {
+          concurrency: [
+            { limit: 5, key_suffix: ->(*) { "global" } },
+            { limit: 1, key_suffix: ->(*) { "per_tenant" } }
+          ]
+        }
+      end
+
+      before do
+        # Saturate the second concurrency strategy (per_tenant limit = 1)
+        # by running a different job through it first
+        strategy.throttled?("seed-jid")
+      end
+
+      it "releases the first strategy's lock when the second strategy throttles" do
+        first_strategy = strategy.concurrency.strategies.first
+
+        # Confirm the second strategy is at capacity before our call
+        expect(strategy.concurrency.strategies.last.count).to eq(1)
+
+        # This call should be throttled by the second strategy (per_tenant is full)
+        expect(strategy.throttled?(jid)).to be true
+
+        # The first strategy must NOT have a leaked lock for jid.
+        # Count should remain 1 (from seed-jid only), not 2.
+        expect(first_strategy.count).to eq(1)
+      end
+    end
+
     context "when both concurrency and threshold given" do
       let(:options) { threshold.merge concurrency }
 

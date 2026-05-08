@@ -67,9 +67,11 @@ module Sidekiq
       end
 
       # @return [Boolean] whenever job is throttled or not.
-      def throttled?(jid, *job_args)
+      def throttled?(jid, *job_args) # rubocop:disable Metrics/MethodLength
         if @concurrency&.throttled?(jid, *job_args)
           @observer&.call(:concurrency, *job_args)
+
+          finalize!(jid, *job_args)
           return true
         end
 
