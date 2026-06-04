@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 require "pathname"
+require "uri"
+
+URI.const_set(:RFC2396_PARSER, URI::RFC2396_Parser.new) unless URI.const_defined?(:RFC2396_PARSER)
 
 require "sidekiq"
 require "sidekiq/web"

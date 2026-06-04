@@ -103,122 +103,75 @@ RSpec.describe Sidekiq::Throttled do
     end
   end
 
-  # describe ".throttled_with" do
-  #   it "returns throttled strategies" do  # Removed "and finalizes the rest" from name
-  #     throttled_strategy = instance_double(Sidekiq::Throttled::Strategy)
-  #     open_strategy = instance_double(Sidekiq::Throttled::Strategy)
+  describe ".throttled_with" do
+    it "returns only the strategies that throttled" do
+      throttled_key = "throttled-#{jid}"
+      open_key = "open-#{jid}"
+      throttled_strategy = Sidekiq::Throttled::Registry.add(throttled_key, concurrency: { limit: 1 })
+      Sidekiq::Throttled::Registry.add(open_key, concurrency: { limit: 5 })
+      throttled_strategy.throttled?(jid)
 
-  #     payload_jid = jid
-  #     args = ["alpha", 1]
+      payload_jid = jid
+      args = ["alpha", 1]
+      message = JSON.dump({
+        "class"                   => "ThrottledTestJob",
+        "jid"                     => payload_jid,
+        "args"                    => args,
+        "throttled_strategy_keys" => [throttled_key, open_key]
+      })
 
-  #     message = JSON.dump({
-  #       "class" => "ThrottledTestJob",
-  #       "jid" => payload_jid,
-  #       "args" => args,
-  #       "throttled_strategy_keys" => %w[first second]
-  #     })
+      expect(described_class.throttled_with(message)).to eq([true, [throttled_strategy]])
+    end
 
-  #     allow(Sidekiq::Throttled::Registry).to receive(:get).with("first").and_return(throttled_strategy)
-  #     allow(Sidekiq::Throttled::Registry).to receive(:get).with("second").and_return(open_strategy)
+    it "returns false with no strategies if all strategies admit the job" do
+      first_key = "first-#{jid}"
+      second_key = "second-#{jid}"
+      Sidekiq::Throttled::Registry.add(first_key, concurrency: { limit: 5 })
+      Sidekiq::Throttled::Registry.add(second_key, threshold: { limit: 5, period: 60 })
 
-  #     # Stub observer to prevent raise on &.
-  #     allow(throttled_strategy).to receive(:observer).and_return(nil)
-  #     allow(open_strategy).to receive(:observer).and_return(nil)
+      message = JSON.dump({
+        "class"                   => "ThrottledTestJob",
+        "jid"                     => jid,
+        "args"                    => ["alpha", 1],
+        "throttled_strategy_keys" => [first_key, second_key]
+      })
 
-  #     # Stub with full args (jid, job_args array, now float)
-  #     allow(throttled_strategy).to receive(:throttled_components).with(payload_jid, args, kind_of(Float)).and_return(
-  #       [[{ type: :concurrency, key: "throttled_key", limit: 0 }]],  # Payloads
-  #       ["throttled_key"],  # Keys
-  #       [:concurrency]  # Types
-  #     )
-  #     allow(open_strategy).to receive(:throttled_components).with(payload_jid, args, kind_of(Float)).and_return(
-  #       [[{ type: :concurrency, key: "open_key", limit: 10 }]],  # Payloads
-  #       ["open_key"],  # Keys
-  #       [:concurrency]  # Types
-  #     )
+      expect(described_class.throttled_with(message)).to eq([false, []])
+    end
 
-  #     # Stub the Lua script constant with a double
-  #     script_double = instance_double("RedisPrescription")
-  #     stub_const("Sidekiq::Throttled::Strategy::MULTI_STRATEGY_SCRIPT", script_double)
-  #     allow(script_double).to receive(:call).and_return([1, 1, 0])  # any_throttled=1, results=[1,0]
+    it "handles missing strategies gracefully" do
+      open_key = "open-#{jid}"
+      Sidekiq::Throttled::Registry.add(open_key, concurrency: { limit: 5 })
 
-  #     # Stub Sidekiq.redis to yield a double (ensures block is called)
-  #     conn = instance_double("Redis")
-  #     allow(Sidekiq).to receive(:redis).and_yield(conn)
+      message = JSON.dump({
+        "class"                   => "ThrottledTestJob",
+        "jid"                     => jid,
+        "args"                    => ["alpha", 1],
+        "throttled_strategy_keys" => ["missing-#{jid}", open_key]
+      })
 
-  #     expect(throttled_strategy).not_to receive(:finalize!)
+      expect(described_class.throttled_with(message)).to eq([false, []])
+    end
 
-  #     expect(described_class.throttled_with(message)).to eq([true, [throttled_strategy]])
-  #   end
+    it "falls back to worker strategy keys when the message has none" do
+      first_key = "first-#{jid}"
+      second_key = "second-#{jid}"
+      first_strategy = Sidekiq::Throttled::Registry.add(first_key, concurrency: { limit: 1 })
+      Sidekiq::Throttled::Registry.add(second_key, concurrency: { limit: 5 })
+      stub_job_class("MultiStrategyTestJob") do
+        sidekiq_throttle_as first_key, second_key
+      end
+      first_strategy.throttled?(jid)
 
-  #   it "returns false with no strategies if all open" do  # Removed "and finalizes all" from name
-  #     first_strategy = instance_double(Sidekiq::Throttled::Strategy)
-  #     second_strategy = instance_double(Sidekiq::Throttled::Strategy)
+      message = JSON.dump({
+        "class" => "MultiStrategyTestJob",
+        "jid"   => jid,
+        "args"  => ["alpha", 1]
+      })
 
-  #     payload_jid = jid
-  #     args = ["alpha", 1]
-
-  #     message = JSON.dump({
-  #       "class" => "ThrottledTestJob",
-  #       "jid" => payload_jid,
-  #       "args" => args,
-  #       "throttled_strategy_keys" => %w[first second]
-  #     })
-
-  #     allow(Sidekiq::Throttled::Registry).to receive(:get).with("first").and_return(first_strategy)
-  #     allow(Sidekiq::Throttled::Registry).to receive(:get).with("second").and_return(second_strategy)
-
-  #     # Stub observer to prevent raise on &.
-  #     allow(first_strategy).to receive(:observer).and_return(nil)
-  #     allow(second_strategy).to receive(:observer).and_return(nil)
-
-  #     # Stub with full args (jid, job_args array, now float)
-  #     allow(first_strategy).to receive(:throttled_components).with(payload_jid, args, kind_of(Float)).and_return(
-  #       [[{ type: :concurrency, key: "first_key", limit: 10 }]],  # Payloads
-  #       ["first_key"],  # Keys
-  #       [:concurrency]  # Types
-  #     )
-  #     allow(second_strategy).to receive(:throttled_components).with(payload_jid, args, kind_of(Float)).and_return(
-  #       [[{ type: :concurrency, key: "second_key", limit: 10 }]],  # Payloads
-  #       ["second_key"],  # Keys
-  #       [:concurrency]  # Types
-  #     )
-
-  #     # Stub the Lua script constant with a double
-  #     script_double = instance_double("RedisPrescription")
-  #     stub_const("Sidekiq::Throttled::Strategy::MULTI_STRATEGY_SCRIPT", script_double)
-  #     allow(script_double).to receive(:call).and_return([0, 0, 0])  # any_throttled=0, results=[0,0]
-
-  #     # Stub Sidekiq.redis to yield a double (ensures block is called)
-  #     conn = instance_double("Redis")
-  #     allow(Sidekiq).to receive(:redis).and_yield(conn)
-
-  #     # No finalize! expectation (incorrect for check phase)
-
-  #     expect(described_class.throttled_with(message)).to eq([false, []])
-  #   end
-
-  #   it "handles missing strategies gracefully" do
-  #     open_strategy = instance_double(Sidekiq::Throttled::Strategy)
-
-  #     payload_jid = jid
-  #     args = ["alpha", 1]
-
-  #     message = JSON.dump({
-  #       "class" => "ThrottledTestJob",
-  #       "jid" => payload_jid,
-  #       "args" => args,
-  #       "throttled_strategy_keys" => %w[missing open]
-  #     })
-
-  #     allow(Sidekiq::Throttled::Registry).to receive(:get).with("missing").and_return(nil)
-  #     allow(Sidekiq::Throttled::Registry).to receive(:get).with("open").and_return(open_strategy)
-
-  #     allow(open_strategy).to receive(:throttled?).with(payload_jid, *args).and_return(false)
-
-  #     expect(described_class.throttled_with(message)).to eq([false, []])
-  #   end
-  # end
+      expect(described_class.throttled_with(message)).to eq([true, [first_strategy]])
+    end
+  end
 
   describe ".requeue_throttled" do
     let(:sidekiq_config) do

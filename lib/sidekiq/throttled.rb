@@ -121,6 +121,13 @@ module Sidekiq
         strategy.requeue_throttled(work)
       end
 
+      def strategy_keys_for(message)
+        keys = message.strategy_keys
+        keys = job_class_strategy_keys(message.job_class) if keys.empty?
+        keys = [message.job_class] if keys.empty? && message.job_class
+        keys
+      end
+
       private
 
       def check_single_strategy(strategy, job_id, job_args)
@@ -130,15 +137,23 @@ module Sidekiq
       end
 
       def strategies_for(message)
-        keys = message.strategy_keys
-        keys = [message.job_class] if keys.empty? && message.job_class
+        strategy_keys_for(message).filter_map { |key| Registry.get(key) }.uniq
+      end
 
-        keys.filter_map { |key| Registry.get(key) }.uniq
+      def job_class_strategy_keys(job_class)
+        return [] unless job_class
+
+        klass = Object.const_get(job_class)
+        return [] unless klass.respond_to?(:sidekiq_throttled_strategy_keys)
+
+        Array(klass.sidekiq_throttled_strategy_keys).compact
+      rescue NameError
+        []
       end
 
       def select_strategy_for_requeue(strategies, message)
         jid = message.job_id
-        job_args = message.job_args
+        job_args = Array(message.job_args)
 
         cooldowns = strategies.map do |strategy|
           with = resolve_requeue_with(strategy, job_args)

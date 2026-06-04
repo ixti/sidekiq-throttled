@@ -192,7 +192,8 @@ especially when combining multiple strategies.
 ==== Important notes
 
 * Strategy keys must be unique per job.
-* A strategy defined in the registry cannot be redefined inside a job.
+* Reusing a registry key redefines that strategy, so prefer explicit unique
+  keys when declaring job-specific throttles.
 * Strategies are independent — concurrency and threshold limits are evaluated
   separately for each one.
 

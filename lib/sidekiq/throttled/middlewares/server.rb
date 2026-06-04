@@ -23,12 +23,10 @@ module Sidekiq
           message = Message.new(msg)
           return unless message.job_class && message.job_id
 
-          keys = message.strategy_keys
-          keys = [message.job_class] if keys.empty?
-
-          keys.uniq.each do |key|
+          job_args = Array(message.job_args)
+          Sidekiq::Throttled.strategy_keys_for(message).uniq.each do |key|
             Registry.get(key) do |strategy|
-              strategy.finalize!(message.job_id, *message.job_args)
+              strategy.finalize!(message.job_id, *job_args)
             end
           end
         end

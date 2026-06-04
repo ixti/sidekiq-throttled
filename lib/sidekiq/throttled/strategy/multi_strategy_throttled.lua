@@ -161,10 +161,18 @@ if any_throttled then
   -- If throttled, we do NOT register concurrency, do NOT decrement backlog,
   -- and do NOT increment threshold counters.
   --
-  -- We also do NOT bump backlog size here; backlog should represent actual admitted backlog,
-  -- and increasing it while throttled can explode scheduling delays.
-  --
-  -- (Stale cleanup already happened above.)
+  -- We do keep concurrency backlog for the concurrency strategies that actually
+  -- throttled, matching the single-strategy script so scheduled retry delays
+  -- still reflect the queued pressure behind that limit.
+  local incremented_backlogs = {}
+  for i = 1, #strategy_states do
+    local state = strategy_states[i]
+    if state.type == "concurrency" and state.throttled and state.lmt and state.lmt > 0 and
+        not incremented_backlogs[state.backlog_info_key] then
+      change_backlog_size(state.backlog_info_key, state.lost_job_threshold, state.lmt, state.now, 1)
+      incremented_backlogs[state.backlog_info_key] = true
+    end
+  end
 else
   for i = 1, #strategy_states do
     local state = strategy_states[i]
