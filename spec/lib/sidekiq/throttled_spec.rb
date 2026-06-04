@@ -24,6 +24,12 @@ RSpec.describe Sidekiq::Throttled do
   end
 
   describe ".throttled?" do
+    it "returns false if throttled_with raises" do
+      allow(described_class).to receive(:throttled_with).and_raise(StandardError)
+
+      expect(described_class.throttled?("{}")).to be false
+    end
+
     it "tolerates invalid JSON message" do
       expect(described_class.throttled?("][")).to be false
     end
@@ -104,6 +110,17 @@ RSpec.describe Sidekiq::Throttled do
   end
 
   describe ".throttled_with" do
+    it "returns false with no strategies if lookup raises" do
+      message = JSON.dump({
+        "jid"                     => jid,
+        "throttled_strategy_keys" => ["boom"]
+      })
+
+      allow(Sidekiq::Throttled::Registry).to receive(:get).and_raise(StandardError)
+
+      expect(described_class.throttled_with(message)).to eq([false, []])
+    end
+
     it "returns only the strategies that throttled" do
       throttled_key = "throttled-#{jid}"
       open_key = "open-#{jid}"
