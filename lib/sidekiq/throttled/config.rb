@@ -51,6 +51,7 @@ module Sidekiq
 
       # @!attribute [w] default_requeue_options
       def default_requeue_options=(options)
+        options = options.dup
         requeue_with = options.delete(:with)&.to_sym || :enqueue
 
         @default_requeue_options = options.merge({ with: requeue_with })

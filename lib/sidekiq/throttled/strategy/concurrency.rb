@@ -69,6 +69,7 @@ module Sidekiq
         def retry_in(_jid, *job_args)
           job_limit = limit(job_args)
           return 0.0 if !job_limit || count(*job_args) < job_limit
+          return @max_delay if job_limit <= 0
 
           (estimated_backlog_size(job_args) * @avg_job_duration / limit(job_args))
             .then { |delay_sec| @max_delay * (1 - Math.exp(-delay_sec / @max_delay)) } # limit to max_delay

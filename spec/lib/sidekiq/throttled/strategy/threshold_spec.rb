@@ -85,6 +85,22 @@ RSpec.describe Sidekiq::Throttled::Strategy::Threshold do
       end
     end
 
+    context "when limit is zero" do
+      subject(:strategy) { described_class.new :test, limit: 0, period: 10 }
+
+      it "backs off for the period instead of retrying immediately" do
+        expect(subject.retry_in).to eq 10
+      end
+    end
+
+    context "when limit is negative" do
+      subject(:strategy) { described_class.new :test, limit: -5, period: 10 }
+
+      it "backs off for the period instead of returning a negative delay" do
+        expect(subject.retry_in).to eq 10
+      end
+    end
+
     context "when there is no limit" do
       subject(:strategy) { described_class.new :test, limit: -> {}, period: 10 }
 
