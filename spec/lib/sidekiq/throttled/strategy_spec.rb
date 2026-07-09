@@ -676,7 +676,6 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           end
 
           it "returns false and does not reschedule the job" do
-            expect(Sidekiq::Client).not_to receive(:enqueue_to_in)
             expect(work).not_to receive(:acknowledge)
             expect(subject.send(:reschedule_throttled, work, "queue:default")).to be_falsey
           end
@@ -686,9 +685,52 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           let(:target_queue) { "queue:default" }
 
           it "reschedules the job to the specified queue" do
-            expect(Sidekiq::Client).to receive(:enqueue_to_in).with("default", anything, anything, anything)
-            expect(work).to receive(:acknowledge)
-            subject.send(:reschedule_throttled, work, target_queue)
+            expect do
+              subject.send(:reschedule_throttled, work, target_queue)
+            end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
+
+            item, = scheduled_redis_item_and_score
+            expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
+              "queue" => "default")
+          end
+        end
+
+        context "when original job has batch metadata" do
+          before do
+            job_data = JSON.parse(work.job).merge(
+              "bid"       => "batch-123",
+              "callbacks" => { "success" => ["MyCallback"] },
+              "tags"      => ["critical"],
+              "wrapped"   => "ThrottledTestJob"
+            )
+            allow(work).to receive(:job).and_return(job_data.to_json)
+          end
+
+          it "preserves all metadata keys in the rescheduled job" do
+            expect do
+              subject.send(:reschedule_throttled, work, "default")
+            end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
+
+            item, = scheduled_redis_item_and_score
+            expect(JSON.parse(item)).to include(
+              "bid"       => "batch-123",
+              "callbacks" => { "success" => ["MyCallback"] },
+              "tags"      => ["critical"],
+              "wrapped"   => "ThrottledTestJob",
+              "class"     => "ThrottledTestJob",
+              "args"      => [1]
+            )
+          end
+
+          it "generates a new jid for the rescheduled job" do
+            original_jid = JSON.parse(work.job)["jid"]
+
+            subject.send(:reschedule_throttled, work, "default")
+
+            item, = scheduled_redis_item_and_score
+            parsed = JSON.parse(item)
+            expect(parsed["jid"]).not_to eq(original_jid)
+            expect(parsed).not_to have_key("enqueued_at")
           end
         end
       end
@@ -1018,7 +1060,6 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           end
 
           it "returns false and does not reschedule the job" do
-            expect(Sidekiq::Client).not_to receive(:enqueue_to_in)
             expect(work).not_to receive(:acknowledge)
             expect(subject.send(:reschedule_throttled, work, "queue:default")).to be_falsey
           end
@@ -1028,9 +1069,52 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           let(:target_queue) { "queue:default" }
 
           it "reschedules the job to the specified queue" do
-            expect(Sidekiq::Client).to receive(:enqueue_to_in).with("default", anything, anything, anything)
-            expect(work).to receive(:acknowledge)
-            subject.send(:reschedule_throttled, work, target_queue)
+            expect do
+              subject.send(:reschedule_throttled, work, target_queue)
+            end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
+
+            item, = scheduled_redis_item_and_score
+            expect(JSON.parse(item)).to include("class" => "ThrottledTestJob", "args" => [1],
+              "queue" => "default")
+          end
+        end
+
+        context "when original job has batch metadata" do
+          before do
+            job_data = JSON.parse(work.job).merge(
+              "bid"       => "batch-xyz",
+              "callbacks" => { "success" => ["MyCallback"] },
+              "tags"      => ["important"],
+              "wrapped"   => "ThrottledTestJob"
+            )
+            allow(work).to receive(:job).and_return(job_data.to_json)
+          end
+
+          it "preserves all metadata keys in the rescheduled job" do
+            expect do
+              subject.send(:reschedule_throttled, work, "default")
+            end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
+
+            item, = scheduled_redis_item_and_score
+            expect(JSON.parse(item)).to include(
+              "bid"       => "batch-xyz",
+              "callbacks" => { "success" => ["MyCallback"] },
+              "tags"      => ["important"],
+              "wrapped"   => "ThrottledTestJob",
+              "class"     => "ThrottledTestJob",
+              "args"      => [1]
+            )
+          end
+
+          it "generates a new jid for the rescheduled job" do
+            original_jid = JSON.parse(work.job)["jid"]
+
+            subject.send(:reschedule_throttled, work, "default")
+
+            item, = scheduled_redis_item_and_score
+            parsed = JSON.parse(item)
+            expect(parsed["jid"]).not_to eq(original_jid)
+            expect(parsed).not_to have_key("enqueued_at")
           end
         end
       end
