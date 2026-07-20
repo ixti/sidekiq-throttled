@@ -96,7 +96,7 @@ module Sidekiq
 
           Registry.add(strategy_key, **options)
 
-          self.sidekiq_throttled_strategy_keys = (throttled_strategy_keys + [strategy_key]).uniq
+          self.sidekiq_throttled_strategy_keys |= [strategy_key]
           update_throttled_strategy_options!
         end
 
