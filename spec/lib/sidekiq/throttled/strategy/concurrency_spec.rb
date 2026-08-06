@@ -156,6 +156,22 @@ RSpec.describe Sidekiq::Throttled::Strategy::Concurrency do
       end
     end
 
+    context "when limit is zero" do
+      subject(:strategy) { described_class.new :test, limit: 0, max_delay: 60 }
+
+      it "backs off to max_delay instead of returning an invalid delay" do
+        expect(subject.retry_in(jid)).to eq 60
+      end
+    end
+
+    context "when limit is negative" do
+      subject(:strategy) { described_class.new :test, limit: -5, max_delay: 60 }
+
+      it "backs off to max_delay instead of returning a negative delay" do
+        expect(subject.retry_in(jid)).to eq 60
+      end
+    end
+
     context "when limit not exceeded, because the oldest job was more than the ttl ago" do
       before do
         Timecop.travel(Time.now - 1000) do

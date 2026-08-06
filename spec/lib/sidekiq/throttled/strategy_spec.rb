@@ -104,6 +104,13 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           end
         end
       end
+
+      it "returns false if Redis reports no throttled component" do
+        script = instance_double(RedisPrescription, call: [1, 0])
+        stub_const("Sidekiq::Throttled::Strategy::MULTI_STRATEGY_SCRIPT", script)
+
+        expect(strategy.throttled?(jid)).to be false
+      end
     end
 
     context "when concurrency constraints given" do
@@ -119,6 +126,15 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         before { 7.times { strategy.throttled? jid } }
 
         it { is_expected.to be true }
+
+        it "tracks backlog for scheduled retry delays" do
+          subject = described_class.new("backlog-#{jid}",
+            concurrency: { limit: 1, avg_job_duration: 10, lost_job_threshold: 30 })
+
+          expect(subject.throttled?(jid)).to be false
+          expect(subject.throttled?(jid)).to be true
+          expect(subject.retry_in(jid)).to be > 0
+        end
 
         context "with observe" do
           let(:observer) { spy }
@@ -154,6 +170,23 @@ RSpec.describe Sidekiq::Throttled::Strategy do
         # There are already 3 jobs under this key, and the limit is 3, so the
         # job is throttled.
         it { is_expected.to be true }
+
+        it "increments shared backlog only once" do
+          strategy_name = "shared-backlog-#{jid}"
+          subject = described_class.new(strategy_name,
+            concurrency: [
+              { limit: 1, avg_job_duration: 10, lost_job_threshold: 30, key_suffix: ->(*) { "shared" } },
+              { limit: 1, avg_job_duration: 10, lost_job_threshold: 30, key_suffix: ->(*) { "shared" } }
+            ])
+
+          expect(subject.throttled?(jid)).to be false
+          expect(subject.throttled?(jid)).to be true
+
+          backlog_size = Sidekiq.redis do |conn|
+            conn.hget("throttled:#{strategy_name}:concurrency.v2:shared.backlog_info", "size").to_f
+          end
+          expect(backlog_size).to be_between(0.9, 1.1).inclusive
+        end
       end
 
       context "with first concurrency rule" do
@@ -704,7 +737,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
           it "raises an error indicating it cannot compute a valid retry interval" do
             expect do
-              subject.send(:retry_in, work)
+              subject.send(:retry_in, jid)
             end.to raise_error("Cannot compute a valid retry interval")
           end
         end
@@ -718,6 +751,17 @@ RSpec.describe Sidekiq::Throttled::Strategy do
       let(:fetcher) { sidekiq_config.default_capsule.fetcher }
 
       let(:work) { fetcher.retrieve_work }
+      let(:super_fetch_work_class) do
+        Struct.new(:queue, :job, :requeued) do
+          def requeue
+            self.requeued = true
+          end
+
+          def requeued?
+            requeued
+          end
+        end
+      end
 
       before do
         pre_existing_job = fetcher.retrieve_work
@@ -758,6 +802,20 @@ RSpec.describe Sidekiq::Throttled::Strategy do
           # See that it is now on the end of the queue
           expect(enqueued_jobs("default")).to eq([["ThrottledTestJob", [3]], ["ThrottledTestJob", [2]]])
           expect(enqueued_jobs("other_queue")).to eq([["ThrottledTestJob", [1]]])
+        end
+
+        it "requeues Sidekiq Pro units without touching Redis directly" do
+          stub_const("Sidekiq::Pro::SuperFetch::UnitOfWork", super_fetch_work_class)
+
+          subject = described_class.new(:foo, **options, requeue: { with: :enqueue, to: :other_queue })
+          super_fetch_unit = super_fetch_work_class.new("queue:default", work.job)
+
+          expect(Sidekiq).not_to receive(:redis)
+
+          subject.requeue_throttled(super_fetch_unit)
+
+          expect(super_fetch_unit.queue).to eq("queue:other_queue")
+          expect(super_fetch_unit).to be_requeued
         end
 
         it "accepts a Proc for :with argument" do
@@ -884,6 +942,21 @@ RSpec.describe Sidekiq::Throttled::Strategy do
                 "queue" => "other_queue")
               expect(score.to_f).to be_within(31.0).of(Time.now.to_f + 330.0)
             end
+          end
+
+          it "passes job args to dynamic retry strategies" do
+            subject = described_class.new(:foo,
+              threshold: {
+                limit:      ->(account_id) { account_id == 1 ? 1 : 10 },
+                period:     300,
+                key_suffix: ->(account_id) { account_id }
+              },
+              requeue:   { with: :schedule })
+
+            expect(subject.throttled?(jid, 1)).to be false
+            expect do
+              subject.requeue_throttled(work)
+            end.to change { Sidekiq.redis { |conn| conn.zcard("schedule") } }.by(1)
           end
         end
 
@@ -1046,7 +1119,7 @@ RSpec.describe Sidekiq::Throttled::Strategy do
 
           it "raises an error indicating it cannot compute a valid retry interval" do
             expect do
-              subject.send(:retry_in, work)
+              subject.send(:retry_in, jid)
             end.to raise_error("Cannot compute a valid retry interval")
           end
         end

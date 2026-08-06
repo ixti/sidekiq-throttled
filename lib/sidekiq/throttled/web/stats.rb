@@ -12,11 +12,34 @@ module Sidekiq
           [1,             "second", "seconds"]
         ].freeze
 
+        def self.fetch_registry
+          strategies = Registry.each_with_static_keys.to_a
+          throttle_components = strategies.flat_map do |_name, strategy|
+            strategy.concurrency.to_a + strategy.threshold.to_a
+          end
+
+          [strategies, fetch_counts(throttle_components)]
+        end
+
+        def self.fetch_counts(strategies)
+          strategies = strategies.compact
+          return {} if strategies.empty?
+
+          counts = Sidekiq.redis do |redis|
+            redis.pipelined do |pipeline|
+              strategies.each { |strategy| strategy.count_from(pipeline) }
+            end
+          end
+
+          strategies.zip(counts.map(&:to_i)).to_h
+        end
+
         # @param [Strategy::Concurrency, Strategy::Threshold] strategy
-        def initialize(strategy)
+        def initialize(strategy, count: nil)
           raise ArgumentError, "Can't handle dynamic strategies" if strategy&.dynamic?
 
           @strategy = strategy
+          @count = count
         end
 
         # @return [String]
@@ -27,7 +50,8 @@ module Sidekiq
 
           html << " per " << humanize_duration(@strategy.period) if @strategy.respond_to?(:period)
 
-          html << "<br />" << colorize_count(@strategy.count, @strategy.limit)
+          count = @count.nil? ? @strategy.count : @count
+          html << "<br />" << colorize_count(count, @strategy.limit)
         end
 
         private

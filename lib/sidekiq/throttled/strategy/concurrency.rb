@@ -69,6 +69,7 @@ module Sidekiq
         def retry_in(_jid, *job_args)
           job_limit = limit(job_args)
           return 0.0 if !job_limit || count(*job_args) < job_limit
+          return @max_delay if job_limit <= 0
 
           (estimated_backlog_size(job_args) * @avg_job_duration / limit(job_args))
             .then { |delay_sec| @max_delay * (1 - Math.exp(-delay_sec / @max_delay)) } # limit to max_delay
@@ -76,7 +77,11 @@ module Sidekiq
 
         # @return [Integer] Current count of jobs
         def count(*job_args)
-          Sidekiq.redis { |conn| conn.zcard(key(job_args)) }.to_i
+          Sidekiq.redis { |conn| count_from(conn, *job_args) }.to_i
+        end
+
+        def count_from(redis, *job_args)
+          redis.zcard(key(job_args))
         end
 
         # Resets count of jobs
@@ -91,6 +96,20 @@ module Sidekiq
           Sidekiq.redis do |conn|
             conn.zrem(key(job_args), jid.to_s)
           end
+        end
+
+        def multi_strategy_payload(jid, _job_args, now, job_limit)
+          {
+            type:               "concurrency",
+            jid:                jid.to_s,
+            limit:              job_limit,
+            lost_job_threshold: @lost_job_threshold,
+            now:                now
+          }
+        end
+
+        def multi_strategy_keys(job_args)
+          [key(job_args), backlog_info_key(job_args)]
         end
 
         private

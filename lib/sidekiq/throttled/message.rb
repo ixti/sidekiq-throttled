@@ -19,6 +19,12 @@ module Sidekiq
         @item["jid"]
       end
 
+      def strategy_keys
+        keys = @item["throttled_strategy_keys"] || @item["throttled_strategy_key"]
+
+        Array(keys).compact.map(&:to_s)
+      end
+
       private
 
       def parse(item)
