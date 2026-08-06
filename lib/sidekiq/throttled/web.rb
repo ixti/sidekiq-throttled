@@ -19,6 +19,8 @@ module Sidekiq
 
       def self.registered(app)
         app.get("/throttled") do
+          @strategies, @counts = Stats.fetch_registry
+
           erb :index, views: VIEWS
         end
 

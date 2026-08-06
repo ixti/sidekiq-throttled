@@ -14,17 +14,17 @@
         </tr>
       </thead>
       <tbody>
-        <% Sidekiq::Throttled::Registry.each_with_static_keys do |name, strategy| %>
+        <% @strategies.each do |name, strategy| %>
           <tr>
             <td style="vertical-align:middle;"><%= name %></td>
             <td style="vertical-align:middle;text-align:center;">
               <% strategy.concurrency.each do |concurrency| %>
-                <%= Sidekiq::Throttled::Web::Stats.new(concurrency).to_html %>
+                <%= Sidekiq::Throttled::Web::Stats.new(concurrency, count: @counts.fetch(concurrency)).to_html %>
               <% end %>
             </td>
             <td style="vertical-align:middle;text-align:center;">
               <% strategy.threshold.each do |threshold| %>
-                <%= Sidekiq::Throttled::Web::Stats.new(threshold).to_html %>
+                <%= Sidekiq::Throttled::Web::Stats.new(threshold, count: @counts.fetch(threshold)).to_html %>
               <% end %>
             </td>
             <td style="vertical-align:middle;text-align:center;">

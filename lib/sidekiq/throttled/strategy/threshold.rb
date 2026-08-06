@@ -86,7 +86,11 @@ module Sidekiq
 
         # @return [Integer] Current count of jobs
         def count(*job_args)
-          Sidekiq.redis { |conn| conn.llen(key(job_args)) }.to_i
+          Sidekiq.redis { |conn| count_from(conn, *job_args) }.to_i
+        end
+
+        def count_from(redis, *job_args)
+          redis.llen(key(job_args))
         end
 
         # Resets count of jobs

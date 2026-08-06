@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Pipeline Web UI counter reads to avoid one Redis round trip per throttle.
+
 
 ## [2.1.0] - 2026-01-20
 
