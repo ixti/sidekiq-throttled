@@ -91,7 +91,8 @@ It may be configured on a per job basis with:
 ```ruby
   sidekiq_throttle(
     # Allow 5 jobs to processed within 1 minute, using the 
-    threshold: { limit: 5, period: 1.minute, requeue: {with: :schedule} }
+    threshold: { limit: 5, period: 1.minute },
+    requeue: { with: :schedule }
   )
 ```
 
@@ -100,7 +101,8 @@ It is also possible to requeue jobs to another queue:
 ```ruby
   sidekiq_throttle(
     # Allow 5 jobs to processed within 1 minute, using the 
-    threshold: { limit: 5, period: 1.minute, requeue: {to: :other_queue, with: :schedule} }
+    threshold: { limit: 5, period: 1.minute },
+    requeue: { to: :other_queue, with: :schedule }
   )
 ```
 
