@@ -93,6 +93,11 @@ module Sidekiq
           Sidekiq.redis { |conn| conn.llen(key(job_args)) }.to_i
         end
 
+        # Marks job as not processing.
+        # No tracking of this is necessary for threshold.
+        # @return [void]
+        def finalize!(...); end
+
         # Resets count of jobs
         # @return [void]
         def reset!(*job_args)
