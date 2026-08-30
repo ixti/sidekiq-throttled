@@ -55,4 +55,19 @@ RSpec.describe Sidekiq::Throttled::Config do
         .to raise_error(ArgumentError, %r{must be positive})
     end
   end
+
+  describe "#default_requeue_options=" do
+    it "updates #default_requeue_options" do
+      expect { config.default_requeue_options = { with: :schedule, to: :retry } }
+        .to change(config, :default_requeue_options).to(with: :schedule, to: :retry)
+    end
+
+    it "does not mutate the caller's options" do
+      options = { with: :schedule, to: :retry }
+
+      config.default_requeue_options = options
+
+      expect(options).to eq(with: :schedule, to: :retry)
+    end
+  end
 end

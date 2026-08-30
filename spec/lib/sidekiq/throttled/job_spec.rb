@@ -13,7 +13,7 @@ RSpec.describe Sidekiq::Throttled::Job do
   end
 
   describe ".sidekiq_throttle" do
-    it "delegates call to Registry.register" do
+    it "delegates call to Registry.add" do
       expect(Sidekiq::Throttled::Registry)
         .to receive(:add).with(working_class, concurrency: { limit: 10 })
 
@@ -90,11 +90,25 @@ RSpec.describe Sidekiq::Throttled::Job do
   end
 
   describe ".sidekiq_throttle_as" do
-    it "delegates call to Registry.register" do
-      expect(Sidekiq::Throttled::Registry)
-        .to receive(:add_alias).with(working_class, :foobar)
+    it "delegates call to Registry.add_alias" do
+      Sidekiq::Throttled::Registry.add("foobar", concurrency: { limit: 1 })
 
-      working_class.sidekiq_throttle_as :foobar
+      expect(Sidekiq::Throttled::Registry)
+        .to receive(:add_alias).with(working_class, "foobar")
+
+      working_class.sidekiq_throttle_as "foobar"
+    end
+
+    it "requires at least one strategy" do
+      expect { working_class.sidekiq_throttle_as }.to raise_error(
+        ArgumentError, "No throttling strategy provided"
+      )
+    end
+
+    it "rejects strategies that are not registered" do
+      expect { working_class.sidekiq_throttle_as "missing" }.to raise_error(
+        "Strategy not found: missing"
+      )
     end
   end
 end

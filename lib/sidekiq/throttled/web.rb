@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 require "pathname"
+require "uri"
+
+URI.const_set(:RFC2396_PARSER, URI::RFC2396_Parser.new) unless URI.const_defined?(:RFC2396_PARSER)
 
 require "sidekiq"
 require "sidekiq/web"
@@ -16,6 +19,8 @@ module Sidekiq
 
       def self.registered(app)
         app.get("/throttled") do
+          @strategies, @counts = Stats.fetch_registry
+
           erb :index, views: VIEWS
         end
 

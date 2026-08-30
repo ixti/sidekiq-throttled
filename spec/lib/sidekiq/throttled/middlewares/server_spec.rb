@@ -102,6 +102,37 @@ RSpec.describe Sidekiq::Throttled::Middlewares::Server do
       end
     end
 
+    context "when message has no strategy keys but worker has multiple configured keys" do
+      let(:payload) { { "class" => "MultiStrategyFinalizeJob", "jid" => "bar", "args" => args } }
+      let(:strategies) do
+        first_key = "first-#{jid}"
+        second_key = "second-#{jid}"
+
+        {
+          first:      Sidekiq::Throttled::Registry.add(first_key, concurrency: { limit: 1 }),
+          second:     Sidekiq::Throttled::Registry.add(second_key, concurrency: { limit: 1 }),
+          first_key:  first_key,
+          second_key: second_key
+        }
+      end
+
+      before do
+        local_first_key = strategies.fetch(:first_key)
+        local_second_key = strategies.fetch(:second_key)
+
+        stub_job_class("MultiStrategyFinalizeJob") do
+          sidekiq_throttle_as local_first_key, local_second_key
+        end
+      end
+
+      it "finalizes every configured strategy" do
+        expect(strategies.fetch(:first)).to receive(:finalize!).with("bar", *args)
+        expect(strategies.fetch(:second)).to receive(:finalize!).with("bar", *args)
+
+        middleware.call(double, payload, double) { |*| :foobar }
+      end
+    end
+
     context "when job class has no strategy" do
       it "returns yields control to the given block" do
         expect { |b| middleware.call(double, payload, double, &b) }

@@ -5,6 +5,14 @@ require "sidekiq/throttled/web/stats"
 RSpec.describe Sidekiq::Throttled::Web::Stats do
   subject(:stats) { described_class.new strategy }
 
+  describe ".fetch_counts" do
+    it "avoids a Redis call when there are no static strategies" do
+      expect(Sidekiq).not_to receive(:redis)
+
+      expect(described_class.fetch_counts([])).to eq({})
+    end
+  end
+
   describe "#to_html" do
     subject { stats.to_html }
 

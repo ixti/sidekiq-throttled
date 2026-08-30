@@ -14,11 +14,19 @@ module Sidekiq
         def call(_worker, msg, _queue)
           yield
         ensure
-          message = Message.new(msg)
+          finalize_strategies(msg)
+        end
 
-          if message.job_class && message.job_id
-            Registry.get(message.job_class) do |strategy|
-              strategy.finalize!(message.job_id, *message.job_args)
+        private
+
+        def finalize_strategies(msg)
+          message = Message.new(msg)
+          return unless message.job_class && message.job_id
+
+          job_args = Array(message.job_args)
+          Sidekiq::Throttled.strategy_keys_for(message).uniq.each do |key|
+            Registry.get(key) do |strategy|
+              strategy.finalize!(message.job_id, *job_args)
             end
           end
         end
