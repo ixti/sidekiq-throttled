@@ -70,7 +70,7 @@ module Sidekiq
           job_limit = limit(job_args)
           return 0.0 if !job_limit || count(*job_args) < job_limit
 
-          (estimated_backlog_size(job_args) * @avg_job_duration / limit(job_args))
+          (estimated_backlog_size(job_args, job_limit) * @avg_job_duration / job_limit)
             .then { |delay_sec| @max_delay * (1 - Math.exp(-delay_sec / @max_delay)) } # limit to max_delay
         end
 
@@ -99,17 +99,17 @@ module Sidekiq
           "#{key(job_args)}.backlog_info"
         end
 
-        def estimated_backlog_size(job_args)
+        def estimated_backlog_size(job_args, job_limit)
           old_size_str, old_timestamp_str =
             Sidekiq.redis { |conn| conn.hmget(backlog_info_key(job_args), "size", "timestamp") }
           old_size = (old_size_str || 0).to_f
           old_timestamp = (old_timestamp_str || Time.now).to_f
 
-          (old_size - jobs_lost_since(old_timestamp, job_args)).clamp(0, Float::INFINITY)
+          (old_size - jobs_lost_since(old_timestamp, job_limit)).clamp(0, Float::INFINITY)
         end
 
-        def jobs_lost_since(timestamp, job_args)
-          (Time.now.to_f - timestamp) / @lost_job_threshold * limit(job_args)
+        def jobs_lost_since(timestamp, job_limit)
+          (Time.now.to_f - timestamp) / @lost_job_threshold * job_limit
         end
 
         def interp_duration_args(avg_job_duration, lost_job_threshold)
