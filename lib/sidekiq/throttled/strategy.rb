@@ -176,7 +176,7 @@ module Sidekiq
       def reschedule_throttled(work, target_queue)
         target_queue = target_queue.delete_prefix("queue:")
         message      = JSON.parse(work.job)
-        job_class    = message.fetch("wrapped") { message.fetch("class") { return false } }
+        job_class    = message.fetch("class") { return false }
         job_args     = message["args"]
 
         # Re-enqueue the job to the target queue at another time as a NEW unit of work
