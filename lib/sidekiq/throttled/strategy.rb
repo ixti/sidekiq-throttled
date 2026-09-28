@@ -16,6 +16,13 @@ module Sidekiq
       # :schedule means schedule enqueueing the job for a later time when we expect to have capacity
       VALID_VALUES_FOR_REQUEUE_WITH = %i[enqueue schedule].freeze
 
+      # Metadata keys from the original job message that should be preserved across reschedule.
+      # - "bid"       : Sidekiq Pro batch ID (required for batch callback tracking)
+      # - "callbacks" : Sidekiq Pro batch callback definitions
+      # - "tags"      : Sidekiq job tags
+      # - "wrapped"   : ActiveJob wrapped class name
+      PRESERVED_METADATA_KEYS = %w[bid callbacks tags wrapped].freeze
+
       # @!attribute [r] concurrency
       #   @return [Strategy::Concurrency, nil]
       attr_reader :concurrency
@@ -173,18 +180,35 @@ module Sidekiq
 
       # Reschedule the job to be executed later in the target queue.
       # The queue name should NOT include the "queue:" prefix, so we remove it if it's present.
-      def reschedule_throttled(work, target_queue)
+      #
+      # Preserves additional metadata from the original job message (e.g. "bid" for Sidekiq Pro
+      # batches, "tags", "wrapped" for ActiveJob) so that batch callbacks, tracing, and other
+      # middleware-injected context survive the reschedule.
+      def reschedule_throttled(work, target_queue) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
         target_queue = target_queue.delete_prefix("queue:")
         message      = JSON.parse(work.job)
         job_class    = message.fetch("wrapped") { message.fetch("class") { return false } }
-        job_args     = message["args"]
+
+        interval = retry_in(work)
+        at       = Time.now.to_f + interval.to_f
+
+        item = {
+          "class" => Object.const_get(job_class),
+          "args"  => message["args"],
+          "queue" => target_queue,
+          "at"    => at
+        }
+
+        # Preserve known metadata keys from the original job
+        PRESERVED_METADATA_KEYS.each do |key|
+          item[key] = message[key] if message.key?(key)
+        end
 
         # Re-enqueue the job to the target queue at another time as a NEW unit of work
-        # AND THEN mark this work as done, so SuperFetch doesn't think this instance is orphaned
-        # Technically, the job could processed twice if the process dies between the two lines,
+        # AND THEN mark this work as done, so SuperFetch doesn't think this instance is orphaned.
+        # Technically, the job could be processed twice if the process dies between the two lines,
         # but your job should be idempotent anyway, right?
-        # The job running twice was already a risk with SuperFetch anyway and this doesn't really increase that risk.
-        Sidekiq::Client.enqueue_to_in(target_queue, retry_in(work), Object.const_get(job_class), *job_args)
+        item["class"].client_push(item)
 
         work.acknowledge
       end
