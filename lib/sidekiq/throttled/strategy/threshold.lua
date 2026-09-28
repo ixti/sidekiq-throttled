@@ -9,6 +9,6 @@ end
 
 redis.call("LPUSH", key, now)
 redis.call("LTRIM", key, 0, lmt - 1)
-redis.call("EXPIRE", key, ttl)
+redis.call("PEXPIRE", key, math.ceil(ttl * 1000))
 
 return 0
