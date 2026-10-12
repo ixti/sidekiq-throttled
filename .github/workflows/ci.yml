@@ -48,7 +48,7 @@ jobs:
         run: bundle exec rake test
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
 
   # See: https://github.com/orgs/community/discussions/26822#discussioncomment-3305794
   test-finale:
