@@ -23,9 +23,10 @@ module Sidekiq
 
       # @param config [Config]
       def initialize(config)
-        @queues    = ExpirableSet.new(config.cooldown_period)
-        @threshold = config.cooldown_threshold
+        @queues    = ExpirableSet.new
         @tracker   = Concurrent::Map.new
+        @period    = config.cooldown_period
+        @threshold = config.cooldown_threshold
       end
 
       # Notify that given queue returned job that was throttled.
@@ -33,7 +34,7 @@ module Sidekiq
       # @param queue [String]
       # @return [void]
       def notify_throttled(queue)
-        @queues.add(queue) if @threshold <= @tracker.merge_pair(queue, 1, &:succ)
+        @queues.add(queue, ttl: @period) if @threshold <= @tracker.merge_pair(queue, 1, &:succ)
       end
 
       # Notify that given queue returned job that was not throttled.
