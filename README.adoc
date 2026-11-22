@@ -106,6 +106,22 @@ It is also possible to requeue jobs to another queue:
   )
 ```
 
+=== Retries
+
+Throttling is checked when a job is fetched, before it runs, so a throttled
+job is not a failure and does not use up any of its `retry` attempts. Jobs that
+Sidekiq retries after an error are fetched again and are throttled and counted
+like any other job. A job that raised releases its concurrency slot right away,
+it does not hold it while waiting in the retry set.
+
+IMPORTANT: The `:schedule` requeue strategy pushes a throttled job back as a
+new job, built only from its class and arguments. It gets a new `jid`, and
+Sidekiq's retry state (`retry_count`, the last error) as well as options given
+with `.set(...)`, like `retry:`, are dropped, so the class level
+`sidekiq_options` apply again. A retry that gets throttled therefore starts
+over with a full retry budget. The default `:enqueue` strategy puts the
+original job back unchanged.
+
 === Web UI
 
 To add a Throttled tab to your sidekiq web dashboard, require it durring your
